@@ -12,7 +12,7 @@ members = ["codegen"]
 
 
 [dependencies]
-feignhttp-codegen = { path = "codegen" }
+feignhttp-codegen = { version = "0.0.1", path = "codegen" }
 
 http = "0.2"
 
