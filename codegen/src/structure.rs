@@ -31,9 +31,10 @@ fn fn_to_streams(
     url: proc_macro2::TokenStream,
     items: Vec<syn::ImplItem>,
 ) -> Vec<proc_macro2::TokenStream> {
-    let mut url = url;
+    let base_url = url;
     let mut method_streams = Vec::new();
     for item in items.iter() {
+        let mut url = base_url.clone();
         // Default get method
         let mut method = Method::GET;
         if let syn::ImplItem::Method(syn::ImplItemMethod { attrs, .. }) = item {
@@ -47,9 +48,9 @@ fn fn_to_streams(
                 }
                 method = method_ident.unwrap();
 
-                let fn_url = parse_fn_path(attr);
-                if !fn_url.is_empty() {
-                    url = quote!(#url + #fn_url)
+                let fn_path = parse_fn_path(attr);
+                if !fn_path.is_empty() {
+                    url = quote!(#url + #fn_path)
                 }
             }
         }
