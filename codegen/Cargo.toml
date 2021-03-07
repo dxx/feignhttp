@@ -3,6 +3,7 @@ name = "feignhttp-codegen"
 version = "0.0.1"
 authors = ["code-mcx <1827939333@qq.com>"]
 edition = "2018"
+description = "FeignHttp macro support"
 
 [lib]
 proc-macro = true
