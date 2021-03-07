@@ -3,7 +3,7 @@ name = "feignhttp"
 version = "0.0.1"
 authors = ["code-mcx <1827939333@qq.com>"]
 edition = "2018"
-description = "Use rust macros to decorate http call"
+description = "Declarative http client for rust"
 readme = "README.md"
 
 
