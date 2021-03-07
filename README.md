@@ -1,4 +1,4 @@
-<div style="text-align: center">
+<div align="center">
   <h1>Feign Http</h1>
   <p>
     <strong>Use rust macros to decorate http call</strong>
