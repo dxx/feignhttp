@@ -3,14 +3,14 @@ use feignhttp::{get};
 #[get("https://api.github.com")]
 async fn github() -> Result<String, Box<dyn std::error::Error>> {}
 
-// Specify path parameter
+// Specifies path parameter
 #[get("https://api.github.com/repos/{owner}/{repo}")]
 async fn repository (
     #[path] owner: &str,
     #[path] repo: String,
 ) -> Result<String, Box<dyn std::error::Error>> {}
 
-// Specify path parameter name and query parameter
+// Specifies path parameter name and query parameter
 #[get("https://api.github.com/repos/{owner}/{repo}/contributors")]
 async fn contributors (
     #[path("owner")] user: &str,
@@ -19,7 +19,7 @@ async fn contributors (
 ) -> Result<String, Box<dyn std::error::Error>> {}
 
 
-// Specify header
+// Specifies header
 #[get("https://api.github.com/repos/{owner}/{repo}/commits")]
 async fn commits (
     #[header] accept: &str,
