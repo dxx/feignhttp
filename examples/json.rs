@@ -44,7 +44,7 @@ async fn create_user(#[body] user: User) -> Result<String, Box<dyn std::error::E
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = issues("octocat", "hello-world", 1, 2).await?;
-    println!("issues: {:?}", r);
+    println!("issues: {:#?}", r);
 
 
     let _server = server::http(8080, move |mut req| async move {
