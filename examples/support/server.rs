@@ -37,9 +37,9 @@ impl Drop for Server {
 }
 
 pub fn http<F, Fut>(port: u16, func: F) -> Server
-    where
-        F: Fn(hyper::Request<hyper::Body>) -> Fut + Clone + Send + 'static,
-        Fut: Future<Output = hyper::Response<hyper::Body>> + Send + 'static,
+where
+    F: Fn(hyper::Request<hyper::Body>) -> Fut + Clone + Send + 'static,
+    Fut: Future<Output = hyper::Response<hyper::Body>> + Send + 'static,
 {
     //Spawn new runtime in thread to prevent reactor execution context conflict
     thread::spawn(move || {
@@ -48,8 +48,8 @@ pub fn http<F, Fut>(port: u16, func: F) -> Server
             .build()
             .expect("new rt");
         let srv = rt.block_on(async move {
-            hyper::Server::bind(&([127, 0, 0, 1], port).into()).serve(hyper::service::make_service_fn(
-                move |_| {
+            hyper::Server::bind(&([127, 0, 0, 1], port).into()).serve(
+                hyper::service::make_service_fn(move |_| {
                     let func = func.clone();
                     async move {
                         Ok::<_, Infallible>(hyper::service::service_fn(move |req| {
@@ -57,8 +57,8 @@ pub fn http<F, Fut>(port: u16, func: F) -> Server
                             async move { Ok::<_, Infallible>(fut.await) }
                         }))
                     }
-                },
-            ))
+                }),
+            )
         });
 
         let addr = srv.local_addr();

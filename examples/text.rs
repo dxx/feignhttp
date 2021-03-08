@@ -1,7 +1,7 @@
 #[allow(dead_code)]
 mod support;
 
-use feignhttp::{post};
+use feignhttp::post;
 use serde::{Deserialize, Serialize};
 
 use support::*;

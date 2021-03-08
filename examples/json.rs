@@ -23,7 +23,7 @@ struct IssueItem {
 const GITHUB_URL: &str = "https://api.github.com";
 
 #[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/issues")]
-async fn issues (
+async fn issues(
     #[path] owner: &str,
     #[path] repo: &str,
     page: u32,
