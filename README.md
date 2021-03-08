@@ -40,5 +40,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## License
 
-FeignHttp is provided under the MIT license. See [LICENSE](./LICENSE.).
+FeignHttp is provided under the MIT license. See [LICENSE](./LICENSE).
 
