@@ -78,7 +78,7 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
         let body_type_str = body_types.get(0).unwrap().to_token_stream().to_string();
         let body_var = body_vars.get(0).unwrap().clone();
 
-        if body_type_str.contains("String") || body_type_str.contains("&str") {
+        if body_type_str.contains("String") || body_type_str.contains("& str") {
             send_fn_call = quote! {send_text(#body_var .to_string())};
         } else {
             send_fn_call = quote! {send_json(& #body_var)};
