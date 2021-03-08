@@ -37,7 +37,7 @@ impl Github {
         &self,
         #[path] owner: &str,
         #[path] repo: &str,
-    )-> Result<String, Box<dyn std::error::Error>> {}
+    ) -> Result<String, Box<dyn std::error::Error>> {}
 }
 
 #[tokio::main]

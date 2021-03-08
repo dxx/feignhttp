@@ -37,7 +37,7 @@ const GITHUB_URL: &str = "https://api.github.com";
 async fn languages(
     #[path] owner: &str,
     #[path] repo: &str,
-)-> Result<String, Box<dyn std::error::Error>> {}
+) -> Result<String, Box<dyn std::error::Error>> {}
 
 
 #[tokio::main]
