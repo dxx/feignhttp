@@ -38,7 +38,192 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+The `get` attribute macro specifies get request to be sent, `Result<String, Box<dyn std::error::Error>>` specifies the 
+return result. It will send get request to `https://api.github.com` and receive a plain text body. You must specifies 
+`Box<dyn std::error::Error>` to be compatible with all errors returned by the internal call library.
+
+### Making a POST request
+
+For a post request, you should use the `post` attribute macro to specify and use a `body` attribute to specify a request body.
+
+as follows:
+
+```rust
+use feignhttp::post;
+
+#[post(url = "http://localhost:8080/create")]
+async fn create(#[body] text: String) -> Result<String, Box<dyn std::error::Error>> {}
+```
+
+The `#[body]` mark a request body. Parameter `text` is a String, so it will put in the request body as plain text. String and &str 
+will be put as plain text into the request body.
+
+### Path
+
+Using `path` to specify path value:
+
+```rust
+use feignhttp::get;
+
+#[get("https://api.github.com/repos/{owner}/{repo}")]
+async fn repository(
+    #[path] owner: &str,
+    #[path] repo: String,
+) -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let r = repository("code-mcx", "feignhttp".to_string()).await?;
+    println!("repository result: {}", r);
+    Ok(())
+}
+```
+
+`code-mcx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be `https://api.github.com/repos/code-mcx/feignhttp`.
+You can specify a path name like this `#[path("owner")]`.
+
+### Query Parameter
+
+Using `param` to specify query parameter：
+
+```rust
+use feignhttp::get;
+
+#[get("https://api.github.com/repos/{owner}/{repo}/contributors")]
+async fn contributors(
+    #[path("owner")] user: &str,
+    #[path] repo: &str,
+    #[param] page: u32,
+) -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let r = contributors (
+        "code-mcx",
+        "feignhttp",
+        1,
+    ).await?;
+    println!("contributors result: {}", r);
+
+    Ok(())
+}
+```
+
+The `page` parameter will as query parameter in the url. An url which will be sended is `https://api.github.com/repos/code-mcx/feignhttp?page=1`.
+
+### Header
+
+Using `header` to specify header:
+
+```rust
+use feignhttp::get;
+
+#[get("https://api.github.com/repos/{owner}/{repo}/commits")]
+async fn commits(
+    #[header] accept: &str,
+    #[path] owner: &str,
+    #[path] repo: &str,
+    #[param] page: u32,
+    #[param] per_page: u32,
+) -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let r = commits(
+        "application/vnd.github.v3+json",
+        "code-mcx",
+        "feignhttp",
+        1,
+        5,
+    )
+    .await?;
+    println!("commits result: {}", r);
+
+    Ok(())
+}
+```
+
+ A header `accept:application/vnd.github.v3+json ` will be send.
+
+### JSON
+
+[Serde](https://github.com/serde-rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Carto.toml`:
+
+```toml
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+```
+
+Here is an example of getting json：
+
+```rust
+use feignhttp::get;
+use serde::Deserialize;
+
+// Deserialize: Specifies deserialization
+#[derive(Debug, Deserialize)]
+struct IssueItem {
+    pub id: u32,
+    pub number: u32,
+    pub title: String,
+    pub url: String,
+    pub repository_url: String,
+    pub state: String,
+    pub body: Option<String>,
+}
+
+
+const GITHUB_URL: &str = "https://api.github.com";
+
+#[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/issues")]
+async fn issues(
+    #[path] owner: &str,
+    #[path] repo: &str,
+    page: u32,
+    per_page: u32,
+) -> Result<Vec<IssueItem>, Box<dyn std::error::Error>> {}
+
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let r = issues("octocat", "hello-world", 1, 2).await?;
+    println!("issues: {:#?}", r);
+
+    Ok(())
+}
+```
+
+This issues function return `Vec<IssueItem>`, it is deserialized according to the content of the response.
+
+Send a json request:
+
+```rust
+use feignhttp::post;
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
+struct User {
+    id: i32,
+    name: String,
+}
+
+#[post(url = "http://localhost:8080/create")]
+async fn create(#[body] user: User) -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let user = User {
+        id: 1,
+        name: "jack".to_string(),
+    };
+    let _r = create(user).await?;
+
+    Ok(())
+}
+```
+
+See [here](./examples/json.rs) for a complete example.
+
 ## License
 
 FeignHttp is provided under the MIT license. See [LICENSE](./LICENSE).
-
