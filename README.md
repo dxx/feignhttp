@@ -84,8 +84,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 `code-mcx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
 `https://api.github.com/repos/code-mcx/feignhttp`. You can specify a path name like `#[path("owner")]`.
 
-> Note: A function parameter without `path` attribute will be query parameter by default.
-
 ### Query Parameter
 
 Using `param` to specify query parameter：
@@ -114,6 +112,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/code-mcx/feignhttp?page=1`.
+
+> Note: A function parameter without `path` attribute will as a query parameter by default.
 
 ### Header
 
