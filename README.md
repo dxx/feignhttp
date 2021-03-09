@@ -151,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### URL constant
 
-We can use constant to maintain all requested url.
+We can use constant to maintain all urls of request.
 
 ```rust
 use feignhttp::get;
