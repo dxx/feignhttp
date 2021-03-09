@@ -1,5 +1,6 @@
 # FeignHttp
 
+[![rust](https://img.shields.io/badge/language-rust-red.svg)](https://github.com/rust-lang/rust)
 [![MIT licensed](https://img.shields.io/github/license/code-mcx/feignhttp.svg?color=blue)](./LICENSE)
 
 FeignHttp is a declarative HTTP client. Based on rust macros.
@@ -38,13 +39,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The `get` attribute macro specifies get request to be sent, `Result<String, Box<dyn std::error::Error>>` specifies the 
-return result. It will send get request to `https://api.github.com` and receive a plain text body. You must specifies 
+The `get` attribute macro specifies get request, `Result<String, Box<dyn std::error::Error>>` specifies the 
+return result. It will send get request to `https://api.github.com` and receive a plain text body. You must specify 
 `Box<dyn std::error::Error>` to be compatible with all errors returned by the internal call library.
 
-### Making a POST request
+### POST request
 
-For a post request, you should use the `post` attribute macro to specify and use a `body` attribute to specify a request body.
+For a post request, you should use the `post` attribute macro to specify request method and use a `body` attribute to specify 
+a request body.
 
 as follows:
 
@@ -55,8 +57,8 @@ use feignhttp::post;
 async fn create(#[body] text: String) -> Result<String, Box<dyn std::error::Error>> {}
 ```
 
-The `#[body]` mark a request body. Parameter `text` is a String, so it will put in the request body as plain text. String and &str 
-will be put as plain text into the request body.
+The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
+String and &str will be put as plain text into the request body.
 
 ### Path
 
@@ -79,8 +81,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-`code-mcx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be `https://api.github.com/repos/code-mcx/feignhttp`.
-You can specify a path name like this `#[path("owner")]`.
+`code-mcx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
+`https://api.github.com/repos/code-mcx/feignhttp`. You can specify a path name like `#[path("owner")]`.
+
+> Note: A function parameter without `path` attribute will be query parameter by default.
 
 ### Query Parameter
 
@@ -109,7 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The `page` parameter will as query parameter in the url. An url which will be sended is `https://api.github.com/repos/code-mcx/feignhttp?page=1`.
+The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/code-mcx/feignhttp?page=1`.
 
 ### Header
 
@@ -144,6 +148,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
  A header `accept:application/vnd.github.v3+json ` will be send.
+
+### URL constant
+
+We can use constant to maintain all requested url.
+
+```rust
+use feignhttp::get;
+
+const GITHUB_URL: &str = "https://api.github.com";
+
+#[get(GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
+async fn languages(
+    #[path] owner: &str,
+    #[path] repo: &str,
+) -> Result<String, Box<dyn std::error::Error>> {}
+```
+
+Url constant must be the first metadata in get attribute macro. You also can specify metadata key:
+
+```rust
+#[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
+async fn languages(
+    #[path] owner: &str,
+    #[path] repo: &str,
+) -> Result<String, Box<dyn std::error::Error>> {}
+```
 
 ### JSON
 
@@ -223,6 +253,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 See [here](./examples/json.rs) for a complete example.
+
+### Using structure
+
+Structure is a good way to manage requests. Define a structure and then define a large number of request methods：
+
+```rust
+use feignhttp::feign;
+
+const GITHUB_URL: &str = "https://api.github.com";
+
+struct Github {}
+
+#[feign(url = GITHUB_URL)]
+impl Github {
+    #[get]
+    async fn home() -> Result<String, Box<dyn std::error::Error>> {}
+
+    #[get("/repos/{owner}/{repo}")]
+    async fn repository(
+        #[path] owner: &str,
+        #[path] repo: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {}
+
+    // ...
+    
+    // Structure method still send request
+    #[get(path = "/repos/{owner}/{repo}/languages")]
+    async fn languages(
+        &self,
+        #[path] owner: &str,
+        #[path] repo: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {}
+}
+```
+
+See [here](./examples/struct.rs) for a complete example.
 
 ## License
 
