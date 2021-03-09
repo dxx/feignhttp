@@ -113,7 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/code-mcx/feignhttp?page=1`.
 
-> Note: A function parameter without `path` attribute will as a query parameter by default.
+> Note: A function parameter without `param` attribute will as a query parameter by default.
 
 ### Header
 
