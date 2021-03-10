@@ -48,8 +48,6 @@ return result. It will send get request to `https://api.github.com` and receive 
 For a post request, you should use the `post` attribute macro to specify request method and use a `body` attribute to specify 
 a request body.
 
-as follows:
-
 ```rust
 use feignhttp::post;
 
@@ -86,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Query Parameters
 
-Using `param` to specify query parameter：
+Using `param` to specify query parameter:
 
 ```rust
 use feignhttp::get;
