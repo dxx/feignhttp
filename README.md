@@ -43,7 +43,7 @@ The `get` attribute macro specifies get request, `Result<String, Box<dyn std::er
 return result. It will send get request to `https://api.github.com` and receive a plain text body. You must specify 
 `Box<dyn std::error::Error>` to be compatible with all errors returned by the internal call library.
 
-### POST request
+### Making a POST request
 
 For a post request, you should use the `post` attribute macro to specify request method and use a `body` attribute to specify 
 a request body.
@@ -60,7 +60,7 @@ async fn create(#[body] text: String) -> Result<String, Box<dyn std::error::Erro
 The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
 String and &str will be put as plain text into the request body.
 
-### Path
+### Paths
 
 Using `path` to specify path value:
 
@@ -84,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 `code-mcx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
 `https://api.github.com/repos/code-mcx/feignhttp`. You can specify a path name like `#[path("owner")]`.
 
-### Query Parameter
+### Query Parameters
 
 Using `param` to specify query parameter：
 
@@ -115,9 +115,9 @@ The `page` parameter will as query parameter in the url. An url which will be se
 
 > Note: A function parameter without `param` attribute will as a query parameter by default.
 
-### Header
+### Headers
 
-Using `header` to specify header:
+Using `header` to specify request header:
 
 ```rust
 use feignhttp::get;
