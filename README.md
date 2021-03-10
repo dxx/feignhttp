@@ -149,7 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### URL constant
 
-We can use constant to maintain all urls of request.
+We can use constant to maintain all urls of request:
 
 ```rust
 use feignhttp::get;
@@ -182,7 +182,7 @@ async fn languages(
 serde = { version = "1", features = ["derive"] }
 ```
 
-Here is an example of getting json：
+Here is an example of getting json:
 
 ```rust
 use feignhttp::get;
