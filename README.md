@@ -1,7 +1,7 @@
 # FeignHttp
 
 [![rust](https://img.shields.io/badge/language-rust-c99272.svg)](https://github.com/rust-lang/rust)
-[![MIT licensed](https://img.shields.io/github/license/code-mcx/feignhttp.svg?color=blue)](./LICENSE)
+[![MIT licensed](https://img.shields.io/github/license/dxx/feignhttp.svg?color=blue)](./LICENSE)
 
 FeignHttp is a declarative HTTP client. Based on rust macros.
 
@@ -73,14 +73,14 @@ async fn repository(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = repository("code-mcx", "feignhttp".to_string()).await?;
+    let r = repository("dxx", "feignhttp".to_string()).await?;
     println!("repository result: {}", r);
     Ok(())
 }
 ```
 
-`code-mcx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
-`https://api.github.com/repos/code-mcx/feignhttp`. You can specify a path name like `#[path("owner")]`.
+`dxx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
+`https://api.github.com/repos/dxx/feignhttp`. You can specify a path name like `#[path("owner")]`.
 
 ### Query Parameters
 
@@ -99,7 +99,7 @@ async fn contributors(
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = contributors (
-        "code-mcx",
+        "dxx",
         "feignhttp",
         1,
     ).await?;
@@ -109,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/code-mcx/feignhttp?page=1`.
+The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/dxx/feignhttp?page=1`.
 
 > Note: A function parameter without `param` attribute will as a query parameter by default.
 
@@ -133,7 +133,7 @@ async fn commits(
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = commits(
         "application/vnd.github.v3+json",
-        "code-mcx",
+        "dxx",
         "feignhttp",
         1,
         5,
