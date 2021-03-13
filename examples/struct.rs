@@ -47,19 +47,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("github result: {}", r);
 
 
-    let r = Github::repository("code-mcx", "feignhttp").await?;
+    let r = Github::repository("dxx", "feignhttp").await?;
 
     println!("repository result: {}", r);
 
 
-    let r = Github::contributors("code-mcx", "feignhttp", 1).await?;
+    let r = Github::contributors("dxx", "feignhttp", 1).await?;
 
     println!("contributors result: {}", r);
 
 
     let r = Github::commits(
         "application/vnd.github.v3+json",
-        "code-mcx",
+        "dxx",
         "feignhttp",
         1,
         1,
@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("commits result: {}", r);
 
 
-    let r = Github {}.languages("code-mcx", "feignhttp").await?;
+    let r = Github {}.languages("dxx", "feignhttp").await?;
 
     println!("languages result: {}", r);
 
