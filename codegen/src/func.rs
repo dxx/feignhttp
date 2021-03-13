@@ -1,5 +1,5 @@
 use crate::enu::{Content, Method};
-use crate::util::{url_to_stream, parse_args, parse_return_type};
+use crate::util::{parse_url_stream, parse_args, parse_return_type};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, ItemFn};
@@ -17,7 +17,7 @@ pub struct ReqArg {
 }
 
 pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenStream {
-    let url = url_to_stream(attr);
+    let url = parse_url_stream(attr);
     if let Err(err) = url {
         return err.to_compile_error().into();
     }

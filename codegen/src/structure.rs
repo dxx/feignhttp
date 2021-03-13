@@ -1,12 +1,12 @@
 use crate::enu::Method;
 use crate::func::{fn_impl, ReqMeta};
-use crate::util::{url_to_stream, get_metas, get_meta_str_value};
+use crate::util::{parse_url_stream, get_metas, get_meta_str_value};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, ItemImpl};
 
 pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let url = url_to_stream(attr);
+    let url = parse_url_stream(attr);
     if let Err(err) = url {
         return err.to_compile_error().into();
     }

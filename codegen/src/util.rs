@@ -4,23 +4,24 @@ use quote::{quote, ToTokens};
 use syn::{parse_macro_input};
 use proc_macro::TokenStream;
 use std::str::FromStr;
+use std::collections::HashMap;
 
-pub fn url_to_stream(attr: TokenStream) -> Result<proc_macro2::TokenStream, syn::Error> {
+pub fn parse_url_stream(attr: TokenStream) -> Result<proc_macro2::TokenStream, syn::Error> {
     let attr_str = attr.to_string();
     if attr_str == "" {
         return Err(syn::Error::new(proc_macro2::Span::call_site(), "no metadata assign"));
     }
 
-    let url = attr_str.split(",");
-    let url: Vec<&str> = url.into_iter().map(|u| u).collect();
-    if let Some(exp) = url.first() {
-        let exp_str = exp.trim();
+    let attrs = attr_str.split(",");
+    let exprs: Vec<&str> = attrs.into_iter().map(|u| u).collect();
+    if let Some(expr_str) = exprs.first() {
+        let expr_str = expr_str.trim();
         let url_expr = parse_macro_input::parse::<syn::Expr>(
-            TokenStream::from_str(exp_str).unwrap()).unwrap();
+            TokenStream::from_str(expr_str).unwrap()).unwrap();
         let url_stream = parse_url(&url_expr)?;
 
-        for i in 1..url.len() {
-            let exp_str = url[i].trim();
+        for i in 1..exprs.len() {
+            let exp_str = exprs[i].trim();
             let url_expr = parse_macro_input::parse::<syn::Expr>(
                 TokenStream::from_str(exp_str).unwrap()).unwrap();
 
@@ -150,6 +151,26 @@ pub fn parse_return_type(sig: &syn::Signature) -> Result<Vec<syn::Type>, syn::Er
         err_msg = "return value must be Result<?, ?>".to_string();
     }
     Err(syn::Error::new_spanned(&sig, err_msg))
+}
+
+pub fn parse_exprs(exprs: Vec<&str>) -> HashMap<String, syn::Expr> {
+    let mut expr_map: HashMap<String, syn::Expr> = HashMap::new();
+    for exp_str in exprs.into_iter() {
+        let expr = parse_macro_input::parse::<syn::Expr>(
+            TokenStream::from_str(exp_str.trim()).unwrap()).unwrap();
+        match expr {
+            // An assignment path: path = xxx
+            syn::Expr::Assign(assign) => {
+                let left = &assign.left;
+                if let syn::Expr::Path(ref k) = **left {
+                    let key = k.path.segments.last().unwrap().ident.to_string();
+                    expr_map.insert(key, *assign.right);
+                }
+            },
+            _ => {}
+        }
+    }
+    expr_map
 }
 
 pub fn get_metas(attr: &syn::Attribute) -> Result<Vec<syn::NestedMeta>, ()> {
