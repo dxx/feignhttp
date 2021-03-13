@@ -25,7 +25,7 @@ async fn test_fn() {
 
 #[tokio::test]
 async fn test_struct() {
-    let r = Feign::user("code-mcx").await.unwrap();
+    let r = Feign::user("dxx").await.unwrap();
     println!("{}", r);
 }
 
