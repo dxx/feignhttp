@@ -38,6 +38,34 @@ async fn test_post() {
 }
 
 
+#[get(url = "http://xxx.com", connect_timeout = 3000)]
+async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::test]
+#[should_panic]
+async fn test_connect_timeout() {
+    connect_timeout().await.unwrap();
+}
+
+
+#[get(url = "http://localhost:8080", timeout = 3000)]
+async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::test]
+#[should_panic]
+async fn test_timeout() {
+    let _server = server::http(8080, move |req| async move {
+        assert_eq!(req.method(), "GET");
+
+        std::thread::sleep(std::time::Duration::from_millis(5000));
+
+        hyper::Response::default()
+    });
+
+    timeout().await.unwrap();
+}
+
+
 #[post(url = "http://localhost:8080/post_header")]
 async fn post_header (
     #[header] auth: String,
