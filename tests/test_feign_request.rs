@@ -38,34 +38,6 @@ async fn test_post() {
 }
 
 
-#[get(url = "http://xxx.com", connect_timeout = 3000)]
-async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
-
-#[tokio::test]
-#[should_panic]
-async fn test_connect_timeout() {
-    connect_timeout().await.unwrap();
-}
-
-
-#[get(url = "http://localhost:8080", timeout = 3000)]
-async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
-
-#[tokio::test]
-#[should_panic]
-async fn test_timeout() {
-    let _server = server::http(8080, move |req| async move {
-        assert_eq!(req.method(), "GET");
-
-        std::thread::sleep(std::time::Duration::from_millis(5000));
-
-        hyper::Response::default()
-    });
-
-    timeout().await.unwrap();
-}
-
-
 #[post(url = "http://localhost:8080/post_header")]
 async fn post_header (
     #[header] auth: String,
@@ -129,7 +101,7 @@ struct User {
 async fn post_json (#[body] user: User) -> Result<String, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
-async fn test_json() {
+async fn test_send_json() {
     let _server = server::http(8080, move |mut req| async move {
         let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
         assert_eq!(r#"{"id":1,"name":"jack"}"#, String::from_utf8(vec).unwrap());
@@ -142,4 +114,32 @@ async fn test_json() {
         name: "jack".to_string(),
     };
     let _r = post_json(user).await.unwrap();
+}
+
+
+#[get(url = "http://xxx.com", connect_timeout = 3000)]
+async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::test]
+#[should_panic]
+async fn test_connect_timeout() {
+    connect_timeout().await.unwrap();
+}
+
+
+#[get(url = "http://localhost:8080", timeout = 3000)]
+async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
+
+#[tokio::test]
+#[should_panic]
+async fn test_timeout() {
+    let _server = server::http(8080, move |req| async move {
+        assert_eq!(req.method(), "GET");
+
+        std::thread::sleep(std::time::Duration::from_millis(5000));
+
+        hyper::Response::default()
+    });
+
+    timeout().await.unwrap();
 }

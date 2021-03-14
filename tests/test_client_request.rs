@@ -21,40 +21,6 @@ async fn test_request() {
 }
 
 #[tokio::test]
-#[should_panic]
-async fn test_connect_timeout() {
-    let url = "http://xxx.com";
-    let method = "get";
-    let config = HttpConfig{
-        connect_timeout: Some(3000), // 3000 millisecond
-        timeout: None,
-    };
-    let request = HttpClient::configure_request(&url, method, config);
-    request.send().await.unwrap();
-}
-
-#[tokio::test]
-#[should_panic]
-async fn test_timeout() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.method(), "GET");
-
-        std::thread::sleep(std::time::Duration::from_millis(5000));
-
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
-    let method = "get";
-    let config = HttpConfig{
-        connect_timeout: None,
-        timeout: Some(3000), // 3000 millisecond
-    };
-    let request = HttpClient::configure_request(&url, method, config);
-    request.send().await.unwrap();
-}
-
-#[tokio::test]
 async fn test_header() {
     let server = server::http(0, move |req| async move {
         assert_eq!(req.headers()["auth"], "name_pass");
@@ -140,4 +106,38 @@ async fn test_send_json() {
 
     let request = HttpClient::default_request(&url, method);
     request.send_json(&user).await.unwrap();
+}
+
+#[tokio::test]
+#[should_panic]
+async fn test_connect_timeout() {
+    let url = "http://xxx.com";
+    let method = "get";
+    let config = HttpConfig{
+        connect_timeout: Some(3000), // 3000 millisecond
+        timeout: None,
+    };
+    let request = HttpClient::configure_request(&url, method, config);
+    request.send().await.unwrap();
+}
+
+#[tokio::test]
+#[should_panic]
+async fn test_timeout() {
+    let server = server::http(0, move |req| async move {
+        assert_eq!(req.method(), "GET");
+
+        std::thread::sleep(std::time::Duration::from_millis(5000));
+
+        hyper::Response::default()
+    });
+
+    let url = format!("http://{}", server.addr());
+    let method = "get";
+    let config = HttpConfig{
+        connect_timeout: None,
+        timeout: Some(3000), // 3000 millisecond
+    };
+    let request = HttpClient::configure_request(&url, method, config);
+    request.send().await.unwrap();
 }
