@@ -1,6 +1,6 @@
 mod support;
 
-use feignhttp::{HttpClient, http, map};
+use feignhttp::{HttpClient, HttpConfig, map};
 use support::*;
 
 use serde::{Serialize};
@@ -25,7 +25,7 @@ async fn test_request() {
 async fn test_connect_timeout() {
     let url = "http://xxx.com";
     let method = "get";
-    let config = http::HttpConfig{
+    let config = HttpConfig{
         connect_timeout: Some(3000), // 3000 millisecond
         timeout: None,
     };
@@ -46,7 +46,7 @@ async fn test_timeout() {
 
     let url = format!("http://{}", server.addr());
     let method = "get";
-    let config = http::HttpConfig{
+    let config = HttpConfig{
         connect_timeout: None,
         timeout: Some(3000), // 3000 millisecond
     };
