@@ -14,7 +14,7 @@ fn test_validate_no_url () {
 
 #[test]
 fn test_validate_url() {
-    // error: metadata url not assign
+    // error: metadata url not specified
     //    |  #[get(aaa = "http://xxx")]
     //    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -24,7 +24,7 @@ fn test_validate_url() {
 
 #[test]
 fn test_validate_url2() {
-    // error: metadata url not assign
+    // error: metadata url not specified
     //    |  #[get(path = "/xxx")]
     //    |  ^^^^^^^^^^^^^^^^^^^^^
 

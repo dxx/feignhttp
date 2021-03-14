@@ -71,15 +71,25 @@ fn fn_to_streams(
 fn parse_fn_path(attr: &syn::Attribute) -> proc_macro2::TokenStream {
     if let Ok(vec) = get_metas(attr) {
         if let Some(nested_meta) = vec.first() {
-            return match get_meta_str_value(nested_meta, "path") {
-                Some(val) => {
-                    val.to_token_stream()
-                },
-                None => {
-                    syn::Error::new_spanned(
-                        nested_meta,
-                        "metadata name can only be path",
-                    ).to_compile_error()
+            match nested_meta {
+                // A literal, like the `"/xxx"` in `#[get("/xxx")]`
+                syn::NestedMeta::Lit(lit) => {
+                    if let syn::Lit::Str(lit) = lit {
+                        return lit.value().to_token_stream();
+                    }
+                }
+                _ => {
+                    return match get_meta_str_value(nested_meta, "path") {
+                        Some(val) => {
+                            val.to_token_stream()
+                        },
+                        None => {
+                            syn::Error::new_spanned(
+                                nested_meta,
+                                "metadata path not specified or must be the first",
+                            ).to_compile_error()
+                        }
+                    }
                 }
             }
         }

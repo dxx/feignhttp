@@ -55,7 +55,7 @@ pub fn parse_url(url_expr: &syn::Expr) -> Result<proc_macro2::TokenStream, syn::
                 if key != "url" {
                     return Err(syn::Error::new(
                         proc_macro2::Span::call_site(),
-                        "metadata url not assign",
+                        "metadata url not specified",
                     ));
                 }
             }
@@ -104,8 +104,19 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
                 content = attr_ident.unwrap();
                 if let Ok(vec) = get_metas(attr) {
                     if let Some(nested_meta) = vec.first() {
-                        if let Some(name_value) = get_meta_str_value(nested_meta, "name") {
-                            name = name_value;
+                        match nested_meta {
+                            // A literal, like the `"name"` in `#[param("name")]`
+                            syn::NestedMeta::Lit(lit) => {
+                                if let syn::Lit::Str(lit) = lit {
+                                    name = lit.value();
+                                }
+                            },
+                            _=> {
+                                if let Some(name_value) = get_meta_str_value(
+                                    nested_meta, "name") {
+                                    name = name_value;
+                                }
+                            }
                         }
                     }
                 }
@@ -189,12 +200,6 @@ pub fn get_meta_str_value(meta: &syn::NestedMeta, name: &str) -> Option<String> 
                 if let syn::Lit::Str(lit) = &name_value.lit {
                     return Some(lit.value());
                 }
-            }
-        }
-        // A literal, like the `"name"` in `#[param("name")]`
-        syn::NestedMeta::Lit(lit) => {
-            if let syn::Lit::Str(lit) = lit {
-                return Some(lit.value());
             }
         }
         _ => {}

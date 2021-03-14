@@ -17,7 +17,7 @@ fn test_validate_struct_impl () {
 
 #[test]
 fn test_validate_impl_url () {
-    // error: metadata url not assign
+    // error: metadata url not specified
     //    |  #[feign(aaa = "http://xxx")]
     //    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -29,7 +29,7 @@ fn test_validate_impl_url () {
 
 #[test]
 fn test_validate_impl_url2 () {
-    // error: metadata url not assign
+    // error: metadata url not specified
     //    |  #[feign(path = "http://xxx")]
     //    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -56,7 +56,7 @@ fn test_validate_impl_method () {
 
 #[test]
 fn test_validate_impl_method_path () {
-    // error: metadata name can only be path
+    // error: metadata path not specified or must be the first
     //    |  #[get(aaa = "/aaa")]
     //    |        ^^^^^^^^^^^^
 
@@ -65,6 +65,6 @@ fn test_validate_impl_method_path () {
     // #[feign("http://xxx")]
     impl Http {
         // #[get(aaa = "/aaa")]
-        // pub async fn get() -> Result<String, String> {}
+        pub async fn get() -> Result<String, String> {}
     }
 }
