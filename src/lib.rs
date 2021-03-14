@@ -5,4 +5,4 @@ mod macros;
 
 pub use feignhttp_codegen::*;
 
-pub struct HttpClient {}
+pub use crate::http::*;

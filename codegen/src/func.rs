@@ -1,12 +1,14 @@
 use crate::enu::{Content, Method};
-use crate::util::{parse_url_stream, parse_args, parse_return_type};
+use crate::util::{parse_url_stream, parse_exprs, parse_args, parse_return_type};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, ItemFn};
+use std::collections::HashMap;
 
 pub struct ReqMeta {
     pub url: proc_macro2::TokenStream,
     pub method: Method,
+    pub config: HashMap<String, String>,
 }
 
 pub struct ReqArg {
@@ -17,15 +19,18 @@ pub struct ReqArg {
 }
 
 pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenStream {
-    let url = parse_url_stream(attr);
+    let url = parse_url_stream(&attr);
     if let Err(err) = url {
         return err.to_compile_error().into();
     }
+
+    let config_map = parse_exprs(&attr);
 
     fn_impl(
         ReqMeta {
             url: url.unwrap(),
             method,
+            config: config_map,
         },
         item,
     )
@@ -34,6 +39,7 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
 pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let url = req_meta.url;
     let method = req_meta.method.to_str();
+    let config = req_meta.config;
 
     let mut item_fn = parse_macro_input!(item as ItemFn);
 
@@ -85,6 +91,13 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
         }
     }
 
+    let mut config_keys = Vec::new();
+    let mut config_values = Vec::new();
+    for (k, v) in config {
+        config_keys.push(k);
+        config_values.push(v);
+    }
+
     let return_type = parse_return_type(sig);
     if let Err(err) = return_type {
         return err.to_compile_error().into();
@@ -127,19 +140,20 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
                 path_map.insert(#path_names, format!("{}", #path_vars));
             )*
 
+            let mut config_map: HashMap<&str, String> = HashMap::new();
+            #(
+                config_map.insert(#config_keys, format!("{}", #config_values));
+            )*
+
             let url = feignhttp::util::replace_url(&format!("{}", #url), &path_map);
 
-            let request = feignhttp::HttpClient::default_request(&url, #method)
+            let config = feignhttp::HttpConfig::from_map(config_map);
+
+            let request = feignhttp::HttpClient::configure_request(&url, #method, config)
                 .headers(header_map).query(&query_vec);
 
             let response = request.#send_fn_call.await?;
             let return_value: #return_type = response.#ret_fn().await?;
-
-            // println!("url: {}", url);
-            // println!("method: {}", #method);
-            // println!("return type: {}", #return_type_str);
-
-            // println!("res : {}", return_value);
 
             Ok(return_value)
         }
