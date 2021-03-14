@@ -1,6 +1,6 @@
 mod support;
 
-use feignhttp::{HttpClient, map};
+use feignhttp::{HttpClient, http, map};
 use support::*;
 
 use serde::{Serialize};
@@ -16,7 +16,41 @@ async fn test_request() {
 
     let url = format!("http://{}", server.addr());
     let method = "get";
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
+    request.send().await.unwrap();
+}
+
+#[tokio::test]
+#[should_panic]
+async fn test_connect_timeout() {
+    let url = "http://xxx.com";
+    let method = "get";
+    let config = http::HttpConfig{
+        connect_timeout: Some(3000), // 3000 millisecond
+        timeout: None,
+    };
+    let request = HttpClient::configure_request(&url, method, config);
+    request.send().await.unwrap();
+}
+
+#[tokio::test]
+#[should_panic]
+async fn test_timeout() {
+    let server = server::http(0, move |req| async move {
+        assert_eq!(req.method(), "GET");
+
+        std::thread::sleep(std::time::Duration::from_millis(5000));
+
+        hyper::Response::default()
+    });
+
+    let url = format!("http://{}", server.addr());
+    let method = "get";
+    let config = http::HttpConfig{
+        connect_timeout: None,
+        timeout: Some(3000), // 3000 millisecond
+    };
+    let request = HttpClient::configure_request(&url, method, config);
     request.send().await.unwrap();
 }
 
@@ -38,8 +72,7 @@ async fn test_header() {
         "username" => "jack".to_string(),
         "pwd" => "xxx".to_string());
 
-    let request  = HttpClient::new()
-        .build_request(&url, method)
+    let request = HttpClient::default_request(&url, method)
         .headers(header_map);
     request.send().await.unwrap();
 }
@@ -61,7 +94,7 @@ async fn test_query() {
         ("name", "xxx2".to_string()),
     ].iter().cloned().collect();
 
-    let request  = HttpClient::new().build_request(&url, method).query(&query_vec);
+    let request = HttpClient::default_request(&url, method).query(&query_vec);
     request.send().await.unwrap();
 }
 
@@ -78,7 +111,7 @@ async fn test_send_text() {
     let method = "post";
 
     let text = r#"I' m text"#;
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     request.send_text(text.to_string()).await.unwrap();
 }
 
@@ -105,6 +138,6 @@ async fn test_send_json() {
         name: "jack".to_string(),
     };
 
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     request.send_json(&user).await.unwrap();
 }

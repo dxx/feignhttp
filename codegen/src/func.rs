@@ -129,7 +129,7 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
 
             let url = feignhttp::util::replace_url(&format!("{}", #url), &path_map);
 
-            let request = feignhttp::HttpClient::new().build_request(&url, #method)
+            let request = feignhttp::HttpClient::default_request(&url, #method)
                 .headers(header_map).query(&query_vec);
 
             let response = request.#send_fn_call.await?;

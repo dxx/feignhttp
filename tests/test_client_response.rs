@@ -15,7 +15,7 @@ async fn test_response() {
 
     let url = format!("http://{}", server.addr());
     let method = "get";
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
 
     assert_eq!(200, response.status().as_u16());
@@ -29,7 +29,7 @@ async fn test_get_text() {
 
     let url = format!("http://{}/text", server.addr());
     let method = "get";
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
     let text = response.text().await.unwrap();
 
@@ -51,7 +51,7 @@ async fn test_get_json() {
 
     let url = format!("http://{}/json", server.addr());
     let method = "get";
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
     let user: User = response.json().await.unwrap();
 
@@ -69,7 +69,7 @@ async fn test_client_error() {
 
     let url = format!("http://{}", server.addr());
     let method = "get";
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     let _response = request.send().await.unwrap();
 }
 
@@ -84,6 +84,6 @@ async fn test_server_error() {
 
     let url = format!("http://{}", server.addr());
     let method = "get";
-    let request = HttpClient::new().build_request(&url, method);
+    let request = HttpClient::default_request(&url, method);
     let _response = request.send().await.unwrap();
 }
