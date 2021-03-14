@@ -30,6 +30,7 @@ async fn test_struct() {
 }
 
 #[tokio::test]
+#[should_panic]
 async fn test_not_found() {
     // 404
     let _r = get_not_found().await.unwrap();
