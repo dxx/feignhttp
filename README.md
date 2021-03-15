@@ -14,7 +14,7 @@ FeignHttp is a declarative HTTP client. Based on rust macros.
 
 ## Usage
 
-FeignHttp mark macros on asynchronous functions, you need to add [tokio](https://github.com/tokio-rs/tokio) in your `Cargo.toml`:
+FeignHttp mark macros on asynchronous functions, you need to add [Tokio](https://github.com/tokio-rs/tokio) in your `Cargo.toml`:
 
 ```toml
 [dependencies]
