@@ -1,3 +1,4 @@
+#[doc(hidden)]
 #[macro_export]
 macro_rules! map {
     ($($k:expr => $v:expr),*) => ({
