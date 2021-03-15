@@ -288,6 +288,24 @@ impl Github {
 
 See [here](./examples/struct.rs) for a complete example.
 
+### Timeout configuration
+
+If you need to configure the timeout, use `connect_timeout` and `timeout` to specify connect timeout and read timeout.
+
+Connect timeout:
+
+```rust
+#[get(url = "http://xxx.com", connect_timeout = 3000)]
+async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
+```
+
+Read timeout:
+
+```rust
+#[get(url = "http://localhost:8080", timeout = 3000)]
+async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
+```
+
 ## License
 
 FeignHttp is provided under the MIT license. See [LICENSE](./LICENSE).
