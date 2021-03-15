@@ -251,7 +251,7 @@
 //! }
 //! ```
 //! 
-//! See [here](https://github.com/dxx/feignhttp/tree/main/examples/json.rs) for a complete example.
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/json.rs) for a complete example.
 //! 
 //! ### Using structure
 //! 
@@ -287,7 +287,7 @@
 //! }
 //! ```
 //! 
-//! See [here](https://github.com/dxx/feignhttp/tree/main/examples/struct.rs) for a complete example.
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/struct.rs) for a complete example.
 //! 
 //! ### Timeout configuration
 //! 
