@@ -8,12 +8,12 @@ use serde::{Serialize};
 use hyper::body::HttpBody;
 
 
-#[get("http://localhost:8080/get")]
+#[get("http://localhost:8081/get")]
 async fn get() -> Result<String, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
 async fn test_get() {
-    let _server = server::http(8080, move |req| async move {
+    let _server = server::http(8081, move |req| async move {
         assert_eq!(req.method(), "GET");
 
         hyper::Response::default()
@@ -23,12 +23,12 @@ async fn test_get() {
 }
 
 
-#[post(url = "http://localhost:8080/post")]
+#[post(url = "http://localhost:8082/post")]
 async fn post() -> Result<String, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
 async fn test_post() {
-    let _server = server::http(8080, move |req| async move {
+    let _server = server::http(8082, move |req| async move {
         assert_eq!(req.method(), "POST");
 
         hyper::Response::default()
@@ -38,7 +38,7 @@ async fn test_post() {
 }
 
 
-#[post(url = "http://localhost:8080/post_header")]
+#[post(url = "http://localhost:8083/post_header")]
 async fn post_header (
     #[header] auth: String,
     #[header("name")] username: &str)
@@ -46,7 +46,7 @@ async fn post_header (
 
 #[tokio::test]
 async fn test_header() {
-    let _server = server::http(8080, move |req| async move {
+    let _server = server::http(8083, move |req| async move {
         assert_eq!(req.headers()["auth"], "name");
         assert_eq!(req.headers()["name"], "jack");
 
@@ -57,7 +57,7 @@ async fn test_header() {
 }
 
 
-#[post(url = "http://localhost:8080/post_query")]
+#[post(url = "http://localhost:8084/post_query")]
 async fn post_query (
     #[param] id: u32,
     #[param("name")] name: String)
@@ -65,7 +65,7 @@ async fn post_query (
 
 #[tokio::test]
 async fn test_query() {
-    let _server = server::http(8080, move |req| async move {
+    let _server = server::http(8084, move |req| async move {
         assert_eq!("id=1&name=xxx", req.uri().query().unwrap());
 
         hyper::Response::default()
@@ -75,12 +75,12 @@ async fn test_query() {
 }
 
 
-#[post(url = "http://localhost:8080/post_text")]
+#[post(url = "http://localhost:8085/post_text")]
 async fn post_text (#[body] text: String) -> Result<String, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
 async fn test_send_text() {
-    let _server = server::http(8080, move |mut req| async move {
+    let _server = server::http(8085, move |mut req| async move {
         let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
         assert_eq!("I' m text", String::from_utf8(vec).unwrap());
 
@@ -97,12 +97,12 @@ struct User {
     name: String,
 }
 
-#[post(url = "http://localhost:8080/post_json")]
+#[post(url = "http://localhost:8086/post_json")]
 async fn post_json (#[body] user: User) -> Result<String, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
 async fn test_send_json() {
-    let _server = server::http(8080, move |mut req| async move {
+    let _server = server::http(8086, move |mut req| async move {
         let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
         assert_eq!(r#"{"id":1,"name":"jack"}"#, String::from_utf8(vec).unwrap());
 

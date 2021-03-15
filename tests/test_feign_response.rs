@@ -6,10 +6,10 @@ use serde::{Deserialize};
 
 use support::*;
 
-const URL: &str = "http://localhost:8080";
+const TEXT_URL: &str = "http://localhost:8080";
 
 
-#[get(url = URL, path = "/text")]
+#[get(url = TEXT_URL, path = "/text")]
 async fn get_text() -> Result<String, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
@@ -24,18 +24,20 @@ async fn test_get_text() {
 }
 
 
+const JSON_URL: &str = "http://localhost:8081";
+
 #[derive(Debug, Deserialize)]
 struct User {
     code: u32,
     message: String,
 }
 
-#[get(url = URL, path = "/json")]
+#[get(url = JSON_URL, path = "/json")]
 async fn get_json() -> Result<User, Box<dyn std::error::Error>> {}
 
 #[tokio::test]
 async fn test_get_json() {
-    let _server = server::http(8080, move |_req| async move {
+    let _server = server::http(8081, move |_req| async move {
 
         hyper::Response::new(r#"{ "code": 200, "message": "success" }"#.into())
     });
