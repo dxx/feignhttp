@@ -1,9 +1,14 @@
 [package]
 name = "feignhttp-codegen"
 version = "0.0.1"
-authors = ["code-mcx <1827939333@qq.com>"]
+authors = ["dxx <1827939333@qq.com>"]
 edition = "2018"
 description = "FeignHttp macro support"
+documentation = "https://docs.rs/feignhttp"
+homepage = "https://github.com/dxx/feignhttp"
+repository = "https://github.com/dxx/feignhttp"
+readme = "README.md"
+license = "MIT"
 
 [lib]
 proc-macro = true
