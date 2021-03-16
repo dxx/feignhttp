@@ -12,14 +12,17 @@ keywords = ["http", "request", "client"]
 readme = "README.md"
 license = "MIT"
 
-exclude = [
-    "examples/**",
-]
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
 
 
 [workspace]
 members = ["codegen"]
 
+
+exclude = [
+    "examples/**",
+]
 
 [dependencies]
 feignhttp-codegen = { version = "0.0.1", path = "codegen" }
