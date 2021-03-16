@@ -1,6 +1,7 @@
 # FeignHttp
 
-[![rust](https://img.shields.io/badge/language-rust-c99272.svg)](https://github.com/rust-lang/rust)
+[![crates.io](https://img.shields.io/crates/v/feignhttp.svg)](https://crates.io/crates/feignhttp)
+[![Documentation](https://docs.rs/feignhttp/badge.svg)](https://docs.rs/feignhttp)
 [![MIT licensed](https://img.shields.io/github/license/dxx/feignhttp.svg?color=blue)](./LICENSE)
 
 FeignHttp is a declarative HTTP client. Based on rust macros.
@@ -19,7 +20,7 @@ FeignHttp mark macros on asynchronous functions, you need to add [Tokio](https:/
 ```toml
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-feignhttp = { version = "0.0.1" }
+feignhttp = { version = "0.1.0" }
 ```
 
 Then add the following code:

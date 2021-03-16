@@ -16,7 +16,7 @@
 //! ```toml
 //! [dependencies]
 //! tokio = { version = "1", features = ["full"] }
-//! feignhttp = { version = "0.0.1" }
+//! feignhttp = { version = "0.1.0" }
 //! ```
 //! 
 //! Then add the following code:
