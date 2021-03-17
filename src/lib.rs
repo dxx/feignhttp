@@ -176,7 +176,7 @@
 //! 
 //! ### JSON
 //! 
-//! [Serde](https://docs.rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Carto.toml`:
+//! [Serde](https://docs.rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Cargo.toml`:
 //! 
 //! ```toml
 //! [dependencies]
