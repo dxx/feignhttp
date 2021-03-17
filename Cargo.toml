@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["dxx <1827939333@qq.com>"]
 edition = "2018"
 description = "Declarative HTTP client for rust"
@@ -25,7 +25,7 @@ exclude = [
 ]
 
 [dependencies]
-feignhttp-codegen = { version = "0.1.0", path = "codegen" }
+feignhttp-codegen = { version = "0.1.1", path = "codegen" }
 
 http = "0.2"
 serde = "1"
