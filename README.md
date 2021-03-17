@@ -176,7 +176,7 @@ async fn languages(
 
 ### JSON
 
-[Serde](https://github.com/serde-rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Carto.toml`:
+[Serde](https://github.com/serde-rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Cargo.toml`:
 
 ```toml
 [dependencies]
