@@ -188,7 +188,7 @@ pub fn parse_return_type(sig: &syn::Signature) -> Result<Vec<syn::Type>, syn::Er
                 }
             }
         }
-        err_msg = "return value must be Result<?, ?>".to_string();
+        err_msg = "return value must be Result".to_string();
     }
     Err(syn::Error::new_spanned(&sig, err_msg))
 }

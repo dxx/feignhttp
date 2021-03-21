@@ -1,4 +1,4 @@
-use crate::{map};
+use crate::{error::Result, map};
 use reqwest::{Body, Client, Method, RequestBuilder, Response, Url};
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -97,7 +97,7 @@ impl RequestWrapper {
         self
     }
 
-    pub async fn send(self) -> Result<ResponseWrapper, Box<dyn std::error::Error>> {
+    pub async fn send(self) -> Result<ResponseWrapper> {
         let mut response = self.set_header().request.send().await?;
         // Client or server error
         response = response.error_for_status()?;
@@ -107,7 +107,7 @@ impl RequestWrapper {
     pub async fn send_text(
         mut self,
         text: String,
-    ) -> Result<ResponseWrapper, Box<dyn std::error::Error>> {
+    ) -> Result<ResponseWrapper> {
         self.request = self.request.body(Body::from(text));
         self.send().await
     }
@@ -115,7 +115,7 @@ impl RequestWrapper {
     pub async fn send_json<T>(
         mut self,
         json: &T,
-    ) -> Result<ResponseWrapper, Box<dyn std::error::Error>>
+    ) -> Result<ResponseWrapper>
     where
         T: serde::ser::Serialize,
     {
@@ -128,11 +128,11 @@ impl ResponseWrapper {
     pub fn status(self) -> http::StatusCode {
         self.response.status()
     }
-    pub async fn text(self) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn text(self) -> Result<String> {
         Ok(self.response.text().await?)
     }
 
-    pub async fn json<T>(self) -> Result<T, Box<dyn std::error::Error>>
+    pub async fn json<T>(self) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
     {

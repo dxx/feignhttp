@@ -316,7 +316,9 @@ pub mod util;
 
 mod http;
 mod macros;
+mod error;
 
 pub use feignhttp_codegen::*;
 
 pub use crate::http::*;
+pub use crate::error::Result;
