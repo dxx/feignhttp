@@ -15,7 +15,7 @@ struct User {
 }
 
 #[post(url = "http://localhost:8080/create")]
-async fn create_user(#[body] json: String) -> Result<String, Box<dyn std::error::Error>> {}
+async fn create_user(#[body] json: String) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

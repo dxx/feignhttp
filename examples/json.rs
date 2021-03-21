@@ -28,7 +28,7 @@ async fn issues(
     #[path] repo: &str,
     page: u32,
     per_page: u32,
-) -> Result<Vec<IssueItem>, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<Vec<IssueItem>> {}
 
 
 #[derive(Debug, Serialize)]
@@ -38,7 +38,7 @@ struct User {
 }
 
 #[post(url = "http://localhost:8080/create")]
-async fn create_user(#[body] user: User) -> Result<String, Box<dyn std::error::Error>> {}
+async fn create_user(#[body] user: User) -> feignhttp::Result<String> {}
 
 
 #[tokio::main]

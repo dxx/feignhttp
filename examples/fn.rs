@@ -1,14 +1,14 @@
 use feignhttp::get;
 
 #[get("https://api.github.com")]
-async fn github() -> Result<String, Box<dyn std::error::Error>> {}
+async fn github() -> feignhttp::Result<String> {}
 
 // Specifies path parameter
 #[get("https://api.github.com/repos/{owner}/{repo}")]
 async fn repository(
     #[path] owner: &str,
     #[path] repo: String,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 // Specifies path parameter name and query parameter
 #[get("https://api.github.com/repos/{owner}/{repo}/contributors")]
@@ -16,7 +16,7 @@ async fn contributors(
     #[path("owner")] user: &str,
     #[path] repo: &str,
     #[param] page: u32,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 
 // Specifies header
@@ -27,7 +27,7 @@ async fn commits(
     #[path] repo: &str,
     #[param] page: u32,
     #[param] per_page: u32,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 
 const GITHUB_URL: &str = "https://api.github.com";
@@ -37,7 +37,7 @@ const GITHUB_URL: &str = "https://api.github.com";
 async fn languages(
     #[path] owner: &str,
     #[path] repo: &str,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 
 #[tokio::main]

@@ -6,10 +6,10 @@ use feignhttp::{get, feign};
 use support::*;
 
 #[get(url = "http://xxx.com", connect_timeout = 3000)]
-async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
+async fn connect_timeout() -> feignhttp::Result<String> {}
 
 #[get(url = "http://localhost:8080", timeout = 3000)]
-async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
+async fn timeout() -> feignhttp::Result<String> {}
 
 
 pub struct Http {}
@@ -17,7 +17,7 @@ pub struct Http {}
 #[feign(url = "http://xxx.com", connect_timeout = 3000)]
 impl Http {
     #[get("", connect_timeout = 5000)] // 5000 will override 3000
-    async fn get() -> Result<String, Box<dyn std::error::Error>> {}
+    async fn get() -> feignhttp::Result<String> {}
 }
 
 

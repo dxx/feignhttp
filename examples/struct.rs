@@ -7,20 +7,20 @@ struct Github {}
 #[feign(url = GITHUB_URL)]
 impl Github {
     #[get]
-    async fn home() -> Result<String, Box<dyn std::error::Error>> {}
+    async fn home() -> feignhttp::Result<String> {}
 
     #[get("/repos/{owner}/{repo}")]
     async fn repository(
         #[path] owner: &str,
         #[path] repo: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {}
+    ) -> feignhttp::Result<String> {}
 
     #[get(path = "/repos/{owner}/{repo}/contributors")]
     async fn contributors(
         #[path("owner")] user: &str,
         #[path] repo: &str,
         #[param] page: u32,
-    ) -> Result<String, Box<dyn std::error::Error>> {}
+    ) -> feignhttp::Result<String> {}
 
     #[get("/repos/{owner}/{repo}/commits")]
     async fn commits(
@@ -29,7 +29,7 @@ impl Github {
         #[path] repo: &str,
         #[param] page: u32,
         #[param] per_page: u32,
-    ) -> Result<String, Box<dyn std::error::Error>> {}
+    ) -> feignhttp::Result<String> {}
 
     // Structure method still send request
     #[get(path = "/repos/{owner}/{repo}/languages")]
@@ -37,7 +37,7 @@ impl Github {
         &self,
         #[path] owner: &str,
         #[path] repo: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {}
+    ) -> feignhttp::Result<String> {}
 }
 
 #[tokio::main]
