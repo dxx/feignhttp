@@ -20,7 +20,7 @@ FeignHttp mark macros on asynchronous functions, you need to add [Tokio](https:/
 ```toml
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-feignhttp = { version = "0.1.1" }
+feignhttp = { version = "0.1.2" }
 ```
 
 Then add the following code:
@@ -29,7 +29,7 @@ Then add the following code:
 use feignhttp::get;
 
 #[get("https://api.github.com")]
-async fn github() -> Result<String, Box<dyn std::error::Error>> {}
+async fn github() -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -40,9 +40,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-The `get` attribute macro specifies get request, `Result<String, Box<dyn std::error::Error>>` specifies the 
-return result. It will send get request to `https://api.github.com` and receive a plain text body. You must specify 
-`Box<dyn std::error::Error>` to be compatible with all errors returned by the internal call library.
+The `get` attribute macro specifies get request, `feignhttp::Result<String>` specifies the return result.
+It will send get request to `https://api.github.com` and receive a plain text body.
 
 ### Making a POST request
 
@@ -53,7 +52,7 @@ a request body.
 use feignhttp::post;
 
 #[post(url = "http://localhost:8080/create")]
-async fn create(#[body] text: String) -> Result<String, Box<dyn std::error::Error>> {}
+async fn create(#[body] text: String) -> feignhttp::Result<String> {}
 ```
 
 The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
@@ -70,7 +69,7 @@ use feignhttp::get;
 async fn repository(
     #[path] owner: &str,
     #[path] repo: String,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,7 +94,7 @@ async fn contributors(
     #[path("owner")] user: &str,
     #[path] repo: &str,
     #[param] page: u32,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -128,7 +127,7 @@ async fn commits(
     #[path] repo: &str,
     #[param] page: u32,
     #[param] per_page: u32,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -161,7 +160,7 @@ const GITHUB_URL: &str = "https://api.github.com";
 async fn languages(
     #[path] owner: &str,
     #[path] repo: &str,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 ```
 
 Url constant must be the first metadata in get attribute macro. You also can specify metadata key:
@@ -171,7 +170,7 @@ Url constant must be the first metadata in get attribute macro. You also can spe
 async fn languages(
     #[path] owner: &str,
     #[path] repo: &str,
-) -> Result<String, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<String> {}
 ```
 
 ### JSON
@@ -210,7 +209,7 @@ async fn issues(
     #[path] repo: &str,
     page: u32,
     per_page: u32,
-) -> Result<Vec<IssueItem>, Box<dyn std::error::Error>> {}
+) -> feignhttp::Result<Vec<IssueItem>> {}
 
 
 #[tokio::main]
@@ -237,7 +236,7 @@ struct User {
 }
 
 #[post(url = "http://localhost:8080/create")]
-async fn create(#[body] user: User) -> Result<String, Box<dyn std::error::Error>> {}
+async fn create(#[body] user: User) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -267,13 +266,13 @@ struct Github {}
 #[feign(url = GITHUB_URL)]
 impl Github {
     #[get]
-    async fn home() -> Result<String, Box<dyn std::error::Error>> {}
+    async fn home() -> feignhttp::Result<String> {}
 
     #[get("/repos/{owner}/{repo}")]
     async fn repository(
         #[path] owner: &str,
         #[path] repo: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {}
+    ) -> feignhttp::Result<String> {}
 
     // ...
     
@@ -283,7 +282,7 @@ impl Github {
         &self,
         #[path] owner: &str,
         #[path] repo: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {}
+    ) -> feignhttp::Result<String> {}
 }
 ```
 
@@ -297,14 +296,14 @@ Connect timeout:
 
 ```rust
 #[get(url = "http://xxx.com", connect_timeout = 3000)]
-async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
+async fn connect_timeout() -> feignhttp::Result<String> {}
 ```
 
 Read timeout:
 
 ```rust
 #[get(url = "http://localhost:8080", timeout = 3000)]
-async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
+async fn timeout() -> feignhttp::Result<String> {}
 ```
 
 ## License
