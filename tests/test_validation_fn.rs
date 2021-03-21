@@ -66,7 +66,7 @@ fn test_validate_return_value() {
 
 #[test]
 fn test_validate_return_value2() {
-    // error: return value must be Result<?, ?>
+    // error: return value must be Result
     //    |  pub async fn get() -> i32 {}
     //    |      ^^^^^^^^^^^^^^^^^^^^^
 

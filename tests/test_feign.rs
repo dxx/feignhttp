@@ -1,10 +1,10 @@
 use feignhttp::{feign, get};
 
 #[get("https://api.github.com")]
-pub async fn get() -> Result<String, Box<dyn std::error::Error>> {}
+pub async fn get() -> feignhttp::Result<String> {}
 
 #[get("https://api.github.com", path = "/abc")]
-pub async fn get_not_found() -> Result<String, Box<dyn std::error::Error>> {}
+pub async fn get_not_found() -> feignhttp::Result<String> {}
 
 
 const URL: &str = "https://api.github.com";
@@ -14,7 +14,7 @@ pub struct Feign {}
 #[feign(url = URL)]
 impl Feign {
     #[get("/users/{user}")]
-    async fn user(#[path] user: &str) -> Result<String, Box<dyn std::error::Error>> {}
+    async fn user(#[path] user: &str) -> feignhttp::Result<String> {}
 }
 
 #[tokio::test]

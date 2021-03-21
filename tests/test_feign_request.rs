@@ -9,7 +9,7 @@ use hyper::body::HttpBody;
 
 
 #[get("http://localhost:8081/get")]
-async fn get() -> Result<String, Box<dyn std::error::Error>> {}
+async fn get() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_get() {
@@ -24,7 +24,7 @@ async fn test_get() {
 
 
 #[post(url = "http://localhost:8082/post")]
-async fn post() -> Result<String, Box<dyn std::error::Error>> {}
+async fn post() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_post() {
@@ -42,7 +42,7 @@ async fn test_post() {
 async fn post_header (
     #[header] auth: String,
     #[header("name")] username: &str)
-    -> Result<String, Box<dyn std::error::Error>> {}
+    -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_header() {
@@ -61,7 +61,7 @@ async fn test_header() {
 async fn post_query (
     #[param] id: u32,
     #[param("name")] name: String)
-    -> Result<String, Box<dyn std::error::Error>> {}
+    -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_query() {
@@ -76,7 +76,7 @@ async fn test_query() {
 
 
 #[post(url = "http://localhost:8085/post_text")]
-async fn post_text (#[body] text: String) -> Result<String, Box<dyn std::error::Error>> {}
+async fn post_text (#[body] text: String) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_send_text() {
@@ -98,7 +98,7 @@ struct User {
 }
 
 #[post(url = "http://localhost:8086/post_json")]
-async fn post_json (#[body] user: User) -> Result<String, Box<dyn std::error::Error>> {}
+async fn post_json (#[body] user: User) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_send_json() {
@@ -118,7 +118,7 @@ async fn test_send_json() {
 
 
 #[get(url = "http://xxx.com", connect_timeout = 3000)]
-async fn connect_timeout() -> Result<String, Box<dyn std::error::Error>> {}
+async fn connect_timeout() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 #[should_panic]
@@ -128,7 +128,7 @@ async fn test_connect_timeout() {
 
 
 #[get(url = "http://localhost:8080", timeout = 3000)]
-async fn timeout() -> Result<String, Box<dyn std::error::Error>> {}
+async fn timeout() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 #[should_panic]

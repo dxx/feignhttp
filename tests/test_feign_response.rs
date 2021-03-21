@@ -10,7 +10,7 @@ const TEXT_URL: &str = "http://localhost:8080";
 
 
 #[get(url = TEXT_URL, path = "/text")]
-async fn get_text() -> Result<String, Box<dyn std::error::Error>> {}
+async fn get_text() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_get_text() {
@@ -33,7 +33,7 @@ struct User {
 }
 
 #[get(url = JSON_URL, path = "/json")]
-async fn get_json() -> Result<User, Box<dyn std::error::Error>> {}
+async fn get_json() -> feignhttp::Result<User> {}
 
 #[tokio::test]
 async fn test_get_json() {
