@@ -1,22 +1,18 @@
-#[allow(dead_code)]
-mod support;
-
 use feignhttp::{get};
+
 use serde::{Deserialize};
+use mockito::mock;
 
-use support::*;
-
-const TEXT_URL: &str = "http://localhost:8080";
-
+const TEXT_URL: &str = "http://localhost:1234";
 
 #[get(url = TEXT_URL, path = "/text")]
 async fn get_text() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_get_text() {
-    let _server = server::http(8080, move |_req| async move {
-        hyper::Response::new("Hello, i' m text".into())
-    });
+    let _mock = mock("GET", "/text")
+        .with_body("Hello, i' m text")
+        .create();
 
     let text = get_text().await.unwrap();
 
@@ -24,7 +20,7 @@ async fn test_get_text() {
 }
 
 
-const JSON_URL: &str = "http://localhost:8081";
+const JSON_URL: &str = "http://localhost:1234";
 
 #[derive(Debug, Deserialize)]
 struct User {
@@ -37,10 +33,9 @@ async fn get_json() -> feignhttp::Result<User> {}
 
 #[tokio::test]
 async fn test_get_json() {
-    let _server = server::http(8081, move |_req| async move {
-
-        hyper::Response::new(r#"{ "code": 200, "message": "success" }"#.into())
-    });
+    let _mock = mock("GET", "/json")
+        .with_body(r#"{ "code": 200, "message": "success" }"#)
+        .create();
 
     let user = get_json().await.unwrap();
 

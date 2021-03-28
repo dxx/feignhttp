@@ -1,20 +1,13 @@
-mod support;
-
 use feignhttp::{HttpClient, HttpConfig, map};
-use support::*;
 
+use mockito::{mock, server_address, Matcher};
 use serde::{Serialize};
-use hyper::body::HttpBody;
 
 #[tokio::test]
 async fn test_request() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.method(), "GET");
+    let _mock = mock("GET", "/").create();
 
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "get";
     let request = HttpClient::default_request(&url, method);
     request.send().await.unwrap();
@@ -22,15 +15,13 @@ async fn test_request() {
 
 #[tokio::test]
 async fn test_header() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.headers()["auth"], "name_pass");
-        assert_eq!(req.headers()["username"], "jack");
-        assert_eq!(req.headers()["pwd"], "xxx");
+    let _mock = mock("GET", "/")
+        .match_header("auth", "name_pass")
+        .match_header("username", "jack")
+        .match_header("pwd", "xxx")
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "get";
 
     let header_map = map!(
@@ -45,13 +36,13 @@ async fn test_header() {
 
 #[tokio::test]
 async fn test_query() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!("id=1&name=xxx&name=xxx2", req.uri().query().unwrap());
+    let _mock = mock("GET", "/")
+        .match_query(Matcher::Regex("id=1".into()))
+        .match_query(Matcher::Regex("name=xxx".into()))
+        .match_query(Matcher::Regex("name=xxx2".into()))
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "get";
 
     let query_vec = [
@@ -66,14 +57,11 @@ async fn test_query() {
 
 #[tokio::test]
 async fn test_send_text() {
-    let server = server::http(0, move |mut req| async move {
-        let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
-        assert_eq!("I' m text", String::from_utf8(vec).unwrap());
+    let _mock = mock("POST", "/")
+        .match_body(r#"I' m text"#)
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "post";
 
     let text = r#"I' m text"#;
@@ -83,14 +71,11 @@ async fn test_send_text() {
 
 #[tokio::test]
 async fn test_send_json() {
-    let server = server::http(0, move |mut req| async move {
-        let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
-        assert_eq!(r#"{"id":1,"name":"jack"}"#, String::from_utf8(vec).unwrap());
+    let _mock = mock("POST", "/")
+        .match_body(r#"{"id":1,"name":"jack"}"#)
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "post";
 
     #[derive(Serialize)]
@@ -124,15 +109,7 @@ async fn test_connect_timeout() {
 #[tokio::test]
 #[should_panic]
 async fn test_timeout() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.method(), "GET");
-
-        std::thread::sleep(std::time::Duration::from_millis(5000));
-
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = "https://httpbin.org/delay/5".to_string();
     let method = "get";
     let config = HttpConfig{
         connect_timeout: None,

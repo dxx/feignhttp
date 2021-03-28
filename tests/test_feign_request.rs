@@ -1,44 +1,31 @@
-#[allow(dead_code)]
-mod support;
-
 use feignhttp::{get, post};
-use support::*;
 
 use serde::{Serialize};
-use hyper::body::HttpBody;
+use mockito::{mock, Matcher};
 
-
-#[get("http://localhost:8081/get")]
+#[get("http://localhost:1234/get")]
 async fn get() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_get() {
-    let _server = server::http(8081, move |req| async move {
-        assert_eq!(req.method(), "GET");
+    let _mock = mock("GET", "/get").create();
 
-        hyper::Response::default()
-    });
-
-    let _r = get().await.unwrap();
+    get().await.unwrap();
 }
 
 
-#[post(url = "http://localhost:8082/post")]
+#[post(url = "http://localhost:1234/post")]
 async fn post() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_post() {
-    let _server = server::http(8082, move |req| async move {
-        assert_eq!(req.method(), "POST");
+    let _mock = mock("POST", "/post").create();
 
-        hyper::Response::default()
-    });
-
-    let _r = post().await.unwrap();
+    post().await.unwrap();
 }
 
 
-#[post(url = "http://localhost:8083/post_header")]
+#[post(url = "http://localhost:1234/post_header")]
 async fn post_header (
     #[header] auth: String,
     #[header("name")] username: &str)
@@ -46,18 +33,16 @@ async fn post_header (
 
 #[tokio::test]
 async fn test_header() {
-    let _server = server::http(8083, move |req| async move {
-        assert_eq!(req.headers()["auth"], "name");
-        assert_eq!(req.headers()["name"], "jack");
+    let _mock = mock("POST", "/post_header")
+        .match_header("auth", "name")
+        .match_header("name", "jack")
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let _r = post_header("name".to_string(), "jack").await.unwrap();
+    post_header("name".to_string(), "jack").await.unwrap();
 }
 
 
-#[post(url = "http://localhost:8084/post_query")]
+#[post(url = "http://localhost:1234/post_query")]
 async fn post_query (
     #[param] id: u32,
     #[param("name")] name: String)
@@ -65,29 +50,25 @@ async fn post_query (
 
 #[tokio::test]
 async fn test_query() {
-    let _server = server::http(8084, move |req| async move {
-        assert_eq!("id=1&name=xxx", req.uri().query().unwrap());
+    let _mock = mock("POST", "/post_query")
+        .match_query(Matcher::Regex("id=1".into()))
+        .match_query(Matcher::Regex("name=xxx".into()))
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let _r = post_query(1, "xxx".to_string()).await.unwrap();
+    post_query(1, "xxx".to_string()).await.unwrap();
 }
 
 
-#[post(url = "http://localhost:8085/post_text")]
+#[post(url = "http://localhost:1234/post_text")]
 async fn post_text (#[body] text: String) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_send_text() {
-    let _server = server::http(8085, move |mut req| async move {
-        let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
-        assert_eq!("I' m text", String::from_utf8(vec).unwrap());
+    let _mock = mock("POST", "/post_text")
+        .match_body("I' m text")
+        .create();
 
-        hyper::Response::default()
-    });
-
-    let _r = post_text("I' m text".to_string()).await.unwrap();
+    post_text("I' m text".to_string()).await.unwrap();
 }
 
 
@@ -97,17 +78,14 @@ struct User {
     name: String,
 }
 
-#[post(url = "http://localhost:8086/post_json")]
+#[post(url = "http://localhost:1234/post_json")]
 async fn post_json (#[body] user: User) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_send_json() {
-    let _server = server::http(8086, move |mut req| async move {
-        let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
-        assert_eq!(r#"{"id":1,"name":"jack"}"#, String::from_utf8(vec).unwrap());
-
-        hyper::Response::default()
-    });
+    let _mock = mock("POST", "/post_json")
+        .match_body(r#"{"id":1,"name":"jack"}"#)
+        .create();
 
     let user = User {
         id: 1,
@@ -127,19 +105,11 @@ async fn test_connect_timeout() {
 }
 
 
-#[get(url = "http://localhost:8080", timeout = 3000)]
+#[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 #[should_panic]
 async fn test_timeout() {
-    let _server = server::http(8080, move |req| async move {
-        assert_eq!(req.method(), "GET");
-
-        std::thread::sleep(std::time::Duration::from_millis(5000));
-
-        hyper::Response::default()
-    });
-
     timeout().await.unwrap();
 }

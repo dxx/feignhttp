@@ -9,7 +9,7 @@ pub async fn get_not_found() -> feignhttp::Result<String> {}
 
 const URL: &str = "https://api.github.com";
 
-pub struct Feign {}
+pub struct Feign;
 
 #[feign(url = URL)]
 impl Feign {

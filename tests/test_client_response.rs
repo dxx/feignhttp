@@ -1,19 +1,13 @@
-mod support;
-
 use feignhttp::HttpClient;
-use serde::{Deserialize};
 
-use support::*;
+use serde::{Deserialize};
+use mockito::{mock, server_address};
 
 #[tokio::test]
 async fn test_response() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.method(), "GET");
+    let _mock = mock("GET", "/").with_status(200).create();
 
-        hyper::Response::default()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "get";
     let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
@@ -23,11 +17,11 @@ async fn test_response() {
 
 #[tokio::test]
 async fn test_get_text() {
-    let server = server::http(0, move |_req| async move {
-        hyper::Response::new("Hello, i' m text".into())
-    });
+    let _mock = mock("GET", "/text")
+        .with_body("Hello, i' m text")
+        .create();
 
-    let url = format!("http://{}/text", server.addr());
+    let url = format!("http://{}/text", server_address());
     let method = "get";
     let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
@@ -38,10 +32,9 @@ async fn test_get_text() {
 
 #[tokio::test]
 async fn test_get_json() {
-    let server = server::http(0, move |_req| async move {
-
-        hyper::Response::new(r#"{ "code": 200, "message": "success" }"#.into())
-    });
+    let _mock = mock("GET", "/json")
+        .with_body(r#"{ "code": 200, "message": "success" }"#)
+        .create();
 
     #[derive(Debug, Deserialize)]
     struct User {
@@ -49,7 +42,7 @@ async fn test_get_json() {
         message: String,
     }
 
-    let url = format!("http://{}/json", server.addr());
+    let url = format!("http://{}/json", server_address());
     let method = "get";
     let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
@@ -61,13 +54,11 @@ async fn test_get_json() {
 #[tokio::test]
 #[should_panic]
 async fn test_client_error() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.method(), "GET");
+    let _mock = mock("GET", "/")
+        .with_status(404)
+        .create();
 
-        hyper::Response::builder().status(hyper::StatusCode::NOT_FOUND).body("".into()).unwrap()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "get";
     let request = HttpClient::default_request(&url, method);
     let _response = request.send().await.unwrap();
@@ -76,13 +67,11 @@ async fn test_client_error() {
 #[tokio::test]
 #[should_panic]
 async fn test_server_error() {
-    let server = server::http(0, move |req| async move {
-        assert_eq!(req.method(), "GET");
+    let _mock = mock("GET", "/")
+        .with_status(503)
+        .create();
 
-        hyper::Response::builder().status(hyper::StatusCode::SERVICE_UNAVAILABLE).body("".into()).unwrap()
-    });
-
-    let url = format!("http://{}", server.addr());
+    let url = format!("http://{}", server_address());
     let method = "get";
     let request = HttpClient::default_request(&url, method);
     let _response = request.send().await.unwrap();
