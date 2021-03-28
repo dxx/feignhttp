@@ -47,8 +47,8 @@
 //! ```rust, no_run
 //! use feignhttp::post;
 //! 
-//! #[post(url = "http://localhost:8080/create")]
-//! async fn create(#[body] text: String) -> feignhttp::Result<String> {}
+//! #[post(url = "https://httpbin.org/anything")]
+//! async fn post_user(#[body] json: String) -> feignhttp::Result<String> {}
 //! ```
 //! 
 //! The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
@@ -71,6 +71,7 @@
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = repository("dxx", "feignhttp".to_string()).await?;
 //!     println!("repository result: {}", r);
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -235,8 +236,8 @@
 //!     name: String,
 //! }
 //! 
-//! #[post(url = "http://localhost:8080/create")]
-//! async fn create(#[body] user: User) -> feignhttp::Result<String> {}
+//! #[post(url = "https://httpbin.org/anything")]
+//! async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -244,7 +245,8 @@
 //!         id: 1,
 //!         name: "jack".to_string(),
 //!     };
-//!     let _r = create(user).await?;
+//!     let r = post_user(user).await?;
+//!     println!("{}", r);
 //! 
 //!     Ok(())
 //! }
@@ -261,7 +263,7 @@
 //! 
 //! const GITHUB_URL: &str = "https://api.github.com";
 //! 
-//! struct Github {}
+//! struct Github;
 //! 
 //! #[feign(url = GITHUB_URL)]
 //! impl Github {
@@ -306,7 +308,7 @@
 //! ```rust, no_run
 //! use feignhttp::get;
 //!
-//! #[get(url = "http://localhost:8080", timeout = 3000)]
+//! #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
 
