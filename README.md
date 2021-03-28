@@ -52,7 +52,7 @@ a request body.
 use feignhttp::post;
 
 #[post(url = "https://httpbin.org/anything")]
-async fn post_user(#[body] json: String) -> feignhttp::Result<String> {}
+async fn post_data(#[body] text: String) -> feignhttp::Result<String> {}
 ```
 
 The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
