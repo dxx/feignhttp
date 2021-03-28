@@ -2,7 +2,7 @@ use feignhttp::feign;
 
 const GITHUB_URL: &str = "https://api.github.com";
 
-struct Github {}
+struct Github;
 
 #[feign(url = GITHUB_URL)]
 impl Github {

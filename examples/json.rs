@@ -1,11 +1,6 @@
-#[allow(dead_code)]
-mod support;
-
 use feignhttp::{get, post};
-use serde::{Deserialize, Serialize};
 
-use support::*;
-use hyper::body::HttpBody;
+use serde::{Deserialize, Serialize};
 
 // Deserialize: Specifies deserialization
 #[derive(Debug, Deserialize)]
@@ -37,8 +32,8 @@ struct User {
     name: String,
 }
 
-#[post(url = "http://localhost:8080/create")]
-async fn create_user(#[body] user: User) -> feignhttp::Result<String> {}
+#[post(url = "https://httpbin.org/anything")]
+async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 
 
 #[tokio::main]
@@ -46,21 +41,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = issues("octocat", "hello-world", 1, 2).await?;
     println!("issues: {:#?}", r);
 
-
-    let _server = server::http(8080, move |mut req| async move {
-        let vec = req.body_mut().data().await.unwrap().unwrap().to_vec();
-        println!("method: {}", req.method());
-        println!("received: {}", String::from_utf8(vec).unwrap());
-
-        hyper::Response::default()
-    });
-
     let user = User {
         id: 1,
         name: "jack".to_string(),
     };
-    let _r = create_user(user).await?;
-
+    let r = post_user(user).await?;
+    println!("{}", r);
 
     Ok(())
 }

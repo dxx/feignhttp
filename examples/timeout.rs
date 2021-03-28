@@ -1,18 +1,12 @@
-#[allow(dead_code)]
-mod support;
-
 use feignhttp::{get, feign};
-
-use support::*;
 
 #[get(url = "http://xxx.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 
-#[get(url = "http://localhost:8080", timeout = 3000)]
+#[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
-
-pub struct Http {}
+pub struct Http;
 
 #[feign(url = "http://xxx.com", connect_timeout = 3000)]
 impl Http {
@@ -31,14 +25,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("connect_timeout: {:?}", err);
         }
     }
-
-    let _server = server::http(8080, move |req| async move {
-        assert_eq!(req.method(), "GET");
-
-        std::thread::sleep(std::time::Duration::from_millis(5000));
-
-        hyper::Response::default()
-    });
 
     match timeout().await {
         Ok(res) => {
