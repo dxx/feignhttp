@@ -8,7 +8,7 @@ async fn test_response() {
     let _mock = mock("GET", "/").with_status(200).create();
 
     let url = format!("http://{}", server_address());
-    let method = "get";
+    let method = "GET";
     let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
 
@@ -22,7 +22,7 @@ async fn test_get_text() {
         .create();
 
     let url = format!("http://{}/text", server_address());
-    let method = "get";
+    let method = "GET";
     let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
     let text = response.text().await.unwrap();
@@ -43,7 +43,7 @@ async fn test_get_json() {
     }
 
     let url = format!("http://{}/json", server_address());
-    let method = "get";
+    let method = "GET";
     let request = HttpClient::default_request(&url, method);
     let response = request.send().await.unwrap();
     let user: User = response.json().await.unwrap();
@@ -59,7 +59,7 @@ async fn test_client_error() {
         .create();
 
     let url = format!("http://{}", server_address());
-    let method = "get";
+    let method = "GET";
     let request = HttpClient::default_request(&url, method);
     let _response = request.send().await.unwrap();
 }
@@ -72,7 +72,7 @@ async fn test_server_error() {
         .create();
 
     let url = format!("http://{}", server_address());
-    let method = "get";
+    let method = "GET";
     let request = HttpClient::default_request(&url, method);
     let _response = request.send().await.unwrap();
 }

@@ -8,7 +8,7 @@ async fn test_request() {
     let _mock = mock("GET", "/").create();
 
     let url = format!("http://{}", server_address());
-    let method = "get";
+    let method = "GET";
     let request = HttpClient::default_request(&url, method);
     request.send().await.unwrap();
 }
@@ -22,7 +22,7 @@ async fn test_header() {
         .create();
 
     let url = format!("http://{}", server_address());
-    let method = "get";
+    let method = "GET";
 
     let header_map = map!(
         "auth" => "name_pass".to_string(),
@@ -43,7 +43,7 @@ async fn test_query() {
         .create();
 
     let url = format!("http://{}", server_address());
-    let method = "get";
+    let method = "GET";
 
     let query_vec = [
         ("id", "1".to_string()),
@@ -62,7 +62,7 @@ async fn test_send_text() {
         .create();
 
     let url = format!("http://{}", server_address());
-    let method = "post";
+    let method = "POST";
 
     let text = r#"I' m text"#;
     let request = HttpClient::default_request(&url, method);
@@ -76,7 +76,7 @@ async fn test_send_json() {
         .create();
 
     let url = format!("http://{}", server_address());
-    let method = "post";
+    let method = "POST";
 
     #[derive(Serialize)]
     struct User {
@@ -97,7 +97,7 @@ async fn test_send_json() {
 #[should_panic]
 async fn test_connect_timeout() {
     let url = "http://xxx.com";
-    let method = "get";
+    let method = "GET";
     let config = HttpConfig{
         connect_timeout: Some(3000), // 3000 millisecond
         timeout: None,
@@ -110,7 +110,7 @@ async fn test_connect_timeout() {
 #[should_panic]
 async fn test_timeout() {
     let url = "https://httpbin.org/delay/5".to_string();
-    let method = "get";
+    let method = "GET";
     let config = HttpConfig{
         connect_timeout: None,
         timeout: Some(3000), // 3000 millisecond
