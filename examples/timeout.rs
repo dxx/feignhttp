@@ -15,7 +15,7 @@ impl Http {
 }
 
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match connect_timeout().await {
         Ok(res) => {

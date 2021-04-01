@@ -6,7 +6,7 @@ use mockito::{mock, Matcher};
 #[get("http://localhost:1234/get")]
 async fn get() -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 async fn test_get() {
     let _mock = mock("GET", "/get").create();
 
@@ -17,7 +17,7 @@ async fn test_get() {
 #[post(url = "http://localhost:1234/post")]
 async fn post() -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 async fn test_post() {
     let _mock = mock("POST", "/post").create();
 
@@ -31,7 +31,7 @@ async fn post_header (
     #[header("name")] username: &str)
     -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 async fn test_header() {
     let _mock = mock("POST", "/post_header")
         .match_header("auth", "name")
@@ -48,7 +48,7 @@ async fn post_query (
     #[param("name")] name: String)
     -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 async fn test_query() {
     let _mock = mock("POST", "/post_query")
         .match_query(Matcher::Regex("id=1".into()))
@@ -62,7 +62,7 @@ async fn test_query() {
 #[post(url = "http://localhost:1234/post_text")]
 async fn post_text (#[body] text: String) -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 async fn test_send_text() {
     let _mock = mock("POST", "/post_text")
         .match_body("I' m text")
@@ -81,7 +81,7 @@ struct User {
 #[post(url = "http://localhost:1234/post_json")]
 async fn post_json (#[body] user: User) -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 async fn test_send_json() {
     let _mock = mock("POST", "/post_json")
         .match_body(r#"{"id":1,"name":"jack"}"#)
@@ -98,7 +98,7 @@ async fn test_send_json() {
 #[get(url = "http://xxx.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 #[should_panic]
 async fn test_connect_timeout() {
     connect_timeout().await.unwrap();
@@ -108,7 +108,7 @@ async fn test_connect_timeout() {
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
-#[tokio::test]
+#[async_std::test]
 #[should_panic]
 async fn test_timeout() {
     timeout().await.unwrap();

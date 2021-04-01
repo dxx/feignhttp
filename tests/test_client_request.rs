@@ -3,7 +3,7 @@ use feignhttp::{HttpClient, HttpConfig, HttpRequest, map};
 use mockito::{mock, server_address, Matcher};
 use serde::{Serialize};
 
-#[tokio::test]
+#[async_std::test]
 async fn test_request() {
     let _mock = mock("GET", "/").create();
 
@@ -13,7 +13,7 @@ async fn test_request() {
     request.send().await.unwrap();
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn test_header() {
     let _mock = mock("GET", "/")
         .match_header("auth", "name_pass")
@@ -34,7 +34,7 @@ async fn test_header() {
     request.send().await.unwrap();
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn test_query() {
     let _mock = mock("GET", "/")
         .match_query(Matcher::Regex("id=1".into()))
@@ -55,7 +55,7 @@ async fn test_query() {
     request.send().await.unwrap();
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn test_send_text() {
     let _mock = mock("POST", "/")
         .match_body(r#"I' m text"#)
@@ -69,7 +69,7 @@ async fn test_send_text() {
     request.send_text(text.to_string()).await.unwrap();
 }
 
-#[tokio::test]
+#[async_std::test]
 async fn test_send_json() {
     let _mock = mock("POST", "/")
         .match_body(r#"{"id":1,"name":"jack"}"#)
@@ -93,7 +93,7 @@ async fn test_send_json() {
     request.send_json(&user).await.unwrap();
 }
 
-#[tokio::test]
+#[async_std::test]
 #[should_panic]
 async fn test_connect_timeout() {
     let url = "http://xxx.com";
@@ -106,7 +106,7 @@ async fn test_connect_timeout() {
     request.send().await.unwrap();
 }
 
-#[tokio::test]
+#[async_std::test]
 #[should_panic]
 async fn test_timeout() {
     let url = "https://httpbin.org/delay/5".to_string();

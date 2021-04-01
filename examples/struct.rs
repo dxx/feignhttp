@@ -40,7 +40,7 @@ impl Github {
     ) -> feignhttp::Result<String> {}
 }
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = Github::home().await?;
 

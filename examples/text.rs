@@ -12,7 +12,7 @@ struct User {
 #[post(url = "https://httpbin.org/anything")]
 async fn post_user(#[body] json: String) -> feignhttp::Result<String> {}
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let user = User {
         id: 1,
