@@ -6,17 +6,34 @@
 //! 
 //! * Easy to use
 //! * Asynchronous request
-//! * Supports `json` and `plain text`
-//! * [Reqwest](https://docs.rs/reqwest) of internal use
+//! * Configurable timeout settings
+//! * Supports plain text and json
+//! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest) or [isahc](https://docs.rs/isahc))
 //! 
 //! ## Usage
 //! 
-//! FeignHttp mark macros on asynchronous functions, you need to add [Tokio](https://docs.rs/tokio) in your `Cargo.toml`:
-//! 
+//! FeignHttp mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://docs.rs/async-std) or [tokio](https://docs.rs/tokio).
+//!
+//! async-std:
+//!
+//! ```toml
+//! [dependencies]
+//! async-std = { version = "1", features = ["attributes", "tokio1"] }
+//! ```
+//!
+//! The features `tokio1` is need when use reqwest as the HTTP backend.
+//!
+//! tokio:
+//!
 //! ```toml
 //! [dependencies]
 //! tokio = { version = "1", features = ["full"] }
-//! feignhttp = { version = "0.1.2" }
+//! ```
+//!
+//! Add feignhttp in your `Cargo.toml` and use default feature:
+//!
+//! ```toml
+//! feignhttp = { version = "0.1" }
 //! ```
 //! 
 //! Then add the following code:
@@ -27,7 +44,7 @@
 //! #[get("https://api.github.com")]
 //! async fn github() -> feignhttp::Result<String> {}
 //! 
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = github().await?;
 //!     println!("result: {}", r);
@@ -38,6 +55,14 @@
 //! 
 //! The `get` attribute macro specifies get request, `feignhttp::Result<String>` specifies the return result.
 //! It will send get request to `https://api.github.com` and receive a plain text body.
+//!
+//! Using non-default HTTP backend:
+//
+//! ```toml
+//! feignhttp = { version = "0.1", default-features = false, features = ["isahc-client"] }
+//! ```
+//!
+//! The `default-features = false` option disable default reqwest.
 //! 
 //! ### Making a POST request
 //! 
@@ -67,7 +92,7 @@
 //!     #[path] repo: String,
 //! ) -> feignhttp::Result<String> {}
 //! 
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = repository("dxx", "feignhttp".to_string()).await?;
 //!     println!("repository result: {}", r);
@@ -76,7 +101,7 @@
 //! }
 //! ```
 //! 
-//! `dxx`  will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
+//! `dxx` will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be
 //! `https://api.github.com/repos/dxx/feignhttp`. You can specify a path name like `#[path("owner")]`.
 //! 
 //! ### Query Parameters
@@ -93,7 +118,7 @@
 //!     #[param] page: u32,
 //! ) -> feignhttp::Result<String> {}
 //! 
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = contributors (
 //!         "dxx",
@@ -126,7 +151,7 @@
 //!     #[param] per_page: u32,
 //! ) -> feignhttp::Result<String> {}
 //! 
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = commits(
 //!         "application/vnd.github.v3+json",
@@ -142,7 +167,7 @@
 //! }
 //! ```
 //! 
-//!  A header `accept:application/vnd.github.v3+json ` will be send.
+//! A header `accept:application/vnd.github.v3+json ` will be send.
 //! 
 //! ### URL constant
 //! 
@@ -213,7 +238,7 @@
 //! ) -> feignhttp::Result<Vec<IssueItem>> {}
 //! 
 //! 
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = issues("octocat", "hello-world", 1, 2).await?;
 //!     println!("issues: {:#?}", r);
@@ -239,7 +264,7 @@
 //! #[post(url = "https://httpbin.org/anything")]
 //! async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 //! 
-//! #[tokio::main]
+//! #[async_std::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let user = User {
 //!         id: 1,
@@ -311,6 +336,12 @@
 //! #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
+//!
+//! ## Optional Features
+//!
+//! The following features are available. The default features are `reqwest-client`.
+//! * **reqwest-client** *(default)*: use `reqwest` as the HTTP backend.
+//! * **isahc-client**: use `isahc` as the HTTP backend.
 
 mod http;
 mod error;
