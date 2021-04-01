@@ -25,7 +25,7 @@ async-std:
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 ```
 
-The features `tokio1` is need when use reqwest as the HTTP backend.
+The feature `tokio1` is need when use reqwest as the HTTP backend.
 
 tokio:
 
