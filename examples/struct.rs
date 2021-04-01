@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("commits result: {}", r);
 
 
-    let r = Github {}.languages("dxx", "feignhttp").await?;
+    let r = Github{}.languages("dxx", "feignhttp").await?;
 
     println!("languages result: {}", r);
 
