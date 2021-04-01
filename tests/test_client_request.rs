@@ -1,4 +1,4 @@
-use feignhttp::{HttpClient, HttpConfig, map};
+use feignhttp::{HttpClient, HttpConfig, HttpRequest, map};
 
 use mockito::{mock, server_address, Matcher};
 use serde::{Serialize};

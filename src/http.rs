@@ -1,10 +1,8 @@
-use crate::{error::Result, map};
-use reqwest::{Body, Client, Method, RequestBuilder, Response, Url};
+use crate::{error::Result, RequestWrapper};
+use async_trait::async_trait;
 use std::collections::HashMap;
-use std::str::FromStr;
-use std::time::Duration;
 
-pub struct HttpClient {}
+pub struct HttpClient;
 
 impl HttpClient {
     pub fn default_request(url: &str, method: &str) -> RequestWrapper {
@@ -22,7 +20,10 @@ pub struct HttpConfig {
 
 impl HttpConfig {
     pub fn from_map(config_map: HashMap<&str, String>) -> Self {
-        let mut config = HttpConfig { connect_timeout: None, timeout: None };
+        let mut config = HttpConfig {
+            connect_timeout: None,
+            timeout: None,
+        };
         if let Some(connect_timeout) = config_map.get("connect_timeout") {
             config.connect_timeout = Some(connect_timeout.parse::<u16>().unwrap());
         }
@@ -33,109 +34,19 @@ impl HttpConfig {
     }
 }
 
-pub struct RequestWrapper {
-    headers: HashMap<String, String>,
-    request: RequestBuilder,
+pub trait HttpRequest {
+    fn build_default(url: &str, method: &str) -> Self;
+
+    fn build_with_config(url: &str, method: &str, config: HttpConfig) -> Self;
+
+    fn headers(self, header_map: HashMap<&str, String>) -> Self;
+
+    fn query(self, query: &Vec<(&str, String)>) -> Self;
 }
 
-pub struct ResponseWrapper {
-    response: Response,
-}
+#[async_trait]
+pub trait HttpResponse {
+    fn status(self) -> http::StatusCode;
 
-impl RequestWrapper {
-    pub fn build_default(url: &str, method: &str) -> RequestWrapper {
-        let request = Client::new().request(
-            Method::from_str(method.to_uppercase().as_str()).unwrap(),
-            Url::from_str(url).unwrap(),
-        );
-        RequestWrapper {
-            headers: map!(
-                "user-agent".to_string() => "Feign Http".to_string()),
-            request,
-        }
-    }
-
-    pub fn build_with_config(url: &str, method: &str, config: HttpConfig) -> RequestWrapper {
-        let mut client = Client::builder();
-        if let Some(millisecond) = config.connect_timeout {
-            client = client.connect_timeout(Duration::from_millis(millisecond as u64));
-        }
-        if let Some(millisecond) = config.timeout {
-            client = client.timeout(Duration::from_millis(millisecond as u64));
-        }
-        let request = client.build().unwrap().request(
-            Method::from_str(method.to_uppercase().as_str()).unwrap(),
-            Url::from_str(url).unwrap(),
-        );
-        RequestWrapper {
-            headers: map!(
-                "user-agent".to_string() => "Feign Http".to_string()),
-            request,
-        }
-    }
-
-    pub fn headers(mut self, header_map: HashMap<&str, String>) -> Self {
-        for (k, v) in header_map {
-            self.headers.insert(k.to_string().to_lowercase(), v);
-        }
-        self
-    }
-
-    fn set_header(mut self) -> Self {
-        let mut request = self.request;
-        for (k, v) in &self.headers {
-            request = request.header(k.as_str(), v);
-        }
-        self.request = request;
-        self
-    }
-
-    pub fn query(mut self, query: &Vec<(&str, String)>) -> Self {
-        let mut request = self.request;
-        request = request.query(query.as_slice());
-        self.request = request;
-        self
-    }
-
-    pub async fn send(self) -> Result<ResponseWrapper> {
-        let mut response = self.set_header().request.send().await?;
-        // Client or server error
-        response = response.error_for_status()?;
-        Ok(ResponseWrapper { response })
-    }
-
-    pub async fn send_text(
-        mut self,
-        text: String,
-    ) -> Result<ResponseWrapper> {
-        self.request = self.request.body(Body::from(text));
-        self.send().await
-    }
-
-    pub async fn send_json<T>(
-        mut self,
-        json: &T,
-    ) -> Result<ResponseWrapper>
-    where
-        T: serde::ser::Serialize,
-    {
-        self.request = self.request.json(json);
-        self.send().await
-    }
-}
-
-impl ResponseWrapper {
-    pub fn status(self) -> http::StatusCode {
-        self.response.status()
-    }
-    pub async fn text(self) -> Result<String> {
-        Ok(self.response.text().await?)
-    }
-
-    pub async fn json<T>(self) -> Result<T>
-    where
-        T: serde::de::DeserializeOwned,
-    {
-        Ok(self.response.json::<T>().await?)
-    }
+    async fn text(self) -> Result<String>;
 }

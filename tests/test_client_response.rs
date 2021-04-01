@@ -1,4 +1,4 @@
-use feignhttp::HttpClient;
+use feignhttp::{HttpClient, HttpResponse};
 
 use serde::{Deserialize};
 use mockito::{mock, server_address};

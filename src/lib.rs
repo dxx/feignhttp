@@ -312,14 +312,25 @@
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
 
+mod http;
+mod error;
+mod macros;
+
+#[cfg(feature = "reqwest-client")]
+mod reqwest;
+#[cfg(feature = "reqwest-client")]
+pub use crate::reqwest::*;
+
+#[cfg(feature = "isahc-client")]
+mod isahc;
+#[cfg(feature = "isahc-client")]
+pub use crate::isahc::*;
+
+
 #[doc(hidden)]
 pub mod util;
-
-mod http;
-mod macros;
-mod error;
 
 pub use feignhttp_codegen::*;
 
 pub use crate::http::*;
-pub use crate::error::Result;
+pub use crate::error::{Result, Error, ErrorKind};

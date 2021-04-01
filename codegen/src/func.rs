@@ -123,7 +123,7 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let stream = quote! {
         #vis #sig {
             use std::collections::HashMap;
-            use feignhttp;
+            use feignhttp::{HttpClient, HttpConfig, HttpRequest, HttpResponse};
 
             let mut header_map: HashMap<&str, String> = HashMap::new();
             #(
@@ -147,9 +147,9 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
 
             let url = feignhttp::util::replace_url(&format!("{}", #url), &path_map);
 
-            let config = feignhttp::HttpConfig::from_map(config_map);
+            let config = HttpConfig::from_map(config_map);
 
-            let request = feignhttp::HttpClient::configure_request(&url, #method, config)
+            let request = HttpClient::configure_request(&url, #method, config)
                 .headers(header_map).query(&query_vec);
 
             let response = request.#send_fn_call.await?;
