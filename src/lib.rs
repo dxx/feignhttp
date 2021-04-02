@@ -33,7 +33,7 @@
 //! Add feignhttp in your `Cargo.toml` and use default feature:
 //!
 //! ```toml
-//! feignhttp = { version = "0.1" }
+//! feignhttp = { version = "0.2" }
 //! ```
 //! 
 //! Then add the following code:
@@ -59,7 +59,7 @@
 //! Using non-default HTTP backend:
 //
 //! ```toml
-//! feignhttp = { version = "0.1", default-features = false, features = ["isahc-client"] }
+//! feignhttp = { version = "0.2", default-features = false, features = ["isahc-client"] }
 //! ```
 //!
 //! The `default-features = false` option disable default reqwest.
