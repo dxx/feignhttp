@@ -132,7 +132,7 @@ impl RequestWrapper {
         T: serde::ser::Serialize,
     {
         self.set_header_no_exist("content-type", "application/json".to_string());
-        let json = serde_json::to_string(json)?;
+        let json = serde_json::to_string(json).map_err(Error::encode)?;
         self.send_body(Some(Body::from(json))).await
     }
 }
@@ -144,10 +144,7 @@ impl HttpResponse for ResponseWrapper {
     }
 
     async fn text(self) -> Result<String> {
-        return match self.response.text().await {
-            Ok(text) => Ok(text),
-            Err(e) => Err(Error::new(ErrorKind::Decode, Some(e)).into()),
-        };
+        self.response.text().await.map_err(Error::decode)
     }
 }
 
@@ -156,9 +153,6 @@ impl ResponseWrapper {
     where
         T: serde::de::DeserializeOwned,
     {
-        return match self.response.json::<T>().await {
-            Ok(json) => Ok(json),
-            Err(e) => Err(Error::new(ErrorKind::Decode, Some(e)).into()),
-        };
+        self.response.json::<T>().await.map_err(Error::decode)
     }
 }

@@ -4,13 +4,14 @@ use std::fmt;
 use url::Url;
 
 /// A `Result` alias.
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 pub(crate) type BoxError = Box<dyn StdError + Send + Sync>;
 
 #[derive(Debug)]
 pub enum ErrorKind {
     Request,
+    Encode,
     Decode,
     Status(StatusCode),
 }
@@ -40,6 +41,14 @@ impl Error {
         }
     }
 
+    pub(crate) fn decode<E: Into<BoxError>>(e: E) -> Error {
+        Error::new(ErrorKind::Decode, Some(e))
+    }
+
+    pub(crate) fn encode<E: Into<BoxError>>(e: E) -> Error {
+        Error::new(ErrorKind::Encode, Some(e))
+    }
+
     pub(crate) fn status(url: Url, status: StatusCode) -> Self {
         Error::new(ErrorKind::Status(status), None::<Error>).with_url(url)
     }
@@ -47,6 +56,22 @@ impl Error {
     pub(crate) fn with_url(mut self, url: Url) -> Self {
         self.inner.url = Some(url);
         self
+    }
+
+    pub fn is_request(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Request)
+    }
+
+    pub fn is_encode(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Encode)
+    }
+
+    pub fn is_decode(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Decode)
+    }
+
+    pub fn is_status(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Status(_))
     }
 }
 
@@ -78,6 +103,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.inner.kind {
             ErrorKind::Request => f.write_str("error sending request")?,
+            ErrorKind::Encode => f.write_str("error encoding request body")?,
             ErrorKind::Decode => f.write_str("error decoding response body")?,
             ErrorKind::Status(ref status_code) => {
                 let prefix = if status_code.is_client_error() {
