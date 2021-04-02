@@ -2,6 +2,7 @@ use crate::{error::Result, RequestWrapper};
 use async_trait::async_trait;
 use std::collections::HashMap;
 
+/// An HTTP client to make requests.
 pub struct HttpClient;
 
 impl HttpClient {
@@ -13,6 +14,7 @@ impl HttpClient {
     }
 }
 
+/// Configuration of an HTTP request.
 pub struct HttpConfig {
     pub connect_timeout: Option<u16>,
     pub timeout: Option<u16>,
@@ -34,6 +36,7 @@ impl HttpConfig {
     }
 }
 
+/// A trait of request.
 pub trait HttpRequest {
     fn build_default(url: &str, method: &str) -> Self;
 
@@ -44,6 +47,7 @@ pub trait HttpRequest {
     fn query(self, query: &Vec<(&str, String)>) -> Self;
 }
 
+/// A trait of response.
 #[async_trait]
 pub trait HttpResponse {
     fn status(self) -> http::StatusCode;

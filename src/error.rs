@@ -15,6 +15,7 @@ pub enum ErrorKind {
     Status(StatusCode),
 }
 
+/// The errors that may occur when processing a request.
 pub struct Error {
     inner: Box<Inner>,
 }

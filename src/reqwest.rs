@@ -10,12 +10,14 @@ use std::str::FromStr;
 use std::time::Duration;
 use url::Url;
 
+/// A wrapper of HTTP request.
 pub struct RequestWrapper {
     url: Url,
     headers: HashMap<String, String>,
     request: RequestBuilder,
 }
 
+/// A wrapper of HTTP response.
 pub struct ResponseWrapper {
     response: Response,
 }
