@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["dxx <1827939333@qq.com>"]
 edition = "2018"
 description = "Declarative HTTP client for rust"
