@@ -1,10 +1,11 @@
 use http::StatusCode;
 use std::error::Error as StdError;
+use std::result::Result as StdResult;
 use std::fmt;
 use url::Url;
 
 /// A `Result` alias.
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = StdResult<T, Error>;
 
 pub(crate) type BoxError = Box<dyn StdError + Send + Sync>;
 
