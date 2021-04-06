@@ -9,12 +9,14 @@ use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
 
+/// A wrapper of HTTP request.
 pub struct RequestWrapper {
     url: Url,
     headers: HashMap<String, String>,
     request: Builder,
 }
 
+/// A wrapper of HTTP response.
 pub struct ResponseWrapper {
     response: Response<AsyncBody>,
 }
