@@ -101,7 +101,7 @@ impl RequestWrapper {
         }
     }
 
-    async fn send_body<T: Into<AsyncBody>>(self, body: T) -> Result<ResponseWrapper> {
+    async fn send_body(self, body: AsyncBody) -> Result<ResponseWrapper> {
         let url = self.url.clone();
         let request = self.set_header().request.body(body).unwrap();
         return match request.send_async().await {
@@ -120,12 +120,12 @@ impl RequestWrapper {
     }
 
     pub async fn send(self) -> Result<ResponseWrapper> {
-        self.send_body(()).await
+        self.send_body(AsyncBody::from(())).await
     }
 
     pub async fn send_text(mut self, text: String) -> Result<ResponseWrapper> {
         self.set_header_no_exist("content-type", "text/plain".to_string());
-        self.send_body(text).await
+        self.send_body(AsyncBody::from(text)).await
     }
 
     pub async fn send_json<T>(mut self, json: &T) -> Result<ResponseWrapper>
@@ -134,7 +134,7 @@ impl RequestWrapper {
     {
         self.set_header_no_exist("content-type", "application/json".to_string());
         let json = serde_json::to_string(json).map_err(Error::encode)?;
-        self.send_body(json).await
+        self.send_body(AsyncBody::from(json)).await
     }
 }
 
