@@ -5,7 +5,7 @@ use crate::{
 use super::log::{print_request_log, print_response_log};
 use async_trait::async_trait;
 use http::{request::Builder, Request, Response, StatusCode};
-use isahc::{config::RedirectPolicy, prelude::*, AsyncBody};
+use isahc::{prelude::*, AsyncBody, config::RedirectPolicy};
 use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
