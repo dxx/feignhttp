@@ -357,7 +357,6 @@ mod isahc;
 #[cfg(feature = "isahc-client")]
 pub use crate::isahc::*;
 
-
 #[doc(hidden)]
 pub mod util;
 
