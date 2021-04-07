@@ -2,9 +2,10 @@ use crate::{
     error::Error, error::ErrorKind, error::Result, http::HttpConfig, http::HttpRequest,
     http::HttpResponse, map,
 };
+use super::log::{print_request_log, print_response_log};
 use async_trait::async_trait;
 use http::{request::Builder, Request, Response, StatusCode};
-use isahc::{prelude::*, AsyncBody, config::RedirectPolicy};
+use isahc::{config::RedirectPolicy, prelude::*, AsyncBody};
 use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
@@ -103,11 +104,20 @@ impl RequestWrapper {
         }
     }
 
-    async fn send_body(self, body: AsyncBody) -> Result<ResponseWrapper> {
+    async fn send_body(self, body: Option<String>) -> Result<ResponseWrapper> {
         let url = self.url.clone();
-        let request = self.set_header().request.body(body).unwrap();
+        let mut async_body = AsyncBody::from(());
+        if let Some(body) = body.clone() {
+            async_body = AsyncBody::from(body);
+        }
+        let request = self.set_header().request.body(async_body).unwrap();
+
+        print_request_log(&request, body);
+
         return match request.send_async().await {
             Ok(response) => {
+                print_response_log(&response);
+
                 let status = response.status();
 
                 // Client or server error
@@ -122,12 +132,12 @@ impl RequestWrapper {
     }
 
     pub async fn send(self) -> Result<ResponseWrapper> {
-        self.send_body(AsyncBody::from(())).await
+        self.send_body(None).await
     }
 
     pub async fn send_text(mut self, text: String) -> Result<ResponseWrapper> {
         self.set_header_no_exist("content-type", "text/plain".to_string());
-        self.send_body(AsyncBody::from(text)).await
+        self.send_body(Some(text)).await
     }
 
     pub async fn send_json<T>(mut self, json: &T) -> Result<ResponseWrapper>
@@ -136,7 +146,7 @@ impl RequestWrapper {
     {
         self.set_header_no_exist("content-type", "application/json".to_string());
         let json = serde_json::to_string(json).map_err(Error::encode)?;
-        self.send_body(AsyncBody::from(json)).await
+        self.send_body(Some(json)).await
     }
 }
 

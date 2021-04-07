@@ -2,6 +2,7 @@ use crate::{
     error::Error, error::ErrorKind, error::Result, http::HttpConfig, http::HttpRequest,
     http::HttpResponse, map,
 };
+use super::log::{print_request_log, print_response_log};
 use async_trait::async_trait;
 use http::StatusCode;
 use reqwest::{Body, Client, Method, RequestBuilder, Response};
@@ -103,8 +104,14 @@ impl RequestWrapper {
             self.request = self.request.body(body);
         }
         let url = self.url.clone();
-        return match self.set_header().request.send().await {
+        let request = self.set_header().request;
+
+        print_request_log(request.try_clone().unwrap());
+
+        return match request.send().await {
             Ok(response) => {
+                print_response_log(&response);
+
                 let status = response.status();
 
                 // Client or server error
