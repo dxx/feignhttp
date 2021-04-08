@@ -137,7 +137,9 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
                             // A literal, like the `"name"` in `#[param("name")]`
                             syn::NestedMeta::Lit(lit) => {
                                 if let syn::Lit::Str(lit) = lit {
-                                    name = lit.value();
+                                    if !lit.value().is_empty() {
+                                        name = lit.value();
+                                    }
                                 }
                             },
                             _=> {
