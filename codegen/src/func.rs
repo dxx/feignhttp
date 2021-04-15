@@ -81,14 +81,9 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
             .filter(|a| a.content == Content::BODY)
             .map(|a| a.var_type.clone())
             .collect();
-        let body_type_str = body_types.get(0).unwrap().to_token_stream().to_string();
-        let body_var = body_vars.get(0).unwrap().clone();
-
-        if body_type_str.contains("String") || body_type_str.contains("& str") {
-            send_fn_call = quote! {send_text(#body_var .to_string())};
-        } else {
-            send_fn_call = quote! {send_json(& #body_var)};
-        }
+        send_fn_call = get_body_fn_call(
+            body_types.get(0).unwrap(),
+            body_vars.get(0).unwrap());
     }
 
     let mut config_keys = Vec::new();
@@ -111,14 +106,7 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
             .into();
     }
     let return_type = return_args.get(0).unwrap();
-    let return_type_str = return_type.to_token_stream().to_string();
-    let is_text = if return_type_str.contains("String") { true } else { false };
-
-    let ret_fn = if is_text {
-        quote! {text}
-    } else {
-        quote! {json}
-    };
+    let return_fn = get_return_fn(return_type);
 
     let stream = quote! {
         #vis #sig {
@@ -153,7 +141,7 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
                 .headers(header_map).query(&query_vec);
 
             let response = request.#send_fn_call.await?;
-            let return_value: #return_type = response.#ret_fn().await?;
+            let return_value: #return_type = response.#return_fn().await?;
 
             Ok(return_value)
         }
@@ -174,4 +162,23 @@ fn find_content_vars(args: &Vec<ReqArg>, content: Content) -> Vec<syn::Ident> {
         .filter(|a| a.content == content)
         .map(|a| a.var.clone())
         .collect()
+}
+
+fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {
+    let body_type_str = body_type.to_token_stream().to_string();
+    return if body_type_str.contains("String") || body_type_str.contains("& str") {
+        quote! {send_text(#body_var .to_string())}
+    } else {
+        quote! {send_json(& #body_var)}
+    }
+}
+
+fn get_return_fn(return_type: &syn::Type) -> proc_macro2::TokenStream {
+    let return_type_str = return_type.to_token_stream().to_string();
+    let is_text = if return_type_str.contains("String") { true } else { false };
+    return if is_text {
+        quote! {text}
+    } else {
+        quote! {json}
+    }
 }
