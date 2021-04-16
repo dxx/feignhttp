@@ -58,6 +58,7 @@ async fn test_query() {
 #[async_std::test]
 async fn test_send_text() {
     let _mock = mock("POST", "/")
+        .match_header("content-type", "text/plain")
         .match_body(r#"I' m text"#)
         .create();
 
@@ -72,6 +73,7 @@ async fn test_send_text() {
 #[async_std::test]
 async fn test_send_json() {
     let _mock = mock("POST", "/")
+        .match_header("content-type", "application/json")
         .match_body(r#"{"id":1,"name":"jack"}"#)
         .create();
 

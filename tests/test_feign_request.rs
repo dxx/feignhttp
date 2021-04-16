@@ -65,7 +65,8 @@ async fn post_text (#[body] text: String) -> feignhttp::Result<String> {}
 #[async_std::test]
 async fn test_send_text() {
     let _mock = mock("POST", "/post_text")
-        .match_body("I' m text")
+        .match_header("content-type", "text/plain")
+        .match_body(r#"I' m text"#)
         .create();
 
     post_text("I' m text".to_string()).await.unwrap();
@@ -84,6 +85,7 @@ async fn post_json (#[body] user: User) -> feignhttp::Result<String> {}
 #[async_std::test]
 async fn test_send_json() {
     let _mock = mock("POST", "/post_json")
+        .match_header("content-type", "application/json")
         .match_body(r#"{"id":1,"name":"jack"}"#)
         .create();
 
