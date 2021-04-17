@@ -19,7 +19,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         name: "jack".to_string(),
     };
     let json = serde_json::to_string(&user).unwrap();
-    post_user(json).await?;
+    let r = post_user(json).await?;
+    println!("{}", r);
 
     Ok(())
 }
