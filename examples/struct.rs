@@ -19,7 +19,7 @@ impl Github {
     async fn contributors(
         #[path("owner")] user: &str,
         #[path] repo: &str,
-        #[param] page: u32,
+        #[query] page: u32,
     ) -> feignhttp::Result<String> {}
 
     #[get("/repos/{owner}/{repo}/commits")]
@@ -27,8 +27,8 @@ impl Github {
         #[header] accept: &str,
         #[path] owner: &str,
         #[path] repo: &str,
-        #[param] page: u32,
-        #[param] per_page: u32,
+        #[query] page: u32,
+        #[query] per_page: u32,
     ) -> feignhttp::Result<String> {}
 
     // Structure method still send request
