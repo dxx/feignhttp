@@ -253,7 +253,7 @@ fn get_form_fn_call(
                 syn::Type::Reference(t) => {
                     let ty = t.to_token_stream().to_string();
                     if is_form_support_types(ty.replace(" ", "").replace("&", "")) {
-                        return Err(format!("non supports form parameter: `{}: {}`", form_name, ty));
+                        return Err(format!("one form parameter only supports scalar types, &str, String or struct"));
                     } else if ty.contains("& str") {
                         let mut token_str = "send_form(&vec![".to_string();
                         token_str.push_str("(");
@@ -275,8 +275,8 @@ fn get_form_fn_call(
                 let form_type = form_types.get(i).unwrap();
                 let form_var = form_vars.get(i).unwrap();
                 let ty = form_type.to_token_stream().to_string().replace(" ", "");
-                if !is_form_support_types(ty.clone()) {
-                    return Err(format!("two or more form parameters can only be scalar types"));
+                if !is_form_support_types(ty) {
+                    return Err(format!("two or more form parameters only supports scalar types, &str or String"));
                 }
                 token_str.push_str("(");
                 token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
