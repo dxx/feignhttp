@@ -11,7 +11,7 @@ FeignHttp is a declarative HTTP client. Based on rust macros.
 * Easy to use
 * Asynchronous request
 * Configurable timeout settings
-* Supports plain text and json
+* Supports form, plain text and JSON
 * Selectable HTTP backends ([reqwest](https://github.com/seanmonstar/reqwest) or [isahc](https://github.com/sagebind/isahc))
 
 ## Usage
@@ -110,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Query Parameters
 
-Using `param` to specify query parameter:
+Using `query` to specify query parameter:
 
 ```rust
 use feignhttp::get;
@@ -119,7 +119,7 @@ use feignhttp::get;
 async fn contributors(
     #[path("owner")] user: &str,
     #[path] repo: &str,
-    #[param] page: u32,
+    #[query] page: u32,
 ) -> feignhttp::Result<String> {}
 
 #[async_std::main]
@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/dxx/feignhttp?page=1`.
 
-> Note: A function parameter without `param` attribute will as a query parameter by default.
+> Note: A function parameter without `query` attribute will as a query parameter by default.
 
 ### Headers
 
@@ -151,8 +151,8 @@ async fn commits(
     #[header] accept: &str,
     #[path] owner: &str,
     #[path] repo: &str,
-    #[param] page: u32,
-    #[param] per_page: u32,
+    #[query] page: u32,
+    #[query] per_page: u32,
 ) -> feignhttp::Result<String> {}
 
 #[async_std::main]
@@ -172,6 +172,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 A header `accept:application/vnd.github.v3+json ` will be send.
+
+### Form
+
+Using `form` to specify form parameter:
+
+```rust
+use feignhttp::post;
+
+#[post(url = "https://httpbin.org/anything")]
+async fn post_user(
+    #[form] id: i32,
+    #[form] name: &str,
+) -> feignhttp::Result<String> {}
+
+#[async_std::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let r = post_user(1, "jack").await?;
+    println!("{}", r);
+
+    Ok(())
+}
+```
+
+See [here](./examples/form.rs) for more examples.
 
 ### URL constant
 
