@@ -56,6 +56,28 @@ async fn test_query() {
 }
 
 #[async_std::test]
+async fn test_send_form() {
+    env_logger::init();
+
+    let _mock = mock("POST", "/")
+        .match_header("content-type", "application/x-www-form-urlencoded")
+        .match_body(r#"id=1&name=xxx&name=xxx2"#)
+        .create();
+
+    let url = format!("http://{}", server_address());
+    let method = "POST";
+
+    let form_vec: Vec<(&str, String)> = [
+        ("id", "1".to_string()),
+        ("name", "xxx".to_string()),
+        ("name", "xxx2".to_string()),
+    ].iter().cloned().collect();
+
+    let request = HttpClient::default_request(&url, method);
+    request.send_form(&form_vec).await.unwrap();
+}
+
+#[async_std::test]
 async fn test_send_text() {
     let _mock = mock("POST", "/")
         .match_header("content-type", "text/plain")

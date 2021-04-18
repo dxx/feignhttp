@@ -26,10 +26,10 @@ async fn test_post() {
 
 
 #[post(url = "http://localhost:1234/post_header")]
-async fn post_header (
+async fn post_header(
     #[header] auth: String,
-    #[header("name")] username: &str)
-    -> feignhttp::Result<String> {}
+    #[header("name")] username: &str,
+) -> feignhttp::Result<String> {}
 
 #[async_std::test]
 async fn test_header() {
@@ -43,10 +43,10 @@ async fn test_header() {
 
 
 #[post(url = "http://localhost:1234/post_query")]
-async fn post_query (
+async fn post_query(
     #[param] id: u32,
-    #[param("name")] name: String)
-    -> feignhttp::Result<String> {}
+    #[param("name")] name: String,
+) -> feignhttp::Result<String> {}
 
 #[async_std::test]
 async fn test_query() {
@@ -59,8 +59,25 @@ async fn test_query() {
 }
 
 
+#[post(url = "http://localhost:1234/post_form")]
+async fn post_form(
+    #[form] id: i32,
+    #[form("name")] name: String,
+) -> feignhttp::Result<String> {}
+
+#[async_std::test]
+async fn test_send_form() {
+    let _mock = mock("POST", "/post_form")
+        .match_header("content-type", "application/x-www-form-urlencoded")
+        .match_body(r#"id=1&name=xxx"#)
+        .create();
+
+    post_form(1, "xxx".to_string()).await.unwrap();
+}
+
+
 #[post(url = "http://localhost:1234/post_text")]
-async fn post_text (#[body] text: String) -> feignhttp::Result<String> {}
+async fn post_text(#[body] text: String) -> feignhttp::Result<String> {}
 
 #[async_std::test]
 async fn test_send_text() {
@@ -80,7 +97,7 @@ struct User {
 }
 
 #[post(url = "http://localhost:1234/post_json")]
-async fn post_json (#[body] user: User) -> feignhttp::Result<String> {}
+async fn post_json(#[body] user: User) -> feignhttp::Result<String> {}
 
 #[async_std::test]
 async fn test_send_json() {
