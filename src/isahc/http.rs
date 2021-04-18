@@ -140,6 +140,15 @@ impl RequestWrapper {
         self.send_body(Some(text)).await
     }
 
+    pub async fn send_form<T>(mut self, form: &T) -> Result<ResponseWrapper>
+    where
+        T: serde::ser::Serialize,
+    {
+        self.set_header_no_exist("content-type", "application/x-www-form-urlencoded".to_string());
+        let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
+        self.send_body(Some(form)).await
+    }
+
     pub async fn send_json<T>(mut self, json: &T) -> Result<ResponseWrapper>
     where
         T: serde::ser::Serialize,

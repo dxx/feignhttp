@@ -34,6 +34,7 @@ pub enum Content {
     HEADER,
     PARAM,
     PATH,
+    FORM,
     BODY,
 }
 
@@ -43,6 +44,7 @@ impl fmt::Display for Content {
             Content::HEADER => "header",
             Content::PARAM => "param",
             Content::PATH => "path",
+            Content::FORM => "form",
             Content::BODY => "body",
         };
         write!(f, "{}", content)
@@ -55,6 +57,7 @@ impl Content {
             "header" | "HEADER" => Ok(Content::HEADER),
             "param" | "PARAM" => Ok(Content::PARAM),
             "path" | "PATH" => Ok(Content::PATH),
+            "form" | "FORM" => Ok(Content::FORM),
             "body" | "BODY" => Ok(Content::BODY),
             _ => Err("unknown request content marker: ".to_string() + content),
         }
