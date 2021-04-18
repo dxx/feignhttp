@@ -32,8 +32,8 @@ impl Method {
 #[derive(PartialEq)]
 pub enum Content {
     HEADER,
-    PARAM,
     PATH,
+    QUERY,
     FORM,
     BODY,
 }
@@ -42,8 +42,8 @@ impl fmt::Display for Content {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let content = match self {
             Content::HEADER => "header",
-            Content::PARAM => "param",
             Content::PATH => "path",
+            Content::QUERY => "query",
             Content::FORM => "form",
             Content::BODY => "body",
         };
@@ -55,8 +55,8 @@ impl Content {
     pub fn from_str(content: &str) -> Result<Content, String> {
         match content {
             "header" | "HEADER" => Ok(Content::HEADER),
-            "param" | "PARAM" => Ok(Content::PARAM),
             "path" | "PATH" => Ok(Content::PATH),
+            "query" | "QUERY" => Ok(Content::QUERY),
             "form" | "FORM" => Ok(Content::FORM),
             "body" | "BODY" => Ok(Content::BODY),
             _ => Err("unknown request content marker: ".to_string() + content),

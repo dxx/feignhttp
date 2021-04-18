@@ -62,8 +62,8 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let header_names = find_content_names(&args, Content::HEADER);
     let header_vars = find_content_vars(&args, Content::HEADER);
 
-    let query_names = find_content_names(&args, Content::PARAM);
-    let query_vars = find_content_vars(&args, Content::PARAM);
+    let query_names = find_content_names(&args, Content::QUERY);
+    let query_vars = find_content_vars(&args, Content::QUERY);
 
     let path_names = find_content_names(&args, Content::PATH);
     let path_vars = find_content_vars(&args, Content::PATH);

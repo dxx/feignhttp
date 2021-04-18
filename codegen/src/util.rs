@@ -110,8 +110,8 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
             let attrs = pat_type.attrs.clone();
             pat_type.attrs.clear();
 
-            // Default param
-            let mut content = Content::PARAM;
+            // Default query
+            let mut content = Content::QUERY;
             let mut name = format!("{}", pat_type.pat.to_token_stream());
             let ident = syn::Ident::new(&name.clone(), proc_macro2::Span::call_site());
             match &*pat_type.ty {
