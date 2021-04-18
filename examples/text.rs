@@ -1,9 +1,9 @@
 use feignhttp::post;
 
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 
-// Serialization and deserialization
-#[derive(Debug, Serialize, Deserialize)]
+// Serialize: Specifies serialization
+#[derive(Debug, Serialize)]
 struct User {
     id: i32,
     name: String,
