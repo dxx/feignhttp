@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 
-use feignhttp::get;
+use feignhttp::{get, post, Result};
 
 #[test]
 fn test_validate_no_url () {
@@ -77,19 +77,65 @@ fn test_validate_return_value2() {
 #[test]
 fn test_validate_arg() {
     // error: unknown content marker: aaa
-    //    |  pub async fn get(#[aaa] a: i32) -> Result<String, String> {}
+    //    |  pub async fn get(#[aaa] a: i32) -> Result<String> {}
     //    |                     ^^^
 
     // #[get("http://xxx")]
-    // pub async fn get(#[aaa] a: i32) -> Result<String, String> {}
+    // pub async fn get(#[aaa] a: i32) -> Result<String> {}
 }
 
 #[test]
 fn test_validate_arg2() {
     // error: unknown content marker: bbb
-    //    |  pub async fn get(a: i32, #[bbb] b: i32) -> Result<String, String> {}
+    //    |  pub async fn get(a: i32, #[bbb] b: i32) -> Result<String> {}
     //    |                             ^^^
 
     // #[get("http://xxx")]
-    // pub async fn get(a: i32, #[bbb] b: i32) -> Result<String, String> {}
+    // pub async fn get(a: i32, #[bbb] b: i32) -> Result<String> {}
+}
+
+#[test]
+fn test_validate_form() {
+    // error: one form parameter only supports scalar types, &str, String or struct
+    //    |  pub async fn get(#[form] s: &String) -> Result<String> {}
+    //    |                           ^^^^^^^^^^
+
+    // #[post("http://xxx")]
+    // pub async fn get(#[form] s: &String) -> Result<String> {}
+}
+
+#[test]
+fn test_validate_form2() {
+    // error: two or more form parameters only supports scalar types, &str or String
+    //    |  pub async fn get(#[form] a: i32, #[form] b: &i32, #[form] f: F) -> Result<String> {}
+    //    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // struct F;
+
+    // #[post("http://xxx")]
+    // pub async fn get(#[form] a: i32, #[form] b: &i32, #[form] f: F) -> Result<String> {}
+}
+
+#[test]
+fn test_validate_body() {
+    // error: request must have only one body
+    //    |  pub async fn get(#[body] b: B, #[body] b2: B) -> Result<String> {}
+    //    |                           ^^^^^^^^^^^^^^^^^^^
+
+    // struct B;
+
+    // #[post("http://xxx")]
+    // pub async fn get(#[body] b: B, #[body] b2: B) -> Result<String> {}
+}
+
+#[test]
+fn test_validate_body_form() {
+    // error: request must have only one of body or form
+    //    |  pub async fn get(#[body] b: S, #[form] f: S) -> Result<String> {}
+    //    |                           ^^^^^^^^^^^^^^^^^^
+
+    // struct S;
+
+    // #[post("http://xxx")]
+    // pub async fn get(#[body] b: S, #[form] f: S) -> Result<String> {}
 }

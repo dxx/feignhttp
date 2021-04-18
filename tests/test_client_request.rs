@@ -57,8 +57,6 @@ async fn test_query() {
 
 #[async_std::test]
 async fn test_send_form() {
-    env_logger::init();
-
     let _mock = mock("POST", "/")
         .match_header("content-type", "application/x-www-form-urlencoded")
         .match_body(r#"id=1&name=xxx&name=xxx2"#)
