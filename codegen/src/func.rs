@@ -42,6 +42,13 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let method = req_meta.method.to_str();
     let config = req_meta.config;
 
+    let mut config_keys = Vec::new();
+    let mut config_values = Vec::new();
+    for (k, v) in config {
+        config_keys.push(k);
+        config_values.push(v);
+    }
+
     let mut item_fn = parse_macro_input!(item as ItemFn);
 
     let sig = &mut item_fn.sig;
@@ -62,11 +69,11 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let header_names = find_content_names(&args, Content::HEADER);
     let header_vars = find_content_vars(&args, Content::HEADER);
 
-    let query_names = find_content_names(&args, Content::QUERY);
-    let query_vars = find_content_vars(&args, Content::QUERY);
-
     let path_names = find_content_names(&args, Content::PATH);
     let path_vars = find_content_vars(&args, Content::PATH);
+
+    let query_names = find_content_names(&args, Content::QUERY);
+    let query_vars = find_content_vars(&args, Content::QUERY);
 
     let form_names = find_content_names(&args, Content::FORM);
     let form_vars = find_content_vars(&args, Content::FORM);
@@ -114,13 +121,6 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
         }
     }
 
-    let mut config_keys = Vec::new();
-    let mut config_values = Vec::new();
-    for (k, v) in config {
-        config_keys.push(k);
-        config_values.push(v);
-    }
-
     let return_type = parse_return_type(sig);
     if let Err(err) = return_type {
         return err.to_compile_error().into();
@@ -141,14 +141,14 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
             use std::collections::HashMap;
             use feignhttp::{HttpClient, HttpConfig, HttpRequest, HttpResponse};
 
+            let mut config_map: HashMap<&str, String> = HashMap::new();
+            #(
+                config_map.insert(#config_keys, format!("{}", #config_values));
+            )*
+
             let mut header_map: HashMap<&str, String> = HashMap::new();
             #(
                 header_map.insert(#header_names, format!("{}", #header_vars));
-            )*
-
-            let mut query_vec: Vec<(&str, String)> = Vec::new();
-            #(
-                query_vec.push((#query_names, format!("{}", #query_vars)));
             )*
 
             let mut path_map: HashMap<&str, String> = HashMap::new();
@@ -156,9 +156,9 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
                 path_map.insert(#path_names, format!("{}", #path_vars));
             )*
 
-            let mut config_map: HashMap<&str, String> = HashMap::new();
+            let mut query_vec: Vec<(&str, String)> = Vec::new();
             #(
-                config_map.insert(#config_keys, format!("{}", #config_values));
+                query_vec.push((#query_names, format!("{}", #query_vars)));
             )*
 
             let url = feignhttp::util::replace_url(&format!("{}", #url), &path_map);
