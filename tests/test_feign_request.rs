@@ -44,8 +44,8 @@ async fn test_header() {
 
 #[post(url = "http://localhost:1234/post_query")]
 async fn post_query(
-    #[param] id: u32,
-    #[param("name")] name: String,
+    #[query] id: u32,
+    #[query("name")] name: String,
 ) -> feignhttp::Result<String> {}
 
 #[async_std::test]
