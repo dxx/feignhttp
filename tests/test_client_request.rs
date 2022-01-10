@@ -118,7 +118,7 @@ async fn test_send_json() {
 #[async_std::test]
 #[should_panic]
 async fn test_connect_timeout() {
-    let url = "http://xxx.com";
+    let url = "http://site_dne.com";
     let method = "GET";
     let config = HttpConfig{
         connect_timeout: Some(3000), // 3000 millisecond
