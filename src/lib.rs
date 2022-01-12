@@ -348,7 +348,7 @@
 //! ```rust, no_run
 //! use feignhttp::get;
 //!
-//! #[get(url = "http://xxx.com", connect_timeout = 3000)]
+//! #[get(url = "http://site_dne.com", connect_timeout = 3000)]
 //! async fn connect_timeout() -> feignhttp::Result<String> {}
 //! ```
 //! 
