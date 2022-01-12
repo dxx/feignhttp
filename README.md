@@ -346,7 +346,7 @@ If you need to configure the timeout, use `connect_timeout` and `timeout` to spe
 Connect timeout:
 
 ```rust
-#[get(url = "http://xxx.com", connect_timeout = 3000)]
+#[get(url = "http://site_dne.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 ```
 
