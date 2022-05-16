@@ -1,6 +1,6 @@
 use std::fmt;
 
-/// Http request method
+/// Http request method.
 pub enum Method {
     GET,
     POST,
@@ -28,7 +28,7 @@ impl Method {
     }
 }
 
-/// Http request content
+/// Http request content.
 #[derive(PartialEq)]
 pub enum Content {
     HEADER,

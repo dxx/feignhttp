@@ -7,6 +7,7 @@ use std::str::FromStr;
 use std::collections::HashMap;
 
 pub struct ReqMeta {
+    // Url is a token stream, so it can be retrieved by a variable.
     pub url: proc_macro2::TokenStream,
     pub method: Method,
     pub config: HashMap<String, String>,
@@ -37,6 +38,7 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
     )
 }
 
+/// Generate function code.
 pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let url = req_meta.url;
     let method = req_meta.method.to_str();

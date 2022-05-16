@@ -40,7 +40,7 @@ fn fn_to_streams(
     let mut method_streams = Vec::new();
     for item in items.iter() {
         let mut url = base_url.clone();
-        // Default get method
+        // Default get method.
         let mut method = Method::GET;
         if let syn::ImplItem::Method(syn::ImplItemMethod { attrs, .. }) = item {
             if let Some(attr) = attrs.last() {
@@ -58,7 +58,7 @@ fn fn_to_streams(
                     url = quote!(#url + #fn_path)
                 }
 
-                // Override configuration
+                // Override configuration.
                 let config_map = parse_fn_attrs(attr);
                 for (k, v) in config_map {
                     config.insert(k, v);
@@ -84,7 +84,7 @@ fn parse_fn_path(attr: &syn::Attribute) -> proc_macro2::TokenStream {
     if let Ok(vec) = get_metas(attr) {
         if let Some(nested_meta) = vec.first() {
             match nested_meta {
-                // A literal, like the `"/xxx"` in `#[get("/xxx")]`
+                // A literal, like the `"/xxx"` in `#[get("/xxx")]`.
                 syn::NestedMeta::Lit(lit) => {
                     if let syn::Lit::Str(lit) = lit {
                         return lit.value().to_token_stream();
@@ -114,7 +114,7 @@ fn parse_fn_attrs(attr: &syn::Attribute) -> HashMap<String, String> {
     if let Ok(metas) = get_metas(attr) {
         for meta in metas.into_iter() {
             match meta {
-                // A literal, like the `xxx` in `#[get(p = xxx)]`
+                // A literal, like the `xxx` in `#[get(p = xxx)]`.
                 syn::NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
                     let key = name_value.path.segments.last().unwrap().ident.to_string();
                     attr_map.insert(key, name_value.lit.to_token_stream().to_string());

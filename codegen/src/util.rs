@@ -6,33 +6,38 @@ use proc_macro::TokenStream;
 use std::str::FromStr;
 use std::collections::HashMap;
 
+/// Parse url and return url token stream.
+/// A URL can be an expression.
 pub fn parse_url_stream(attr: &TokenStream) -> Result<proc_macro2::TokenStream, syn::Error> {
     let attr_str = attr.to_string();
-    if attr_str == "" {
+    if attr_str.is_empty() {
         return Err(syn::Error::new(proc_macro2::Span::call_site(), "no metadata assign"));
     }
 
     let attrs = attr_str.split(",");
     let exprs: Vec<&str> = attrs.into_iter().map(|u| u).collect();
+    // The default starting expression is the URL.
     if let Some(expr_str) = exprs.first() {
         let expr_str = expr_str.trim();
         let url_expr = parse_macro_input::parse::<syn::Expr>(
-            TokenStream::from_str(expr_str).unwrap()).unwrap();
+            TokenStream::from_str(expr_str).unwrap())?;
         let url_stream = parse_url(&url_expr)?;
-
+        
+        // Skip the url.
         for i in 1..exprs.len() {
             let exp_str = exprs[i].trim();
             let url_expr = parse_macro_input::parse::<syn::Expr>(
-                TokenStream::from_str(exp_str).unwrap()).unwrap();
+                TokenStream::from_str(exp_str).unwrap())?;
 
             match url_expr {
-                // An assignment path: path = xxx
+                // An assignment path: path = xxx.
                 syn::Expr::Assign(assign) => {
                     let left = &assign.left;
                     if let syn::Expr::Path(ref k) = **left {
                         let key = k.path.segments.last().unwrap().ident.to_string();
                         if key == "path" {
                             let right = &assign.right;
+                            // Url + path.
                             return Ok(quote!(#url_stream .to_string() + #right));
                         }
                     }
@@ -45,9 +50,10 @@ pub fn parse_url_stream(attr: &TokenStream) -> Result<proc_macro2::TokenStream, 
     Err(syn::Error::new(proc_macro2::Span::call_site(), "no metadata assign"))
 }
 
+/// Parse and validate the url.
 pub fn parse_url(url_expr: &syn::Expr) -> Result<proc_macro2::TokenStream, syn::Error> {
     return match url_expr {
-        // An assignment url: url = xxx
+        // An assignment url: url = xxx.
         syn::Expr::Assign(assign) => {
             let left = &assign.left;
             if let syn::Expr::Path(ref k) = **left {
@@ -62,9 +68,9 @@ pub fn parse_url(url_expr: &syn::Expr) -> Result<proc_macro2::TokenStream, syn::
             let right = &assign.right;
             Ok(right.to_token_stream())
         }
-        // A literal url: `"http://xxx"`
+        // A literal url: `"http://xxx"`.
         syn::Expr::Lit(lit) => Ok(lit.to_token_stream()),
-        // A variable url: URL
+        // A variable url: URL.
         syn::Expr::Path(path) => Ok(path.to_token_stream()),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
@@ -73,6 +79,7 @@ pub fn parse_url(url_expr: &syn::Expr) -> Result<proc_macro2::TokenStream, syn::
     };
 }
 
+/// Parse assignment expression like n1=v1, n2=v2, etc.
 pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
     let mut expr_map = HashMap::new();
     let attr_str = attr.to_string();
@@ -86,7 +93,7 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
         let expr = parse_macro_input::parse::<syn::Expr>(
             TokenStream::from_str(exp_str.trim()).unwrap()).unwrap();
         match expr {
-            // An assignment path: path = xxx
+            // An assignment path: path = xxx.
             syn::Expr::Assign(assign) => {
                 let left = &assign.left;
                 if let syn::Expr::Path(ref k) = **left {
@@ -102,6 +109,7 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
     expr_map
 }
 
+/// Parse request args.
 pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
     let input = &mut sig.inputs;
     let mut req_args: Vec<ReqArg> = Vec::new();
@@ -110,7 +118,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
             let attrs = pat_type.attrs.clone();
             pat_type.attrs.clear();
 
-            // Default query
+            // Default is query.
             let mut content = Content::QUERY;
             let mut name = format!("{}", pat_type.pat.to_token_stream());
             let ident = syn::Ident::new(&name.clone(), proc_macro2::Span::call_site());
@@ -124,7 +132,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
             }
 
             if let Some(attr) = attrs.last() {
-                // Content: header, param, path, body
+                // Content: header, param, path, body.
                 let attr_ident =
                     Content::from_str(&attr.path.segments.last().unwrap().ident.to_string());
                 if let Err(err) = attr_ident {
@@ -134,7 +142,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
                 if let Ok(vec) = get_metas(attr) {
                     if let Some(nested_meta) = vec.first() {
                         match nested_meta {
-                            // A literal, like the `"name"` in `#[param("name")]`
+                            // A literal, like the `"name"` in `#[param("name")]`.
                             syn::NestedMeta::Lit(lit) => {
                                 if let syn::Lit::Str(lit) = lit {
                                     if !lit.value().is_empty() {
@@ -165,6 +173,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
     Ok(req_args)
 }
 
+/// Parse return type of function.
 pub fn parse_return_type(sig: &syn::Signature) -> Result<Vec<syn::Type>, syn::Error> {
     let output = &sig.output;
     let mut err_msg = "function must have a return value".to_string();
@@ -204,7 +213,7 @@ pub fn get_metas(attr: &syn::Attribute) -> Result<Vec<syn::NestedMeta>, ()> {
 
 pub fn get_meta_str_value(meta: &syn::NestedMeta, name: &str) -> Option<String> {
     match meta {
-        // A literal, like the `"name"` in `#[param(p = "name")]`
+        // A literal, like the `"name"` in `#[param(p = "name")]`.
         syn::NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
             let key = name_value.path.segments.last().unwrap().ident.to_string();
             if key == name {
