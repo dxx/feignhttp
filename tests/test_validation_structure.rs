@@ -64,7 +64,7 @@ fn test_validate_impl_method_path() {
 
     // #[feign("http://xxx")]
     impl Http {
-        // #[get(path = "/aaa")]
+        // #[get(aaa = "/aaa")]
         // pub async fn get() -> Result<String> {}
     }
 }
