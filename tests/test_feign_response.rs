@@ -10,7 +10,7 @@ const TEXT_URL: &str = "http://localhost:1234";
 #[get(url = TEXT_URL, path = "/text")]
 async fn get_text() -> feignhttp::Result<String> {}
 
-#[async_std::test]
+#[tokio::test]
 async fn test_get_text() {
     let _mock = mock("GET", "/text")
         .with_body("Hello, i' m text")
@@ -33,7 +33,7 @@ struct User {
 #[get(url = JSON_URL, path = "/json")]
 async fn get_json() -> feignhttp::Result<User> {}
 
-#[async_std::test]
+#[tokio::test]
 async fn test_get_json() {
     let _mock = mock("GET", "/json")
         .with_body(r#"{ "code": 200, "message": "success" }"#)

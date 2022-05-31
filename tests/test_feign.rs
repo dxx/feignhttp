@@ -17,19 +17,19 @@ impl Feign {
     async fn user(#[path] user: &str) -> feignhttp::Result<String> {}
 }
 
-#[async_std::test]
+#[tokio::test]
 async fn test_fn() {
     let r = get().await.unwrap();
     println!("{}", r);
 }
 
-#[async_std::test]
+#[tokio::test]
 async fn test_struct() {
     let r = Feign::user("dxx").await.unwrap();
     println!("{}", r);
 }
 
-#[async_std::test]
+#[tokio::test]
 #[should_panic]
 async fn test_not_found() {
     // 404
