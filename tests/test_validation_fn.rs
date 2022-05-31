@@ -3,7 +3,7 @@
 use feignhttp::{get, post, Result};
 
 #[test]
-fn test_validate_no_url () {
+fn test_validate_no_url() {
     // error: no metadata assign
     //    |  #[get]
     //    |  ^^^^^^^^
@@ -45,7 +45,7 @@ fn test_validate_invalid_url() {
 }
 
 #[test]
-fn test_validate_async () {
+fn test_validate_async() {
     // error: only support async fn
     //    |  pub fn get() {}
     //    |      ^^
