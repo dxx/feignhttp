@@ -47,7 +47,7 @@ reqwest = { version = "0.11", features = ["default", "json"], optional = true }
 isahc = { version = "1.2", features = ["default", "json"], optional = true }
 
 [dev-dependencies]
-async-std = { version = "1", features = ["attributes", "tokio1"] }
+tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 mockito = "0.23.3"
 env_logger = "0.8.3"
