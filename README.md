@@ -16,6 +16,8 @@ FeignHttp is a declarative HTTP client. Based on rust macros.
 
 ## Usage
 
+### Basic
+
 FeignHttp mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://github.com/async-rs/async-std) or [tokio](https://github.com/tokio-rs/tokio).
 
 async-std:
@@ -48,7 +50,7 @@ use feignhttp::get;
 #[get("https://api.github.com")]
 async fn github() -> feignhttp::Result<String> {}
 
-#[async_std::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = github().await?;
     println!("result: {}", r);
@@ -67,161 +69,6 @@ feignhttp = { version = "0.3", default-features = false, features = ["isahc-clie
 ```
 
 The `default-features = false` option disable default reqwest.
-
-### Making a POST request
-
-For a post request, you should use the `post` attribute macro to specify request method and use a `body` attribute to specify 
-a request body.
-
-```rust
-use feignhttp::post;
-
-#[post(url = "https://httpbin.org/anything")]
-async fn post_data(#[body] text: String) -> feignhttp::Result<String> {}
-```
-
-The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
-String and &str will be put as plain text into the request body.
-
-### Paths
-
-Using `path` to specify path value:
-
-```rust
-use feignhttp::get;
-
-#[get("https://api.github.com/repos/{owner}/{repo}")]
-async fn repository(
-    #[path] owner: &str,
-    #[path] repo: String,
-) -> feignhttp::Result<String> {}
-
-#[async_std::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = repository("dxx", "feignhttp".to_string()).await?;
-    println!("repository result: {}", r);
-
-    Ok(())
-}
-```
-
-`dxx` will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be 
-`https://api.github.com/repos/dxx/feignhttp`. You can specify a path name like `#[path("owner")]`.
-
-### Query Parameters
-
-Using `query` to specify query parameter:
-
-```rust
-use feignhttp::get;
-
-#[get("https://api.github.com/repos/{owner}/{repo}/contributors")]
-async fn contributors(
-    #[path("owner")] user: &str,
-    #[path] repo: &str,
-    #[query] page: u32,
-) -> feignhttp::Result<String> {}
-
-#[async_std::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = contributors (
-        "dxx",
-        "feignhttp",
-        1,
-    ).await?;
-    println!("contributors result: {}", r);
-
-    Ok(())
-}
-```
-
-The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/dxx/feignhttp?page=1`.
-
-> Note: A function parameter without `query` attribute will as a query parameter by default.
-
-### Headers
-
-Using `header` to specify request header:
-
-```rust
-use feignhttp::get;
-
-#[get("https://api.github.com/repos/{owner}/{repo}/commits")]
-async fn commits(
-    #[header] accept: &str,
-    #[path] owner: &str,
-    #[path] repo: &str,
-    #[query] page: u32,
-    #[query] per_page: u32,
-) -> feignhttp::Result<String> {}
-
-#[async_std::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = commits(
-        "application/vnd.github.v3+json",
-        "dxx",
-        "feignhttp",
-        1,
-        5,
-    )
-    .await?;
-    println!("commits result: {}", r);
-
-    Ok(())
-}
-```
-
-A header `accept:application/vnd.github.v3+json ` will be send.
-
-### Form
-
-Using `form` to specify form parameter:
-
-```rust
-use feignhttp::post;
-
-#[post(url = "https://httpbin.org/anything")]
-async fn post_user(
-    #[form] id: i32,
-    #[form] name: &str,
-) -> feignhttp::Result<String> {}
-
-#[async_std::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = post_user(1, "jack").await?;
-    println!("{}", r);
-
-    Ok(())
-}
-```
-
-See [here](./examples/form.rs) for more examples.
-
-### URL constant
-
-We can use constant to maintain all urls of request:
-
-```rust
-use feignhttp::get;
-
-const GITHUB_URL: &str = "https://api.github.com";
-
-#[get(GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
-async fn languages(
-    #[path] owner: &str,
-    #[path] repo: &str,
-) -> feignhttp::Result<String> {}
-```
-
-Url constant must be the first metadata in get attribute macro. You also can specify metadata key:
-
-```rust
-#[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
-async fn languages(
-    #[path] owner: &str,
-    #[path] repo: &str,
-) -> feignhttp::Result<String> {}
-```
 
 ### JSON
 
@@ -250,7 +97,6 @@ struct IssueItem {
     pub body: Option<String>,
 }
 
-
 const GITHUB_URL: &str = "https://api.github.com";
 
 #[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/issues")]
@@ -261,8 +107,7 @@ async fn issues(
     per_page: u32,
 ) -> feignhttp::Result<Vec<IssueItem>> {}
 
-
-#[async_std::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = issues("octocat", "hello-world", 1, 2).await?;
     println!("issues: {:#?}", r);
@@ -288,7 +133,7 @@ struct User {
 #[post(url = "https://httpbin.org/anything")]
 async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 
-#[async_std::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let user = User {
         id: 1,
