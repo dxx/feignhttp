@@ -15,7 +15,7 @@ async fn post_user(#[form] id: i32, #[form] name: &str) -> feignhttp::Result<Str
 #[post(url = "https://httpbin.org/anything")]
 async fn post_user2(#[form] user: User) -> feignhttp::Result<String> {}
 
-#[async_std::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("RUST_LOG", "feignhttp=debug");
     env_logger::init();

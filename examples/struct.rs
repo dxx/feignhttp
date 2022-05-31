@@ -40,7 +40,7 @@ impl Github {
     ) -> feignhttp::Result<String> {}
 }
 
-#[async_std::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("RUST_LOG", "feignhttp=debug");
     env_logger::init();
