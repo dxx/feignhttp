@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use feignhttp::{get, post};
 
 use serde::{Deserialize, Serialize};
