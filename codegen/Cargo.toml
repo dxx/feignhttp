@@ -2,7 +2,7 @@
 name = "feignhttp-codegen"
 version = "0.3.0"
 authors = ["dxx <dx1898@foxmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "FeignHttp macro support"
 documentation = "https://docs.rs/feignhttp"
 homepage = "https://github.com/dxx/feignhttp"
