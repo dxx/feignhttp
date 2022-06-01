@@ -7,17 +7,19 @@ use syn::{parse_macro_input, ItemImpl};
 use std::collections::HashMap;
 
 pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let url = parse_url_stream(&attr);
-    if let Err(err) = url {
-        return err.to_compile_error().into();
-    }
-    let url = url.unwrap();
+    let url = match parse_url_stream(&attr) {
+        Ok(url) => url,
+        Err(err) => return err.into_compile_error().into(),
+    };
 
     let config = parse_exprs(&attr);
 
     let item_impl = parse_macro_input!(item as ItemImpl);
 
-    let fn_streams = fn_to_streams(url, item_impl.items, config);
+    let fn_streams = match fn_to_streams(url, item_impl.items, config) {
+        Ok(streams) => streams,
+        Err(err) => return err.into_compile_error().into(),
+    };
 
     let ty = &item_impl.self_ty;
 
@@ -34,7 +36,7 @@ fn fn_to_streams(
     url: proc_macro2::TokenStream,
     items: Vec<syn::ImplItem>,
     config: HashMap<String, String>,
-) -> Vec<proc_macro2::TokenStream> {
+) -> syn::Result<Vec<proc_macro2::TokenStream>> {
     let base_url = url;
     let mut config = config;
     let mut method_streams = Vec::new();
@@ -44,18 +46,16 @@ fn fn_to_streams(
         let mut method = Method::GET;
         if let syn::ImplItem::Method(syn::ImplItemMethod { attrs, .. }) = item {
             if let Some(attr) = attrs.last() {
-                let method_ident =
-                    Method::from_str(&attr.path.segments.last().unwrap().ident.to_string());
-                if let Err(err) = method_ident {
-                    method_streams
-                        .push(syn::Error::new_spanned(&attr.path, err).into_compile_error());
-                    return method_streams;
-                }
-                method = method_ident.unwrap();
+                let method_ident = Method::from_str(
+                    &attr.path.segments.last().unwrap().ident.to_string());
+                method = match method_ident {
+                    Ok(method) => method,
+                    Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
+                };
 
-                let fn_path = parse_fn_path(attr);
+                let fn_path = parse_fn_path(attr)?;
                 if !fn_path.is_empty() {
-                    url = quote!(#url + #fn_path)
+                    url = quote!(#url + #fn_path);
                 }
 
                 // Override configuration.
@@ -66,52 +66,51 @@ fn fn_to_streams(
             }
         }
 
-        let func: proc_macro2::TokenStream = fn_impl(
+        let fn_stream = fn_impl(
             ReqMeta {
                 config: config.clone(),
                 url: url.clone(),
                 method,
             },
             item.to_token_stream().into(),
-        )
-        .into();
-        method_streams.push(func);
+        )?;
+        method_streams.push(fn_stream);
     }
-    method_streams
+    Ok(method_streams)
 }
 
-fn parse_fn_path(attr: &syn::Attribute) -> proc_macro2::TokenStream {
-    if let Ok(vec) = get_metas(attr) {
+fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream> {
+    if let Some(vec) = get_metas(attr) {
         if let Some(nested_meta) = vec.first() {
             match nested_meta {
                 // A literal, like the `"/xxx"` in `#[get("/xxx")]`.
                 syn::NestedMeta::Lit(lit) => {
                     if let syn::Lit::Str(lit) = lit {
-                        return lit.value().to_token_stream();
+                        return Ok(lit.value().to_token_stream());
                     }
                 }
                 _ => {
                     return match get_meta_str_value(nested_meta, "path") {
                         Some(val) => {
-                            val.to_token_stream()
+                            Ok(val.to_token_stream())
                         },
                         None => {
-                            syn::Error::new_spanned(
+                            Err(syn::Error::new_spanned(
                                 nested_meta,
                                 "metadata path not specified or must be the first",
-                            ).to_compile_error()
+                            ))
                         }
                     }
                 }
             }
         }
     }
-    proc_macro2::TokenStream::new()
+    Ok(proc_macro2::TokenStream::new())
 }
 
 fn parse_fn_attrs(attr: &syn::Attribute) -> HashMap<String, String> {
     let mut attr_map = HashMap::new();
-    if let Ok(metas) = get_metas(attr) {
+    if let Some(metas) = get_metas(attr) {
         for meta in metas.into_iter() {
             match meta {
                 // A literal, like the `xxx` in `#[get(p = xxx)]`.

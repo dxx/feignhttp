@@ -1,14 +1,13 @@
 use crate::enu::Content;
 use crate::func::ReqArg;
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input};
 use proc_macro::TokenStream;
 use std::str::FromStr;
 use std::collections::HashMap;
 
 /// Parse url and return url token stream.
 /// A URL can be an expression.
-pub fn parse_url_stream(attr: &TokenStream) -> Result<proc_macro2::TokenStream, syn::Error> {
+pub fn parse_url_stream(attr: &TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let attr_str = attr.to_string();
     if attr_str.is_empty() {
         return Err(syn::Error::new(proc_macro2::Span::call_site(), "no metadata assign"));
@@ -19,14 +18,14 @@ pub fn parse_url_stream(attr: &TokenStream) -> Result<proc_macro2::TokenStream, 
     // The default starting expression is the URL.
     if let Some(expr_str) = exprs.first() {
         let expr_str = expr_str.trim();
-        let url_expr = parse_macro_input::parse::<syn::Expr>(
+        let url_expr = syn::parse::<syn::Expr>(
             TokenStream::from_str(expr_str).unwrap())?;
         let url_stream = parse_url(&url_expr)?;
         
         // Skip the url.
         for i in 1..exprs.len() {
             let exp_str = exprs[i].trim();
-            let url_expr = parse_macro_input::parse::<syn::Expr>(
+            let url_expr = syn::parse::<syn::Expr>(
                 TokenStream::from_str(exp_str).unwrap())?;
 
             match url_expr {
@@ -51,7 +50,7 @@ pub fn parse_url_stream(attr: &TokenStream) -> Result<proc_macro2::TokenStream, 
 }
 
 /// Parse and validate the url.
-pub fn parse_url(url_expr: &syn::Expr) -> Result<proc_macro2::TokenStream, syn::Error> {
+pub fn parse_url(url_expr: &syn::Expr) -> syn::Result<proc_macro2::TokenStream> {
     return match url_expr {
         // An assignment url: url = xxx.
         syn::Expr::Assign(assign) => {
@@ -90,7 +89,7 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
     let attrs = attr_str.split(",");
     let exprs: Vec<&str> = attrs.into_iter().map(|u| u).collect();
     for exp_str in exprs.into_iter() {
-        let expr = parse_macro_input::parse::<syn::Expr>(
+        let expr = syn::parse::<syn::Expr>(
             TokenStream::from_str(exp_str.trim()).unwrap()).unwrap();
         match expr {
             // An assignment path: path = xxx.
@@ -110,7 +109,7 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
 }
 
 /// Parse request args.
-pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
+pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<ReqArg>> {
     let input = &mut sig.inputs;
     let mut req_args: Vec<ReqArg> = Vec::new();
     for fn_arg in input.iter_mut() {
@@ -139,7 +138,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
                     return Err(syn::Error::new_spanned(&attr.path, err));
                 }
                 content = attr_ident.unwrap();
-                if let Ok(vec) = get_metas(attr) {
+                if let Some(vec) = get_metas(attr) {
                     if let Some(nested_meta) = vec.first() {
                         match nested_meta {
                             // A literal, like the `"name"` in `#[param("name")]`.
@@ -174,7 +173,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> Result<Vec<ReqArg>, syn::Error> {
 }
 
 /// Parse return type of function.
-pub fn parse_return_type(sig: &syn::Signature) -> Result<Vec<syn::Type>, syn::Error> {
+pub fn parse_return_type(sig: &syn::Signature) -> syn::Result<Vec<syn::Type>> {
     let output = &sig.output;
     let mut err_msg = "function must have a return value".to_string();
     if let syn::ReturnType::Type(.., t) = output {
@@ -204,11 +203,11 @@ pub fn parse_return_type(sig: &syn::Signature) -> Result<Vec<syn::Type>, syn::Er
     Err(syn::Error::new_spanned(&sig, err_msg))
 }
 
-pub fn get_metas(attr: &syn::Attribute) -> Result<Vec<syn::NestedMeta>, ()> {
+pub fn get_metas(attr: &syn::Attribute) -> Option<Vec<syn::NestedMeta>> {
     if let Ok(syn::Meta::List(mate_list)) = attr.parse_meta() {
-        return Ok(mate_list.nested.into_iter().collect());
+        return Some(mate_list.nested.into_iter().collect());
     }
-    Err(())
+    None
 }
 
 pub fn get_meta_str_value(meta: &syn::NestedMeta, name: &str) -> Option<String> {

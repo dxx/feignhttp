@@ -2,7 +2,6 @@ use crate::enu::{Content, Method};
 use crate::util::{parse_url_stream, parse_exprs, parse_args, parse_return_type};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, ItemFn};
 use std::str::FromStr;
 use std::collections::HashMap;
 
@@ -21,25 +20,29 @@ pub struct ReqArg {
 }
 
 pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenStream {
-    let url = parse_url_stream(&attr);
-    if let Err(err) = url {
-        return err.to_compile_error().into();
-    }
+    let url = match parse_url_stream(&attr) {
+        Ok(url) => url,
+        Err(err) => return err.into_compile_error().into(),
+    };
 
-    let config_map = parse_exprs(&attr);
+    let config = parse_exprs(&attr);
 
-    fn_impl(
+    let stream = fn_impl(
         ReqMeta {
-            url: url.unwrap(),
+            url,
             method,
-            config: config_map,
+            config,
         },
         item,
-    )
+    );
+    match stream {
+        Ok(stream) => stream.into(),
+        Err(err) => err.into_compile_error().into(),
+    }
 }
 
 /// Generate function code.
-pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
+pub fn fn_impl(req_meta: ReqMeta, item_stream: TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let url = req_meta.url;
     let method = req_meta.method.to_str();
     let config = req_meta.config;
@@ -51,22 +54,16 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
         config_values.push(v);
     }
 
-    let mut item_fn = parse_macro_input!(item as ItemFn);
+    let mut item_fn = syn::parse::<syn::ItemFn>(item_stream)?;
 
     let sig = &mut item_fn.sig;
     let asyncness = &sig.asyncness;
     if asyncness.is_none() {
-        return syn::Error::new_spanned(sig.fn_token, "only support async fn")
-            .to_compile_error()
-            .into();
+        return Err(syn::Error::new_spanned(sig.fn_token, "only support async fn"));
     }
 
     let vis = &item_fn.vis;
-    let args = parse_args(sig);
-    if let Err(err) = args {
-        return err.to_compile_error().into();
-    }
-    let args = args.unwrap();
+    let args = parse_args(sig)?;
 
     let header_names = find_content_names(&args, Content::HEADER);
     let header_vars = find_content_vars(&args, Content::HEADER);
@@ -83,17 +80,13 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
     let body_vars = find_content_vars(&args, Content::BODY);
 
     if form_vars.len() > 0 && body_vars.len() > 0 {
-        return syn::Error::new_spanned(
+        return Err(syn::Error::new_spanned(
             &sig.inputs,
-            "request must have only one of body or form")
-            .to_compile_error()
-            .into();
+            "request must have only one of body or form"));
     } else if body_vars.len() > 1 {
-        return syn::Error::new_spanned(
+        return Err(syn::Error::new_spanned(
             &sig.inputs,
-            "request must have only one body")
-            .to_compile_error()
-            .into();
+            "request must have only one body"));
     }
 
     let mut send_fn_call = quote! {send()};
@@ -115,25 +108,17 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
                 send_fn_call = fn_call;
             },
             Err(e) => {
-                return syn::Error::new_spanned(
-                    &sig.inputs, e)
-                    .to_compile_error()
-                    .into();
+                return Err(syn::Error::new_spanned(
+                    &sig.inputs, e));
             }
         }
     }
 
-    let return_type = parse_return_type(sig);
-    if let Err(err) = return_type {
-        return err.to_compile_error().into();
-    }
-    let return_args = return_type.unwrap();
+    let return_args = parse_return_type(sig)?;
     if return_args.is_empty() {
-        return syn::Error::new_spanned(
+        return Err(syn::Error::new_spanned(
             &sig.output,
-            "function must have generic parameters")
-            .to_compile_error()
-            .into();
+            "function must have generic parameters"));
     }
     let return_type = return_args.get(0).unwrap();
     let return_fn = get_return_fn(return_type);
@@ -177,7 +162,7 @@ pub fn fn_impl(req_meta: ReqMeta, item: TokenStream) -> TokenStream {
         }
     };
 
-    stream.into()
+    Ok(stream)
 }
 
 fn find_content_names(args: &Vec<ReqArg>, content: Content) -> Vec<String> {
