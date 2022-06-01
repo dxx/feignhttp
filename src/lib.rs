@@ -44,7 +44,7 @@
 //! #[get("https://api.github.com")]
 //! async fn github() -> feignhttp::Result<String> {}
 //! 
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = github().await?;
 //!     println!("result: {}", r);
@@ -92,7 +92,7 @@
 //!     #[path] repo: String,
 //! ) -> feignhttp::Result<String> {}
 //! 
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = repository("dxx", "feignhttp".to_string()).await?;
 //!     println!("repository result: {}", r);
@@ -118,7 +118,7 @@
 //!     #[query] page: u32,
 //! ) -> feignhttp::Result<String> {}
 //! 
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = contributors (
 //!         "dxx",
@@ -151,7 +151,7 @@
 //!     #[query] per_page: u32,
 //! ) -> feignhttp::Result<String> {}
 //! 
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = commits(
 //!         "application/vnd.github.v3+json",
@@ -173,7 +173,7 @@
 //!
 //! Using `form` to specify form parameter:
 //!
-//! ```rust
+//! ```rust, no_run
 //! use feignhttp::post;
 //!
 //! #[post(url = "https://httpbin.org/anything")]
@@ -182,7 +182,7 @@
 //!     #[form] name: &str,
 //! ) -> feignhttp::Result<String> {}
 //!
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = post_user(1, "jack").await?;
 //!     println!("{}", r);
@@ -262,7 +262,7 @@
 //! ) -> feignhttp::Result<Vec<IssueItem>> {}
 //! 
 //! 
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = issues("octocat", "hello-world", 1, 2).await?;
 //!     println!("issues: {:#?}", r);
@@ -288,7 +288,7 @@
 //! #[post(url = "https://httpbin.org/anything")]
 //! async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 //! 
-//! #[async_std::main]
+//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let user = User {
 //!         id: 1,
@@ -364,8 +364,8 @@
 //! ## Optional Features
 //!
 //! The following features are available. The default features are `reqwest-client`.
-//! * **reqwest-client** *(default)*: use `reqwest` as the HTTP backend.
-//! * **isahc-client**: use `isahc` as the HTTP backend.
+//! * **reqwest-client** *(default)*: Use `reqwest` as the HTTP backend.
+//! * **isahc-client**: Use `isahc` as the HTTP backend.
 
 mod http;
 mod error;
