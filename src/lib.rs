@@ -88,7 +88,7 @@
 //! 
 //! #[get("https://api.github.com/repos/{owner}/{repo}")]
 //! async fn repository(
-//!     #[path] owner: &str,
+//!     #[path("owner")] user: &str,
 //!     #[path] repo: String,
 //! ) -> feignhttp::Result<String> {}
 //! 
@@ -113,7 +113,7 @@
 //! 
 //! #[get("https://api.github.com/repos/{owner}/{repo}/contributors")]
 //! async fn contributors(
-//!     #[path("owner")] user: &str,
+//!     #[path] owner: &str,
 //!     #[path] repo: &str,
 //!     #[query] page: u32,
 //! ) -> feignhttp::Result<String> {}
