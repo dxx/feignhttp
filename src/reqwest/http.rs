@@ -74,7 +74,7 @@ impl HttpRequest for RequestWrapper {
         request = request.query(query.as_slice());
         if let Some(builder) = request.try_clone() {
             if let Ok(ref req) = builder.build() {
-                // Change url after adding query parameters
+                // Change url after add query parameters.
                 self.url = req.url().clone();
             }
         }
@@ -93,7 +93,7 @@ impl RequestWrapper {
         self
     }
 
-    fn set_header_no_exist(&mut self, k: &str, v: String) {
+    fn set_header_if_absent(&mut self, k: &str, v: String) {
         if let None = self.headers.get(k) {
             self.headers.insert(k.to_string(), v);
         }
@@ -114,7 +114,7 @@ impl RequestWrapper {
 
                 let status = response.status();
 
-                // Client or server error
+                // Client or server error.
                 if status.is_client_error() || status.is_server_error() {
                     return Err(Error::status(url, status).into());
                 }
@@ -130,7 +130,7 @@ impl RequestWrapper {
     }
 
     pub async fn send_text(mut self, text: String) -> Result<ResponseWrapper> {
-        self.set_header_no_exist("content-type", "text/plain".to_string());
+        self.set_header_if_absent("content-type", "text/plain".to_string());
         self.send_body(Some(Body::from(text))).await
     }
 
@@ -138,7 +138,7 @@ impl RequestWrapper {
     where
         T: serde::ser::Serialize,
     {
-        self.set_header_no_exist("content-type", "application/x-www-form-urlencoded".to_string());
+        self.set_header_if_absent("content-type", "application/x-www-form-urlencoded".to_string());
         let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
         self.send_body(Some(Body::from(form))).await
     }
@@ -147,7 +147,7 @@ impl RequestWrapper {
     where
         T: serde::ser::Serialize,
     {
-        self.set_header_no_exist("content-type", "application/json".to_string());
+        self.set_header_if_absent("content-type", "application/json".to_string());
         let json = serde_json::to_string(json).map_err(Error::encode)?;
         self.send_body(Some(Body::from(json))).await
     }
