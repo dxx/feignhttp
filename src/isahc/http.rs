@@ -2,6 +2,7 @@ use crate::{
     error::Error, error::ErrorKind, error::Result, http::HttpConfig, http::HttpRequest,
     http::HttpResponse, map,
 };
+#[cfg(feature = "log")]
 use super::log::{print_request_log, print_response_log};
 use async_trait::async_trait;
 use http::{request::Builder, Request, Response, StatusCode};
@@ -112,10 +113,13 @@ impl RequestWrapper {
         }
         let request = self.set_header().request.body(async_body).unwrap();
 
+        #[cfg(feature = "log")]
         print_request_log(&request, body);
 
         return match request.send_async().await {
             Ok(response) => {
+
+                #[cfg(feature = "log")]
                 print_response_log(&response);
 
                 let status = response.status();
