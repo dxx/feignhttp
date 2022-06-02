@@ -68,7 +68,7 @@ feignhttp = { version = "0.3", default-features = false, features = ["isahc-clie
 
 The `default-features = false` option disable default reqwest.
 
-For more examples, see [here](./examples).
+For more examples, click [here](./examples).
 
 ## Documentation
 
