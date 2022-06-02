@@ -193,7 +193,7 @@
 //!
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/form.rs) for more examples.
 //!
-//! ### URL constant
+//! ### URL Constant
 //! 
 //! We can use constant to maintain all urls of request:
 //! 
@@ -303,7 +303,7 @@
 //! 
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/json.rs) for a complete example.
 //! 
-//! ### Using structure
+//! ### Using Structure
 //! 
 //! Structure is a good way to manage requests. Define a structure and then define a large number of request methods：
 //! 
@@ -339,7 +339,7 @@
 //! 
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/struct.rs) for a complete example.
 //! 
-//! ### Timeout configuration
+//! ### Timeout Configuration
 //! 
 //! If you need to configure the timeout, use `connect_timeout` and `timeout` to specify connect timeout and read timeout.
 //! 
