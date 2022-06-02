@@ -4,7 +4,7 @@ use feignhttp::{get, post};
 
 use serde::{Deserialize, Serialize};
 
-// Deserialize: Specifies deserialization
+// Deserialize: Specifies deserialization.
 #[derive(Debug, Deserialize)]
 struct IssueItem {
     pub id: u32,

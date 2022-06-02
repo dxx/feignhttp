@@ -2,7 +2,7 @@ use feignhttp::post;
 
 use serde::{Serialize};
 
-// Serialize: Specifies serialization
+// Serialize: Specifies serialization.
 #[derive(Debug, Serialize)]
 struct User {
     id: i32,

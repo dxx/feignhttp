@@ -31,7 +31,7 @@ impl Github {
         #[query] per_page: u32,
     ) -> feignhttp::Result<String> {}
 
-    // Structure method still send request
+    // Structure method still send request.
     #[get(path = "/repos/{owner}/{repo}/languages")]
     async fn languages(
         &self,
@@ -46,19 +46,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
     let r = Github::home().await?;
-
     println!("github result: {}", r);
 
-
     let r = Github::repository("dxx", "feignhttp").await?;
-
     println!("repository result: {}", r);
 
-
     let r = Github::contributors("dxx", "feignhttp", 1).await?;
-
     println!("contributors result: {}", r);
-
 
     let r = Github::commits(
         "application/vnd.github.v3+json",
@@ -68,14 +62,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         1,
     )
     .await?;
-
     println!("commits result: {}", r);
 
-
     let r = Github{}.languages("dxx", "feignhttp").await?;
-
     println!("languages result: {}", r);
-
 
     Ok(())
 }

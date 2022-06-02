@@ -10,7 +10,7 @@ pub struct Http;
 
 #[feign(url = "http://site_dne.com", connect_timeout = 3000)]
 impl Http {
-    #[get("", connect_timeout = 5000)] // 5000 will override 3000
+    #[get("", connect_timeout = 5000)] // 5000 will override 3000.
     async fn get() -> feignhttp::Result<String> {}
 }
 
