@@ -14,9 +14,6 @@ async fn post_user(#[body] json: String) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    std::env::set_var("RUST_LOG", "feignhttp=debug");
-    env_logger::init();
-
     let user = User {
         id: 1,
         name: "jack".to_string(),
