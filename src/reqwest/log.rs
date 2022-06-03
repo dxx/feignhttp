@@ -4,9 +4,10 @@ use log::debug;
 pub fn print_request_log(request: RequestBuilder) {
     if let Ok(request) = request.build() {
         debug!(
-            "---> {} {}",
+            "---> {} {} {:?}",
             request.method().to_string(),
-            request.url().to_string()
+            request.url().to_string(),
+            request.version(),
         );
         for (name, value) in request.headers() {
             debug!("{}: {}", name.as_str(), value.to_str().unwrap())
@@ -26,7 +27,7 @@ pub fn print_response_log(response: &Response) {
     debug!(
         "<--- {:?} {}",
         response.version(),
-        response.status().as_str()
+        response.status().to_string(),
     );
     for (name, value) in response.headers() {
         debug!("{}: {}", name.as_str(), value.to_str().unwrap());
