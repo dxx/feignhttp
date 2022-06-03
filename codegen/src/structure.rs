@@ -1,5 +1,5 @@
 use crate::enu::Method;
-use crate::func::{fn_impl, ReqMeta};
+use crate::func::{fn_impl, FnMetadata};
 use crate::util::{parse_url_stream, parse_exprs, get_metas, get_meta_str_value};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -12,11 +12,11 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
         Err(err) => return err.into_compile_error().into(),
     };
 
-    let config = parse_exprs(&attr);
+    let meta_map = parse_exprs(&attr);
 
     let item_impl = parse_macro_input!(item as ItemImpl);
 
-    let fn_streams = match fn_to_streams(url, item_impl.items, config) {
+    let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
         Ok(streams) => streams,
         Err(err) => return err.into_compile_error().into(),
     };
@@ -35,16 +35,16 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 fn fn_to_streams(
     url: proc_macro2::TokenStream,
     items: Vec<syn::ImplItem>,
-    config: HashMap<String, String>,
+    meta_map: HashMap<String, String>,
 ) -> syn::Result<Vec<proc_macro2::TokenStream>> {
     let base_url = url;
-    let base_config = config;
+    let base_meta = meta_map;
     let mut method_streams = Vec::new();
     for item in items.iter() {
         if let syn::ImplItem::Method(syn::ImplItemMethod { attrs, .. }) = item {
             if let Some(attr) = attrs.last() {
                 let mut url = base_url.clone();
-                let mut config = base_config.clone();
+                let mut meta_map = base_meta.clone();
                 let method_ident = Method::from_str(
                     &attr.path.segments.last().unwrap().ident.to_string());
                 let method = match method_ident {
@@ -57,17 +57,17 @@ fn fn_to_streams(
                     url = quote!(#url + #fn_path);
                 }
 
-                // Override configuration.
-                let config_map = parse_fn_attrs(attr);
-                for (k, v) in config_map {
-                    config.insert(k, v);
+                // Override meta.
+                let map = parse_fn_attrs(attr);
+                for (k, v) in map {
+                    meta_map.insert(k, v);
                 }
 
                 let fn_stream = fn_impl(
-                    ReqMeta {
-                        config,
+                    FnMetadata {
                         url,
                         method,
+                        meta_map,
                     },
                     item.to_token_stream().into(),
                 )?;

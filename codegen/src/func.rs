@@ -5,14 +5,14 @@ use quote::{quote, ToTokens};
 use std::str::FromStr;
 use std::collections::HashMap;
 
-pub struct ReqMeta {
+pub struct FnMetadata {
     // Url is a token stream, so it can be retrieved by a variable.
     pub url: proc_macro2::TokenStream,
     pub method: Method,
-    pub config: HashMap<String, String>,
+    pub meta_map: HashMap<String, String>,
 }
 
-pub struct ReqArg {
+pub struct FnArg {
     pub content: Content,
     pub name: String,
     pub var: syn::Ident,
@@ -25,13 +25,13 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
         Err(err) => return err.into_compile_error().into(),
     };
 
-    let config = parse_exprs(&attr);
+    let meta_map = parse_exprs(&attr);
 
     let stream = fn_impl(
-        ReqMeta {
+        FnMetadata {
             url,
             method,
-            config,
+            meta_map,
         },
         item,
     );
@@ -42,14 +42,14 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
 }
 
 /// Generate function code.
-pub fn fn_impl(req_meta: ReqMeta, item_stream: TokenStream) -> syn::Result<proc_macro2::TokenStream> {
-    let url = req_meta.url;
-    let method = req_meta.method.to_str();
-    let config = req_meta.config;
+pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+    let url = metadata.url;
+    let method = metadata.method.to_str();
+    let meta_map = metadata.meta_map;
 
     let mut config_keys = Vec::new();
     let mut config_values = Vec::new();
-    for (k, v) in config {
+    for (k, v) in meta_map {
         config_keys.push(k);
         config_values.push(v);
     }
@@ -165,14 +165,14 @@ pub fn fn_impl(req_meta: ReqMeta, item_stream: TokenStream) -> syn::Result<proc_
     Ok(stream)
 }
 
-fn find_content_names(args: &Vec<ReqArg>, content: Content) -> Vec<String> {
+fn find_content_names(args: &Vec<FnArg>, content: Content) -> Vec<String> {
     args.iter()
         .filter(|a| a.content == content)
         .map(|a| a.name.clone())
         .collect()
 }
 
-fn find_content_vars(args: &Vec<ReqArg>, content: Content) -> Vec<syn::Ident> {
+fn find_content_vars(args: &Vec<FnArg>, content: Content) -> Vec<syn::Ident> {
     args.iter()
         .filter(|a| a.content == content)
         .map(|a| a.var.clone())

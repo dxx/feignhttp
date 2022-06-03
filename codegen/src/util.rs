@@ -1,5 +1,5 @@
 use crate::enu::Content;
-use crate::func::ReqArg;
+use crate::func::FnArg;
 use quote::{quote, ToTokens};
 use proc_macro::TokenStream;
 use std::str::FromStr;
@@ -108,10 +108,10 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
     expr_map
 }
 
-/// Parse request args.
-pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<ReqArg>> {
+/// Parse function args.
+pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<FnArg>> {
     let input = &mut sig.inputs;
-    let mut req_args: Vec<ReqArg> = Vec::new();
+    let mut req_args: Vec<FnArg> = Vec::new();
     for fn_arg in input.iter_mut() {
         if let syn::FnArg::Typed(pat_type) = fn_arg {
             let attrs = pat_type.attrs.clone();
@@ -160,7 +160,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<ReqArg>> {
                 }
             }
 
-            req_args.push(ReqArg {
+            req_args.push(FnArg {
                 content,
                 name,
                 var: ident,
