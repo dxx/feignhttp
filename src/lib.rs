@@ -2,13 +2,28 @@
 //!
 //! FeignHttp is a declarative HTTP client. Based on rust macros.
 //! 
-//! ## Features
+//! Here are some features:
 //! 
 //! * Easy to use
 //! * Asynchronous request
 //! * Configurable timeout settings
 //! * Supports form, plain text and JSON
 //! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest) or [isahc](https://docs.rs/isahc))
+//! 
+//! ## Table of contents
+//! 
+//! * <a href="#usage">Usage</a>
+//! * <a href="#making-a-post-request">Making a POST request</a>
+//! * <a href="#paths">Paths</a>
+//! * <a href="#query-parameters">Query Parameters</a>
+//! * <a href="#headers">Headers</a>
+//! * <a href="#form">Form</a>
+//! * <a href="#url-constant">URL Constant</a>
+//! * <a href="#json">JSON</a>
+//! * <a href="#using-structure">Using Structure</a>
+//! * <a href="#timeout-configuration">Timeout Configuration</a>
+//! * <a href="#logs">Logs</a>
+//! * <a href="#optional-features">Optional Features</a>
 //! 
 //! ## Usage
 //! 
@@ -228,8 +243,12 @@
 //! [Serde](https://docs.rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Cargo.toml`:
 //! 
 //! ```toml
-//! [dependencies]
 //! serde = { version = "1", features = ["derive"] }
+//! ```
+//! 
+//! You also need enable `json` feature:
+//! ```toml
+//! feignhttp = { version = "<version>", features = ["json"] }
 //! ```
 //! 
 //! Here is an example of getting json:
@@ -250,9 +269,9 @@
 //!     pub body: Option<String>,
 //! }
 //! 
-//! 
 //! const GITHUB_URL: &str = "https://api.github.com";
 //! 
+//! # #[cfg(feature = "json")]
 //! #[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/issues")]
 //! async fn issues(
 //!     #[path] owner: &str,
@@ -261,11 +280,12 @@
 //!     per_page: u32,
 //! ) -> feignhttp::Result<Vec<IssueItem>> {}
 //! 
-//! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # #[cfg(feature = "json")] {
 //!     let r = issues("octocat", "hello-world", 1, 2).await?;
 //!     println!("issues: {:#?}", r);
+//!     # }
 //! 
 //!     Ok(())
 //! }
@@ -285,17 +305,20 @@
 //!     name: String,
 //! }
 //! 
+//! # #[cfg(feature = "json")]
 //! #[post(url = "https://httpbin.org/anything")]
 //! async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     # #[cfg(feature = "json")] {
 //!     let user = User {
 //!         id: 1,
 //!         name: "jack".to_string(),
 //!     };
 //!     let r = post_user(user).await?;
 //!     println!("{}", r);
+//!     # }
 //! 
 //!     Ok(())
 //! }
@@ -361,11 +384,22 @@
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
 //!
+//! ## Logs
+//! 
+//! FeignHttp logs some useful information about requests and responses with the [log](https://docs.rs/log) crate.
+//! To enable the log information, specify `log` feature in `Cargo.toml`, then set the log level to debug.
+//! 
+//! ```toml
+//! features = ["log"]
+//! ```
+//! 
 //! ## Optional Features
 //!
 //! The following features are available. The default features are `reqwest-client`.
 //! * **reqwest-client** *(default)*: Use `reqwest` as the HTTP backend.
 //! * **isahc-client**: Use `isahc` as the HTTP backend.
+//! * **json**: Enable json serialize and deserialize.
+//! * **log**: Enable request and response logs.
 
 mod http;
 mod error;
