@@ -218,60 +218,60 @@ fn get_form_fn_call(
     form_types: &Vec<syn::Type>,
     form_vars: &Vec<syn::Ident>,
 )-> Result<proc_macro2::TokenStream, String> {
-    if !form_names.is_empty() {
-        return if form_names.len() == 1 {
-            let form_name = form_names.get(0).unwrap();
-            let form_type = form_types.get(0).unwrap();
-            let form_var = form_vars.get(0).unwrap();
-            match form_type {
-                syn::Type::Path(t) => {
-                    let ty = t.to_token_stream().to_string();
-                    if is_form_support_types(ty) {
-                        let mut token_str = "send_form(&vec![".to_string();
-                        token_str.push_str("(");
-                        token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
-                        token_str.push_str("),");
-                        token_str.push_str("])");
-                        Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
-                    } else {
-                        Ok(quote! {send_form(& #form_var)})
-                    }
-                },
-                syn::Type::Reference(t) => {
-                    let ty = t.to_token_stream().to_string();
-                    if is_form_support_types(ty.replace(" ", "").replace("&", "")) {
-                        return Err(format!("one form parameter only supports scalar types, &str, String or struct"));
-                    } else if ty.contains("& str") {
-                        let mut token_str = "send_form(&vec![".to_string();
-                        token_str.push_str("(");
-                        token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
-                        token_str.push_str("),");
-                        token_str.push_str("])");
-                        return Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
-                    }
+    if form_names.is_empty() {
+        return Err("no form parameters".to_string());
+    }
+    return if form_names.len() == 1 {
+        let form_name = form_names.get(0).unwrap();
+        let form_type = form_types.get(0).unwrap();
+        let form_var = form_vars.get(0).unwrap();
+        match form_type {
+            syn::Type::Path(t) => {
+                let ty = t.to_token_stream().to_string();
+                if is_form_support_types(ty) {
+                    let mut token_str = "send_form(&vec![".to_string();
+                    token_str.push_str("(");
+                    token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
+                    token_str.push_str("),");
+                    token_str.push_str("])");
+                    Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
+                } else {
                     Ok(quote! {send_form(& #form_var)})
                 }
-                _ => {
-                    Err(format!("non supports form parameter: `{}: {}`", form_name, form_type.to_token_stream()))
+            },
+            syn::Type::Reference(t) => {
+                let ty = t.to_token_stream().to_string();
+                if is_form_support_types(ty.replace(" ", "").replace("&", "")) {
+                    return Err(format!("one form parameter only supports scalar types, &str, String or struct"));
+                } else if ty.contains("& str") {
+                    let mut token_str = "send_form(&vec![".to_string();
+                    token_str.push_str("(");
+                    token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
+                    token_str.push_str("),");
+                    token_str.push_str("])");
+                    return Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
                 }
+                Ok(quote! {send_form(& #form_var)})
             }
-        } else {
-            let mut token_str = "send_form(&vec![".to_string();
-            for i in 0..form_names.len() {
-                let form_name = form_names.get(i).unwrap();
-                let form_type = form_types.get(i).unwrap();
-                let form_var = form_vars.get(i).unwrap();
-                let ty = form_type.to_token_stream().to_string().replace(" ", "");
-                if !is_form_support_types(ty) {
-                    return Err(format!("two or more form parameters only supports scalar types, &str or String"));
-                }
-                token_str.push_str("(");
-                token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
-                token_str.push_str("),");
+            _ => {
+                Err(format!("non supports form parameter: `{}: {}`", form_name, form_type.to_token_stream()))
             }
-            token_str.push_str("])");
-            Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
         }
+    } else {
+        let mut token_str = "send_form(&vec![".to_string();
+        for i in 0..form_names.len() {
+            let form_name = form_names.get(i).unwrap();
+            let form_type = form_types.get(i).unwrap();
+            let form_var = form_vars.get(i).unwrap();
+            let ty = form_type.to_token_stream().to_string().replace(" ", "");
+            if !is_form_support_types(ty) {
+                return Err(format!("two or more form parameters only supports scalar types, &str or String"));
+            }
+            token_str.push_str("(");
+            token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
+            token_str.push_str("),");
+        }
+        token_str.push_str("])");
+        Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
     }
-    Err("no form parameters".to_string())
 }
