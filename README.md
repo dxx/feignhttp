@@ -1,10 +1,10 @@
-# FeignHttp
+# FeignHTTP
 
 [![crates.io](https://img.shields.io/crates/v/feignhttp.svg)](https://crates.io/crates/feignhttp)
 [![Documentation](https://docs.rs/feignhttp/badge.svg)](https://docs.rs/feignhttp)
 [![MIT licensed](https://img.shields.io/github/license/dxx/feignhttp.svg?color=blue)](./LICENSE)
 
-FeignHttp is a declarative HTTP client. Based on rust macros.
+FeignHTTP is a declarative HTTP client. Based on rust macros.
 
 ## Features
 
@@ -16,7 +16,7 @@ FeignHttp is a declarative HTTP client. Based on rust macros.
 
 ## Usage
 
-FeignHttp mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://github.com/async-rs/async-std) or [tokio](https://github.com/tokio-rs/tokio).
+FeignHTTP mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://github.com/async-rs/async-std) or [tokio](https://github.com/tokio-rs/tokio).
 
 async-std:
 
@@ -34,7 +34,7 @@ tokio:
 tokio = { version = "1", features = ["full"] }
 ```
 
-Add feignhttp in your `Cargo.toml` and use default feature:
+Add `feignhttp` in your `Cargo.toml` and use default feature:
 
 ```toml
 feignhttp = { version = "0.3" }
@@ -76,4 +76,4 @@ Read the [documentation](https://docs.rs/feignhttp) for more details.
 
 ## License
 
-FeignHttp is provided under the MIT license. See [LICENSE](./LICENSE).
+FeignHTTP is provided under the MIT license. See [LICENSE](./LICENSE).

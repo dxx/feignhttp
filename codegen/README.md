@@ -1,6 +1,6 @@
-# FeignHttp Codegen
+# FeignHTTP Codegen
 
-FeignHttp macro support. Used by FeignHttp.
+FeignHTTP macro support. Used by [feignhttp](https://crates.io/crates/feignhttp).
 
 ## Attribute Macros
 
