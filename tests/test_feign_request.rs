@@ -1,6 +1,6 @@
 use feignhttp::{get, post};
 
-use serde::{Serialize};
+use serde::Serialize;
 use mockito::{mock, Matcher};
 
 #[get("http://localhost:1234/get")]
@@ -96,21 +96,25 @@ struct User {
     name: String,
 }
 
+#[cfg(feature = "json")]
 #[post(url = "http://localhost:1234/post_json")]
 async fn post_json(#[body] user: User) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_send_json() {
-    let _mock = mock("POST", "/post_json")
-        .match_header("content-type", "application/json")
-        .match_body(r#"{"id":1,"name":"jack"}"#)
-        .create();
+    #[cfg(feature = "json")] {
+        println!("1421");
+        let _mock = mock("POST", "/post_json")
+            .match_header("content-type", "application/json")
+            .match_body(r#"{"id":1,"name":"jack"}"#)
+            .create();
 
-    let user = User {
-        id: 1,
-        name: "jack".to_string(),
-    };
-    let _r = post_json(user).await.unwrap();
+        let user = User {
+            id: 1,
+            name: "jack".to_string(),
+        };
+        let _r = post_json(user).await.unwrap();
+    }
 }
 
 

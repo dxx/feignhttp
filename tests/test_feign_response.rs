@@ -2,7 +2,7 @@
 
 use feignhttp::{get};
 
-use serde::{Deserialize};
+use serde::Deserialize;
 use mockito::mock;
 
 const TEXT_URL: &str = "http://localhost:1234";
@@ -30,16 +30,19 @@ struct User {
     message: String,
 }
 
+#[cfg(feature = "json")]
 #[get(url = JSON_URL, path = "/json")]
 async fn get_json() -> feignhttp::Result<User> {}
 
 #[tokio::test]
 async fn test_get_json() {
-    let _mock = mock("GET", "/json")
-        .with_body(r#"{ "code": 200, "message": "success" }"#)
-        .create();
+    #[cfg(feature = "json")] {
+        let _mock = mock("GET", "/json")
+            .with_body(r#"{ "code": 200, "message": "success" }"#)
+            .create();
 
-    let user = get_json().await.unwrap();
+        let user = get_json().await.unwrap();
 
-    assert_eq!(r#"User { code: 200, message: "success" }"#, format!("{:?}", user));
+        assert_eq!(r#"User { code: 200, message: "success" }"#, format!("{:?}", user));
+    }
 }

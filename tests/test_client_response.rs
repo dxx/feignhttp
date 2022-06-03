@@ -1,8 +1,9 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
 
 use feignhttp::{HttpClient, HttpResponse};
 
-use serde::{Deserialize};
+use serde::Deserialize;
 use mockito::{mock, server_address};
 
 #[tokio::test]
@@ -34,23 +35,25 @@ async fn test_get_text() {
 
 #[tokio::test]
 async fn test_get_json() {
-    let _mock = mock("GET", "/json")
-        .with_body(r#"{ "code": 200, "message": "success" }"#)
-        .create();
+    #[cfg(feature = "json")] {
+        let _mock = mock("GET", "/json")
+            .with_body(r#"{ "code": 200, "message": "success" }"#)
+            .create();
 
-    #[derive(Debug, Deserialize)]
-    struct User {
-        code: u32,
-        message: String,
+        #[derive(Debug, Deserialize)]
+        struct User {
+            code: u32,
+            message: String,
+        }
+
+        let url = format!("http://{}/json", server_address());
+        let method = "GET";
+        let request = HttpClient::default_request(&url, method);
+        let response = request.send().await.unwrap();
+        let user: User = response.json().await.unwrap();
+
+        assert_eq!(r#"User { code: 200, message: "success" }"#, format!("{:?}", user));
     }
-
-    let url = format!("http://{}/json", server_address());
-    let method = "GET";
-    let request = HttpClient::default_request(&url, method);
-    let response = request.send().await.unwrap();
-    let user: User = response.json().await.unwrap();
-
-    assert_eq!(r#"User { code: 200, message: "success" }"#, format!("{:?}", user));
 }
 
 #[tokio::test]

@@ -1,7 +1,9 @@
+#![allow(unused_imports)]
+
 use feignhttp::{HttpClient, HttpConfig, HttpRequest, map};
 
 use mockito::{mock, server_address, Matcher};
-use serde::{Serialize};
+use serde::Serialize;
 
 #[tokio::test]
 async fn test_request() {
@@ -92,27 +94,29 @@ async fn test_send_text() {
 
 #[tokio::test]
 async fn test_send_json() {
-    let _mock = mock("POST", "/")
-        .match_header("content-type", "application/json")
-        .match_body(r#"{"id":1,"name":"jack"}"#)
-        .create();
+    #[cfg(feature = "json")] {
+        let _mock = mock("POST", "/")
+            .match_header("content-type", "application/json")
+            .match_body(r#"{"id":1,"name":"jack"}"#)
+            .create();
 
-    let url = format!("http://{}", server_address());
-    let method = "POST";
+        let url = format!("http://{}", server_address());
+        let method = "POST";
 
-    #[derive(Serialize)]
-    struct User {
-        id: i32,
-        name: String,
+        #[derive(Serialize)]
+        struct User {
+            id: i32,
+            name: String,
+        }
+
+        let user = User {
+            id: 1,
+            name: "jack".to_string(),
+        };
+
+        let request = HttpClient::default_request(&url, method);
+        request.send_json(&user).await.unwrap();
     }
-
-    let user = User {
-        id: 1,
-        name: "jack".to_string(),
-    };
-
-    let request = HttpClient::default_request(&url, method);
-    request.send_json(&user).await.unwrap();
 }
 
 #[tokio::test]
