@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
 
 use feignhttp::{get, post};
 
@@ -16,9 +17,10 @@ struct IssueItem {
     pub body: Option<String>,
 }
 
-
+#[cfg(feature = "json")]
 const GITHUB_URL: &str = "https://api.github.com";
 
+#[cfg(feature = "json")]
 #[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/issues")]
 async fn issues(
     #[path] owner: &str,
@@ -34,20 +36,23 @@ struct User {
     name: String,
 }
 
+#[cfg(feature = "json")]
 #[post(url = "https://httpbin.org/anything")]
 async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = issues("octocat", "hello-world", 1, 2).await?;
-    println!("issues: {:#?}", r);
+    #[cfg(feature = "json")] {
+        let r = issues("octocat", "hello-world", 1, 2).await?;
+        println!("issues: {:#?}", r);
 
-    let user = User {
-        id: 1,
-        name: "jack".to_string(),
-    };
-    let r = post_user(user).await?;
-    println!("{}", r);
+        let user = User {
+            id: 1,
+            name: "jack".to_string(),
+        };
+        let r = post_user(user).await?;
+        println!("{}", r);
+    }
 
     Ok(())
 }
