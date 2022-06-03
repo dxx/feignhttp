@@ -1,6 +1,6 @@
-//! # FeignHttp
+//! # FeignHTTP
 //!
-//! FeignHttp is a declarative HTTP client. Based on rust macros.
+//! FeignHTTP is a declarative HTTP client. Based on rust macros.
 //! 
 //! Here are some features:
 //! 
@@ -27,7 +27,7 @@
 //! 
 //! ## Usage
 //! 
-//! FeignHttp mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://docs.rs/async-std) or [tokio](https://docs.rs/tokio).
+//! FeignHTTP mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://docs.rs/async-std) or [tokio](https://docs.rs/tokio).
 //!
 //! async-std:
 //!
@@ -45,7 +45,7 @@
 //! tokio = { version = "1", features = ["full"] }
 //! ```
 //!
-//! Add feignhttp in your `Cargo.toml` and use default feature:
+//! Add `feignhttp` in your `Cargo.toml` and use default feature:
 //!
 //! ```toml
 //! feignhttp = { version = "0.3" }
@@ -386,7 +386,7 @@
 //!
 //! ## Logs
 //! 
-//! FeignHttp logs some useful information about requests and responses with the [log](https://docs.rs/log) crate.
+//! FeignHTTP logs some useful information about requests and responses with the [log](https://docs.rs/log) crate.
 //! To enable the log information, specify `log` feature in `Cargo.toml`, then set the log level to debug.
 //! 
 //! ```toml
