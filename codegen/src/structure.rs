@@ -38,17 +38,16 @@ fn fn_to_streams(
     config: HashMap<String, String>,
 ) -> syn::Result<Vec<proc_macro2::TokenStream>> {
     let base_url = url;
-    let mut config = config;
+    let base_config = config;
     let mut method_streams = Vec::new();
     for item in items.iter() {
-        let mut url = base_url.clone();
-        // Default get method.
-        let mut method = Method::GET;
         if let syn::ImplItem::Method(syn::ImplItemMethod { attrs, .. }) = item {
             if let Some(attr) = attrs.last() {
+                let mut url = base_url.clone();
+                let mut config = base_config.clone();
                 let method_ident = Method::from_str(
                     &attr.path.segments.last().unwrap().ident.to_string());
-                method = match method_ident {
+                let method = match method_ident {
                     Ok(method) => method,
                     Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
                 };
@@ -63,18 +62,21 @@ fn fn_to_streams(
                 for (k, v) in config_map {
                     config.insert(k, v);
                 }
+
+                let fn_stream = fn_impl(
+                    ReqMeta {
+                        config,
+                        url,
+                        method,
+                    },
+                    item.to_token_stream().into(),
+                )?;
+                method_streams.push(fn_stream);
+                continue;
             }
         }
 
-        let fn_stream = fn_impl(
-            ReqMeta {
-                config: config.clone(),
-                url: url.clone(),
-                method,
-            },
-            item.to_token_stream().into(),
-        )?;
-        method_streams.push(fn_stream);
+        method_streams.push(item.to_token_stream());
     }
     Ok(method_streams)
 }
