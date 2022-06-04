@@ -76,7 +76,7 @@ fn test_validate_return_value2() {
 
 #[test]
 fn test_validate_arg() {
-    // error: unknown content marker: aaa
+    // error: unknown arg type: aaa
     //    |  pub async fn get(#[aaa] a: i32) -> Result<String> {}
     //    |                     ^^^
 
@@ -86,7 +86,7 @@ fn test_validate_arg() {
 
 #[test]
 fn test_validate_arg2() {
-    // error: unknown content marker: bbb
+    // error: unknown arg type: bbb
     //    |  pub async fn get(a: i32, #[bbb] b: i32) -> Result<String> {}
     //    |                             ^^^
 

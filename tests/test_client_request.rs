@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use feignhttp::{HttpClient, HttpConfig, HttpRequest, map};
+use feignhttp::{HttpClient, HttpConfig, map};
 
 use mockito::{mock, server_address, Matcher};
 use serde::Serialize;
@@ -11,7 +11,11 @@ async fn test_request() {
 
     let url = format!("http://{}", server_address());
     let method = "GET";
-    let request = HttpClient::default_request(&url, method);
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .build()
+        .unwrap();
     request.send().await.unwrap();
 }
 
@@ -31,8 +35,12 @@ async fn test_header() {
         "username" => "jack".to_string(),
         "pwd" => "xxx".to_string());
 
-    let request = HttpClient::default_request(&url, method)
-        .headers(header_map);
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .headers(header_map)
+        .build()
+        .unwrap();
     request.send().await.unwrap();
 }
 
@@ -53,7 +61,12 @@ async fn test_query() {
         ("name", "xxx2".to_string()),
     ].iter().cloned().collect();
 
-    let request = HttpClient::default_request(&url, method).query(&query_vec);
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .query(query_vec)
+        .build()
+        .unwrap();
     request.send().await.unwrap();
 }
 
@@ -73,7 +86,11 @@ async fn test_send_form() {
         ("name", "xxx2".to_string()),
     ].iter().cloned().collect();
 
-    let request = HttpClient::default_request(&url, method);
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .build()
+        .unwrap();
     request.send_form(&form_vec).await.unwrap();
 }
 
@@ -88,7 +105,12 @@ async fn test_send_text() {
     let method = "POST";
 
     let text = r#"I' m text"#;
-    let request = HttpClient::default_request(&url, method);
+
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .build()
+        .unwrap();
     request.send_text(text.to_string()).await.unwrap();
 }
 
@@ -114,7 +136,11 @@ async fn test_send_json() {
             name: "jack".to_string(),
         };
 
-        let request = HttpClient::default_request(&url, method);
+        let request = HttpClient::builder()
+            .url(&url)
+            .method(method)
+            .build()
+            .unwrap();
         request.send_json(&user).await.unwrap();
     }
 }
@@ -128,7 +154,12 @@ async fn test_connect_timeout() {
         connect_timeout: Some(3000), // 3000 millisecond
         timeout: None,
     };
-    let request = HttpClient::configure_request(&url, method, config);
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .config(config)
+        .build()
+        .unwrap();
     request.send().await.unwrap();
 }
 
@@ -141,6 +172,11 @@ async fn test_timeout() {
         connect_timeout: None,
         timeout: Some(3000), // 3000 millisecond
     };
-    let request = HttpClient::configure_request(&url, method, config);
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .config(config)
+        .build()
+        .unwrap();
     request.send().await.unwrap();
 }
