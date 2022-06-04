@@ -6,8 +6,9 @@
 //! 
 //! * Easy to use
 //! * Asynchronous request
-//! * Configurable timeout settings
 //! * Supports form, plain text and JSON
+//! * Configurable timeout settings
+//! * Friendly error handling
 //! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest) or [isahc](https://docs.rs/isahc))
 //! 
 //! ## Table of contents
@@ -15,13 +16,15 @@
 //! * <a href="#usage">Usage</a>
 //! * <a href="#making-a-post-request">Making a POST request</a>
 //! * <a href="#paths">Paths</a>
+//! * <a href="#url">URL</a>
 //! * <a href="#query-parameters">Query Parameters</a>
 //! * <a href="#headers">Headers</a>
 //! * <a href="#form">Form</a>
-//! * <a href="#url-constant">URL Constant</a>
 //! * <a href="#json">JSON</a>
 //! * <a href="#using-structure">Using Structure</a>
 //! * <a href="#timeout-configuration">Timeout Configuration</a>
+//! * <a href="#params">Params</a>
+//! * <a href="#error-handling">Error Handling</a>
 //! * <a href="#logs">Logs</a>
 //! * <a href="#optional-features">Optional Features</a>
 //! 
@@ -87,14 +90,14 @@
 //! ```rust, no_run
 //! use feignhttp::post;
 //! 
-//! #[post(url = "https://httpbin.org/anything")]
+//! #[post("https://httpbin.org/anything")]
 //! async fn post_data(#[body] text: String) -> feignhttp::Result<String> {}
 //! ```
 //! 
 //! The `#[body]` mark a request body. Function parameter `text` is a String type, it will put in the request body as plain text. 
-//! String and &str will be put as plain text into the request body.
+//! String and &str will be put as plain text into the request body. Before send request, a header `content-type: text/plain` will be added automatically.
 //! 
-//! ### Paths
+//! ## Paths
 //! 
 //! Using `path` to specify path value:
 //! 
@@ -119,7 +122,39 @@
 //! `dxx` will replace `{owner}` and `feignhttp` will replace `{repo}` , the url to be send will be
 //! `https://api.github.com/repos/dxx/feignhttp`. You can specify a path name like `#[path("owner")]`.
 //! 
-//! ### Query Parameters
+//! ## URL
+//! 
+//! You can use constant to maintain all urls of request:
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//! 
+//! const GITHUB_URL: &str = "https://api.github.com";
+//! 
+//! #[get(GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
+//! async fn languages(
+//!     #[path] owner: &str,
+//!     #[path] repo: &str,
+//! ) -> feignhttp::Result<String> {}
+//! ```
+//! 
+//! Url constant must be the first metadata in get attribute macro. You also can specify metadata key:
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//!
+//! const GITHUB_URL: &str = "https://api.github.com";
+//!
+//! #[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
+//! async fn languages(
+//!     #[path] owner: &str,
+//!     #[path] repo: &str,
+//! ) -> feignhttp::Result<String> {}
+//! ```
+//! 
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/url.rs) for more examples.
+//! 
+//! ## Query Parameters
 //! 
 //! Using `query` to specify query parameter:
 //! 
@@ -150,18 +185,16 @@
 //! 
 //! Note: A function parameter without `query` attribute will as a query parameter by default.
 //! 
-//! ### Headers
+//! ## Headers
 //! 
 //! Using `header` to specify request header:
 //! 
 //! ```rust, no_run
 //! use feignhttp::get;
 //! 
-//! #[get("https://api.github.com/repos/{owner}/{repo}/commits")]
+//! #[get("https://api.github.com/repos/dxx/feignhttp/commits")]
 //! async fn commits(
 //!     #[header] accept: &str,
-//!     #[path] owner: &str,
-//!     #[path] repo: &str,
 //!     #[query] page: u32,
 //!     #[query] per_page: u32,
 //! ) -> feignhttp::Result<String> {}
@@ -170,8 +203,6 @@
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let r = commits(
 //!         "application/vnd.github.v3+json",
-//!         "dxx",
-//!         "feignhttp",
 //!         1,
 //!         5,
 //!     )
@@ -184,7 +215,7 @@
 //! 
 //! A header `accept:application/vnd.github.v3+json ` will be send.
 //!
-//! ### Form
+//! ## Form
 //!
 //! Using `form` to specify form parameter:
 //!
@@ -205,40 +236,11 @@
 //!     Ok(())
 //! }
 //! ```
-//!
+//! 
+//! Before send request, a header `content-type: application/x-www-form-urlencoded` will be added automatically.
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/form.rs) for more examples.
 //!
-//! ### URL Constant
-//! 
-//! We can use constant to maintain all urls of request:
-//! 
-//! ```rust, no_run
-//! use feignhttp::get;
-//! 
-//! const GITHUB_URL: &str = "https://api.github.com";
-//! 
-//! #[get(GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
-//! async fn languages(
-//!     #[path] owner: &str,
-//!     #[path] repo: &str,
-//! ) -> feignhttp::Result<String> {}
-//! ```
-//! 
-//! Url constant must be the first metadata in get attribute macro. You also can specify metadata key:
-//! 
-//! ```rust, no_run
-//! use feignhttp::get;
-//!
-//! const GITHUB_URL: &str = "https://api.github.com";
-//!
-//! #[get(url = GITHUB_URL, path = "/repos/{owner}/{repo}/languages")]
-//! async fn languages(
-//!     #[path] owner: &str,
-//!     #[path] repo: &str,
-//! ) -> feignhttp::Result<String> {}
-//! ```
-//! 
-//! ### JSON
+//! ## JSON
 //! 
 //! [Serde](https://docs.rs/serde) is a framework for serializing and deserializing Rust data structures. When use json, you should add serde in `Cargo.toml`:
 //! 
@@ -323,10 +325,10 @@
 //!     Ok(())
 //! }
 //! ```
-//! 
+//! Before send request, a header `content-type: application/json` will be added automatically.
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/json.rs) for a complete example.
 //! 
-//! ### Using Structure
+//! ## Using Structure
 //! 
 //! Structure is a good way to manage requests. Define a structure and then define a large number of request methods：
 //! 
@@ -344,7 +346,7 @@
 //! 
 //!     #[get("/repos/{owner}/{repo}")]
 //!     async fn repository(
-//!         #[path] owner: &str,
+//!         #[path("owner")] user: &str,
 //!         #[path] repo: &str,
 //!     ) -> feignhttp::Result<String> {}
 //! 
@@ -362,7 +364,7 @@
 //! 
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/struct.rs) for a complete example.
 //! 
-//! ### Timeout Configuration
+//! ## Timeout Configuration
 //! 
 //! If you need to configure the timeout, use `connect_timeout` and `timeout` to specify connect timeout and read timeout.
 //! 
@@ -384,6 +386,10 @@
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
 //!
+//! ## Params
+//! 
+//! ## Error Handling
+//! 
 //! ## Logs
 //! 
 //! FeignHTTP logs some useful information about requests and responses with the [log](https://docs.rs/log) crate.
