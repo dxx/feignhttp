@@ -11,13 +11,13 @@ impl Github {
 
     #[get("/repos/{owner}/{repo}")]
     async fn repository(
-        #[path] owner: &str,
+        #[path("owner")] user: &str,
         #[path] repo: &str,
     ) -> feignhttp::Result<String> {}
 
     #[get(path = "/repos/{owner}/{repo}/contributors")]
     async fn contributors(
-        #[path("owner")] user: &str,
+        #[path] owner: &str,
         #[path] repo: &str,
         #[query] page: u32,
     ) -> feignhttp::Result<String> {}
