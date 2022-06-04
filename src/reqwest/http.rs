@@ -105,12 +105,13 @@ impl RequestWrapper {
         }
     }
 
-    async fn send_body(mut self, body: Option<Body>) -> Result<ResponseWrapper> {
-        if let Some(body) = body {
-            self.request = self.request.body(body);
-        }
+    async fn send_body(self, body: Option<Body>) -> Result<ResponseWrapper> {
         let url = self.url.clone();
-        let request = self.set_header().request;
+        let mut request = self.set_header().request;
+
+        if let Some(body) = body {
+            request = request.body(body);
+        }
 
         #[cfg(feature = "log")]
         print_request_log(request.try_clone().unwrap());

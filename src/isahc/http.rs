@@ -109,16 +109,16 @@ impl RequestWrapper {
         }
     }
 
-    async fn send_body(self, body: Option<String>) -> Result<ResponseWrapper> {
+    async fn send_body(self, body: Option<Vec<u8>>) -> Result<ResponseWrapper> {
         let url = self.url.clone();
         let mut async_body = AsyncBody::from(());
         if let Some(body) = body.clone() {
             async_body = AsyncBody::from(body);
         }
-        let request = self.set_header().request.body(async_body).unwrap();
+        let request = self.set_header().request.body(async_body).map_err(Error::build)?;
 
         #[cfg(feature = "log")]
-        print_request_log(&request, body);
+        print_request_log(&request, body.map(|vec| String::from_utf8(vec).unwrap()));
 
         return match request.send_async().await {
             Ok(response) => {
@@ -145,7 +145,7 @@ impl RequestWrapper {
 
     pub async fn send_text(mut self, text: String) -> Result<ResponseWrapper> {
         self.set_header_if_absent("content-type", "text/plain".to_string());
-        self.send_body(Some(text)).await
+        self.send_body(Some(text.as_bytes().to_vec())).await
     }
 
     pub async fn send_form<T>(mut self, form: &T) -> Result<ResponseWrapper>
@@ -154,7 +154,7 @@ impl RequestWrapper {
     {
         self.set_header_if_absent("content-type", "application/x-www-form-urlencoded".to_string());
         let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
-        self.send_body(Some(form)).await
+        self.send_body(Some(form.as_bytes().to_vec())).await
     }
 
     #[cfg(feature = "json")]
@@ -164,7 +164,7 @@ impl RequestWrapper {
     {
         self.set_header_if_absent("content-type", "application/json".to_string());
         let json = serde_json::to_string(json).map_err(Error::encode)?;
-        self.send_body(Some(json)).await
+        self.send_body(Some(json.as_bytes().to_vec())).await
     }
 }
 

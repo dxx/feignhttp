@@ -16,7 +16,7 @@ pub fn print_request_log(request: &Request<AsyncBody>, body: Option<String>) {
     let mut body_len = 0;
     if let Some(body) = body {
         debug!("{}", body);
-        body_len = body.as_bytes().len();
+        body_len = body.len();
     }
     debug!("---> END HTTP ({}-byte body)", body_len);
 }
