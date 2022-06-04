@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-pub fn replace_url(url: &str, map: &HashMap<&str, String>) -> String {
-    let mut url = url.to_string();
+pub fn replace(placeholder: &str, map: &HashMap<&str, String>) -> String {
+    let mut placeholder = placeholder.to_string();
     for (k, v) in map {
-        url = url.replace(("{".to_string() + k + "}").as_str(), &v);
+        placeholder = placeholder.replace(format!("{{{}}}", k).as_str(), &v);
     }
-    url
+    placeholder
 }
