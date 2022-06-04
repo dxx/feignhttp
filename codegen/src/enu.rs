@@ -28,38 +28,41 @@ impl Method {
     }
 }
 
-/// Http request content.
+/// Arg type.
 #[derive(PartialEq)]
-pub enum Content {
+pub enum ArgType {
     HEADER,
     PATH,
     QUERY,
     FORM,
     BODY,
+    PARAM,
 }
 
-impl fmt::Display for Content {
+impl fmt::Display for ArgType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let content = match self {
-            Content::HEADER => "header",
-            Content::PATH => "path",
-            Content::QUERY => "query",
-            Content::FORM => "form",
-            Content::BODY => "body",
+        let t = match self {
+            ArgType::HEADER => "header",
+            ArgType::PATH => "path",
+            ArgType::QUERY => "query",
+            ArgType::FORM => "form",
+            ArgType::BODY => "body",
+            ArgType::PARAM => "PARAM",
         };
-        write!(f, "{}", content)
+        write!(f, "{}", t)
     }
 }
 
-impl Content {
-    pub fn from_str(content: &str) -> Result<Content, String> {
-        match content {
-            "header" | "HEADER" => Ok(Content::HEADER),
-            "path" | "PATH" => Ok(Content::PATH),
-            "query" | "QUERY" => Ok(Content::QUERY),
-            "form" | "FORM" => Ok(Content::FORM),
-            "body" | "BODY" => Ok(Content::BODY),
-            _ => Err("unknown request content marker: ".to_string() + content),
+impl ArgType {
+    pub fn from_str(arg_type: &str) -> Result<ArgType, String> {
+        match arg_type {
+            "header" | "HEADER" => Ok(ArgType::HEADER),
+            "path" | "PATH" => Ok(ArgType::PATH),
+            "query" | "QUERY" => Ok(ArgType::QUERY),
+            "form" | "FORM" => Ok(ArgType::FORM),
+            "body" | "BODY" => Ok(ArgType::BODY),
+            "param" | "PARAM" => Ok(ArgType::PARAM),
+            _ => Err("unknown arg type: ".to_string() + arg_type),
         }
     }
 }

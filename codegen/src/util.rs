@@ -1,4 +1,4 @@
-use crate::enu::Content;
+use crate::enu::ArgType;
 use crate::func::FnArg;
 use quote::{quote, ToTokens};
 use proc_macro::TokenStream;
@@ -92,13 +92,27 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
         let expr = syn::parse::<syn::Expr>(
             TokenStream::from_str(exp_str.trim()).unwrap()).unwrap();
         match expr {
-            // An assignment path: path = xxx.
+            // An assignment path: key = xxx.
             syn::Expr::Assign(assign) => {
                 let left = &assign.left;
                 if let syn::Expr::Path(ref k) = **left {
                     let key = k.path.segments.last().unwrap().ident.to_string();
-                    if let syn::Expr::Lit(lit) = *assign.right {
-                        expr_map.insert(key, lit.to_token_stream().to_string());
+                    if let syn::Expr::Lit(expr_lit) = *assign.right {
+                        match expr_lit.lit {
+                            syn::Lit::Str(s) => {
+                                expr_map.insert(key, s.value());
+                            },
+                            syn::Lit::Int(i) => {
+                                expr_map.insert(key, i.to_string());
+                            },
+                            syn::Lit::Float(f) => {
+                                expr_map.insert(key, f.to_string());
+                            },
+                            syn::Lit::Bool(b) => {
+                                expr_map.insert(key, format!("{}", b.value()));
+                            },
+                            _ => {}
+                        }
                     }
                 }
             },
@@ -117,8 +131,8 @@ pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<FnArg>> {
             let attrs = pat_type.attrs.clone();
             pat_type.attrs.clear();
 
-            // Default is query.
-            let mut content = Content::QUERY;
+            // Default is QUERY.
+            let mut arg_type = ArgType::QUERY;
             let mut name = format!("{}", pat_type.pat.to_token_stream());
             let ident = syn::Ident::new(&name.clone(), proc_macro2::Span::call_site());
             match &*pat_type.ty {
@@ -133,11 +147,11 @@ pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<FnArg>> {
             if let Some(attr) = attrs.last() {
                 // Content: header, param, path, body.
                 let attr_ident =
-                    Content::from_str(&attr.path.segments.last().unwrap().ident.to_string());
+                    ArgType::from_str(&attr.path.segments.last().unwrap().ident.to_string());
                 if let Err(err) = attr_ident {
                     return Err(syn::Error::new_spanned(&attr.path, err));
                 }
-                content = attr_ident.unwrap();
+                arg_type = attr_ident.unwrap();
                 if let Some(vec) = get_metas(attr) {
                     if let Some(nested_meta) = vec.first() {
                         match nested_meta {
@@ -161,7 +175,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<FnArg>> {
             }
 
             req_args.push(FnArg {
-                content,
+                arg_type,
                 name,
                 var: ident,
                 var_type: *pat_type.ty.clone(),

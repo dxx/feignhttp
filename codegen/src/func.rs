@@ -1,4 +1,4 @@
-use crate::enu::{Content, Method};
+use crate::enu::{ArgType, Method};
 use crate::util::{parse_url_stream, parse_exprs, parse_args, parse_return_type};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -13,7 +13,7 @@ pub struct FnMetadata {
 }
 
 pub struct FnArg {
-    pub content: Content,
+    pub arg_type: ArgType,
     pub name: String,
     pub var: syn::Ident,
     pub var_type: syn::Type,
@@ -65,20 +65,24 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     let vis = &item_fn.vis;
     let args = parse_args(sig)?;
 
-    let header_names = find_content_names(&args, Content::HEADER);
-    let header_vars = find_content_vars(&args, Content::HEADER);
+    let header_names = find_type_names(&args, ArgType::HEADER);
+    let header_vars = find_type_vars(&args, ArgType::HEADER);
 
-    let path_names = find_content_names(&args, Content::PATH);
-    let path_vars = find_content_vars(&args, Content::PATH);
+    let path_names = find_type_names(&args, ArgType::PATH);
+    let path_vars = find_type_vars(&args, ArgType::PATH);
 
-    let query_names = find_content_names(&args, Content::QUERY);
-    let query_vars = find_content_vars(&args, Content::QUERY);
+    let query_names = find_type_names(&args, ArgType::QUERY);
+    let query_vars = find_type_vars(&args, ArgType::QUERY);
 
-    let form_names = find_content_names(&args, Content::FORM);
-    let form_vars = find_content_vars(&args, Content::FORM);
+    let form_names = find_type_names(&args, ArgType::FORM);
+    let form_vars = find_type_vars(&args, ArgType::FORM);
 
-    let body_vars = find_content_vars(&args, Content::BODY);
+    let param_names = find_type_names(&args, ArgType::PARAM);
+    let param_vars = find_type_vars(&args, ArgType::PARAM);
 
+    let body_vars = find_type_vars(&args, ArgType::BODY);
+
+    // Valid form and body.
     if form_vars.len() > 0 && body_vars.len() > 0 {
         return Err(syn::Error::new_spanned(
             &sig.inputs,
@@ -89,20 +93,28 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
             "request must have only one body"));
     }
 
+    // Valid param types.
+    if param_names.len() > 0 {
+        let param_types = find_var_types(&args, ArgType::PARAM);
+        for i in 0..param_types.len() {
+            let p_name = param_names.get(i).unwrap();
+            let p_type = param_types.get(i).unwrap();
+            let ty = p_type.to_token_stream().to_string().replace(" ", "");
+            if !is_support_types(&ty) {
+                return Err(syn::Error::new_spanned(
+                    &sig.inputs, format!("unsupported param parameter: `{}: {}`", p_name, p_type.to_token_stream())));
+            }
+        }
+    }
+
     let mut send_fn_call = quote! {send()};
     if !body_vars.is_empty() {
-        let body_types: Vec<syn::Type> = args.iter()
-            .filter(|a| a.content == Content::BODY)
-            .map(|a| a.var_type.clone())
-            .collect();
+        let body_types = find_var_types(&args, ArgType::BODY);
         send_fn_call = get_body_fn_call(
             body_types.get(0).unwrap(),
             body_vars.get(0).unwrap());
     } else if !form_vars.is_empty() {
-        let form_types: Vec<syn::Type> = args.iter()
-            .filter(|a| a.content == Content::FORM)
-            .map(|a| a.var_type.clone())
-            .collect();
+        let form_types = find_var_types(&args, ArgType::FORM);
         match get_form_fn_call(&form_names, &form_types, &form_vars) {
             Ok(fn_call) => {
                 send_fn_call = fn_call;
@@ -126,11 +138,16 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     let stream = quote! {
         #vis #sig {
             use std::collections::HashMap;
-            use feignhttp::{HttpClient, HttpConfig, HttpRequest, HttpResponse};
+            use feignhttp::{HttpClient, HttpConfig, HttpResponse, util};
+
+            let mut param_map: HashMap<&str, String> = HashMap::new();
+            #(
+                param_map.insert(#param_names, format!("{}", #param_vars));
+            )*
 
             let mut config_map: HashMap<&str, String> = HashMap::new();
             #(
-                config_map.insert(#config_keys, format!("{}", #config_values));
+                config_map.insert(#config_keys, util::replace(&#config_values, &param_map));
             )*
 
             let mut header_map: HashMap<&str, String> = HashMap::new();
@@ -148,12 +165,12 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
                 query_vec.push((#query_names, format!("{}", #query_vars)));
             )*
 
-            let url = feignhttp::util::replace_url(&format!("{}", #url), &path_map);
+            let url = util::replace(&format!("{}", #url), &path_map);
 
-            let config = HttpConfig::from_map(config_map);
+            let config = HttpConfig::from_map(config_map)?;
 
-            let request = HttpClient::configure_request(&url, #method, config)
-                .headers(header_map).query(&query_vec);
+            let request = HttpClient::builder().url(&url).method(#method).config(config)
+                .headers(header_map).query(query_vec).build()?;
 
             let response = request.#send_fn_call.await?;
             let return_value: #return_type = response.#return_fn().await?;
@@ -165,18 +182,40 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     Ok(stream)
 }
 
-fn find_content_names(args: &Vec<FnArg>, content: Content) -> Vec<String> {
+fn find_type_names(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<String> {
     args.iter()
-        .filter(|a| a.content == content)
+        .filter(|a| a.arg_type == arg_type)
         .map(|a| a.name.clone())
         .collect()
 }
 
-fn find_content_vars(args: &Vec<FnArg>, content: Content) -> Vec<syn::Ident> {
+fn find_type_vars(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Ident> {
     args.iter()
-        .filter(|a| a.content == content)
+        .filter(|a| a.arg_type == arg_type)
         .map(|a| a.var.clone())
         .collect()
+}
+
+fn find_var_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
+    args.iter()
+        .filter(|a| a.arg_type == arg_type)
+        .map(|a| a.var_type.clone())
+        .collect()
+}
+
+fn is_support_types(t: &str) -> bool {
+    return match t {
+        "bool" |
+        "u8" | "u16" | "u32" | "u64" |
+        "i8" | "i16" | "i32" | "i64" |
+        "f32" | "f64" |
+        "char" | "String" | "&str" => {
+            true
+        },
+        _ => {
+            false
+        }
+    }
 }
 
 fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {
@@ -198,21 +237,6 @@ fn get_return_fn(return_type: &syn::Type) -> proc_macro2::TokenStream {
     }
 }
 
-fn is_form_support_types(t: String) -> bool {
-    return match t.as_str() {
-        "bool" |
-        "u8" | "u16" | "u32" | "u64" |
-        "i8" | "i16" | "i32" | "i64" |
-        "f32" | "f64" |
-        "char" | "String" | "&str" => {
-            true
-        },
-        _ => {
-            false
-        }
-    }
-}
-
 fn get_form_fn_call(
     form_names: &Vec<String>,
     form_types: &Vec<syn::Type>,
@@ -228,7 +252,7 @@ fn get_form_fn_call(
         match form_type {
             syn::Type::Path(t) => {
                 let ty = t.to_token_stream().to_string();
-                if is_form_support_types(ty) {
+                if is_support_types(&ty) {
                     let mut token_str = "send_form(&vec![".to_string();
                     token_str.push_str("(");
                     token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
@@ -241,7 +265,7 @@ fn get_form_fn_call(
             },
             syn::Type::Reference(t) => {
                 let ty = t.to_token_stream().to_string();
-                if is_form_support_types(ty.replace(" ", "").replace("&", "")) {
+                if is_support_types(&ty.replace(" ", "").replace("&", "")) {
                     return Err(format!("one form parameter only supports scalar types, &str, String or struct"));
                 } else if ty.contains("& str") {
                     let mut token_str = "send_form(&vec![".to_string();
@@ -254,7 +278,7 @@ fn get_form_fn_call(
                 Ok(quote! {send_form(& #form_var)})
             }
             _ => {
-                Err(format!("non supports form parameter: `{}: {}`", form_name, form_type.to_token_stream()))
+                Err(format!("unsupported form parameter: `{}: {}`", form_name, form_type.to_token_stream()))
             }
         }
     } else {
@@ -264,7 +288,7 @@ fn get_form_fn_call(
             let form_type = form_types.get(i).unwrap();
             let form_var = form_vars.get(i).unwrap();
             let ty = form_type.to_token_stream().to_string().replace(" ", "");
-            if !is_form_support_types(ty) {
+            if !is_support_types(&ty) {
                 return Err(format!("two or more form parameters only supports scalar types, &str or String"));
             }
             token_str.push_str("(");

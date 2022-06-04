@@ -58,7 +58,7 @@ fn fn_to_streams(
                 }
 
                 // Override meta.
-                let map = parse_fn_attrs(attr);
+                let map = parse_fn_metas(attr);
                 for (k, v) in map {
                     meta_map.insert(k, v);
                 }
@@ -110,7 +110,7 @@ fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream>
     Ok(proc_macro2::TokenStream::new())
 }
 
-fn parse_fn_attrs(attr: &syn::Attribute) -> HashMap<String, String> {
+fn parse_fn_metas(attr: &syn::Attribute) -> HashMap<String, String> {
     let mut attr_map = HashMap::new();
     if let Some(metas) = get_metas(attr) {
         for meta in metas.into_iter() {
@@ -118,7 +118,21 @@ fn parse_fn_attrs(attr: &syn::Attribute) -> HashMap<String, String> {
                 // A literal, like the `xxx` in `#[get(p = xxx)]`.
                 syn::NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
                     let key = name_value.path.segments.last().unwrap().ident.to_string();
-                    attr_map.insert(key, name_value.lit.to_token_stream().to_string());
+                    match name_value.lit {
+                        syn::Lit::Str(s) => {
+                            attr_map.insert(key, s.value());
+                        },
+                        syn::Lit::Int(i) => {
+                            attr_map.insert(key, i.to_string());
+                        },
+                        syn::Lit::Float(f) => {
+                            attr_map.insert(key, f.to_string());
+                        },
+                        syn::Lit::Bool(b) => {
+                            attr_map.insert(key, format!("{}", b.value()));
+                        },
+                        _ => {}
+                    }
                 }
                 _ => {}
             }
