@@ -76,10 +76,10 @@ impl RequestWrapper {
     ) -> Result<RequestWrapper> {
         let mut request = Request::builder();
         if let Some(millisecond) = config.connect_timeout {
-            request = request.connect_timeout(Duration::from_millis(millisecond as u64));
+            request = request.connect_timeout(Duration::from_millis(millisecond));
         }
         if let Some(millisecond) = config.timeout {
-            request = request.timeout(Duration::from_millis(millisecond as u64));
+            request = request.timeout(Duration::from_millis(millisecond));
         }
         let url = Url::parse(url).map_err(Error::build)?;
         request = request

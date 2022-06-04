@@ -72,8 +72,8 @@ impl<'a> RequestBuilder<'a> {
 
 /// Configuration of an HTTP request.
 pub struct HttpConfig {
-    pub connect_timeout: Option<u16>,
-    pub timeout: Option<u16>,
+    pub connect_timeout: Option<u64>,
+    pub timeout: Option<u64>,
 }
 
 impl HttpConfig {
@@ -83,10 +83,10 @@ impl HttpConfig {
             timeout: None,
         };
         if let Some(connect_timeout) = config_map.get("connect_timeout") {
-            config.connect_timeout = Some(connect_timeout.parse::<u16>().map_err(Error::config)?);
+            config.connect_timeout = Some(connect_timeout.parse::<u64>().map_err(Error::config)?);
         }
         if let Some(timeout) = config_map.get("timeout") {
-            config.timeout = Some(timeout.parse::<u16>().map_err(Error::config)?);
+            config.timeout = Some(timeout.parse::<u64>().map_err(Error::config)?);
         }
         Ok(config)
     }
