@@ -165,7 +165,7 @@ impl RequestWrapper {
 
 #[async_trait]
 impl HttpResponse for ResponseWrapper {
-    fn status(self) -> StatusCode {
+    fn status(&self) -> StatusCode {
         self.response.status()
     }
 
@@ -175,6 +175,10 @@ impl HttpResponse for ResponseWrapper {
 }
 
 impl ResponseWrapper {
+    pub async fn none(self) -> Result<()> {
+        Ok(())
+    }
+
     #[cfg(feature = "json")]
     pub async fn json<T>(self) -> Result<T>
     where

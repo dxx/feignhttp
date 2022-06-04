@@ -229,6 +229,7 @@ fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2
 
 fn get_return_fn(return_type: &syn::Type) -> proc_macro2::TokenStream {
     let return_type_str = return_type.to_token_stream().to_string();
+    if return_type_str == "()" { return quote! {none} }
     let is_text = if return_type_str.contains("String") { true } else { false };
     return if is_text {
         quote! {text}
