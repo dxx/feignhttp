@@ -6,7 +6,7 @@ async fn connect_timeout() -> feignhttp::Result<String> {}
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
-pub struct Http;
+struct Http;
 
 #[feign(url = "http://site_dne.com", connect_timeout = 3000)]
 impl Http {
@@ -15,7 +15,7 @@ impl Http {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     match connect_timeout().await {
         Ok(res) => {
             println!("connect_timeout: {}", res);
@@ -42,6 +42,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Http::get: {:?}", err);
         }
     }
-
-    Ok(())
 }
