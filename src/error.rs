@@ -9,7 +9,7 @@ pub type Result<T> = StdResult<T, Error>;
 
 pub(crate) type BoxError = Box<dyn StdError + Send + Sync>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ErrorKind {
     Build, // Indicates an error occurred while build http client.
     Config, // Indicates an error occurred while crate http config.
@@ -67,6 +67,10 @@ impl Error {
     pub(crate) fn with_url(mut self, url: Url) -> Self {
         self.inner.url = Some(url);
         self
+    }
+
+    pub fn error_kind(&self) -> ErrorKind {
+        self.inner.kind.clone()
     }
 
     pub fn is_build_error(&self) -> bool {
