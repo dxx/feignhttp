@@ -102,7 +102,7 @@ pub trait HttpRequest {
 /// A trait of HTTP response.
 #[async_trait]
 pub trait HttpResponse {
-    fn status(self) -> http::StatusCode;
+    fn status(&self) -> http::StatusCode;
 
     async fn text(self) -> Result<String>;
 }
