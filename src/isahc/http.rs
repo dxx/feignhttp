@@ -24,49 +24,14 @@ pub struct ResponseWrapper {
 }
 
 impl HttpRequest for RequestWrapper {
-    fn build_default(url: &str, method: &str) -> RequestWrapper {
-        let url = Url::parse(url).unwrap();
-        let request = Request::builder()
-            .uri(url.to_string())
-            .method(method.to_uppercase().as_str())
-            .redirect_policy(RedirectPolicy::Limit(10));
-        RequestWrapper {
-            url,
-            headers: map!(
-                "user-agent".to_string() => "Feign Http".to_string()),
-            request,
-        }
-    }
-
-    fn build_with_config(url: &str, method: &str, config: HttpConfig) -> RequestWrapper {
-        let mut request = Request::builder();
-        if let Some(millisecond) = config.connect_timeout {
-            request = request.connect_timeout(Duration::from_millis(millisecond as u64));
-        }
-        if let Some(millisecond) = config.timeout {
-            request = request.timeout(Duration::from_millis(millisecond as u64));
-        }
-        let url = Url::parse(url).unwrap();
-        request = request
-            .uri(url.to_string())
-            .method(method.to_uppercase().as_str())
-            .redirect_policy(RedirectPolicy::Limit(10));
-        RequestWrapper {
-            url,
-            headers: map!(
-                "user-agent".to_string() => "Feign Http".to_string()),
-            request,
-        }
-    }
-
-    fn headers(mut self, header_map: HashMap<&str, String>) -> Self {
-        for (k, v) in header_map {
-            self.headers.insert(k.to_string().to_lowercase(), v);
+    fn headers(mut self, headers: HashMap<&str, String>) -> Self {
+        for (k, v) in headers {
+            self.headers.insert(k.to_lowercase(), v);
         }
         self
     }
 
-    fn query(mut self, query: &Vec<(&str, String)>) -> Self {
+    fn query(mut self, query: Vec<(&str, String)>) -> Self {
         if query.len() == 0 {
             return self;
         }
@@ -90,6 +55,45 @@ impl HttpRequest for RequestWrapper {
 }
 
 impl RequestWrapper {
+    pub fn build_default(url: &str, method: &str) -> Result<RequestWrapper> {
+        let url = Url::parse(url).map_err(Error::build)?;
+        let request = Request::builder()
+            .uri(url.to_string())
+            .method(method.to_uppercase().as_str())
+            .redirect_policy(RedirectPolicy::Limit(10));
+        Ok(RequestWrapper {
+            url,
+            headers: map!(
+                "user-agent".to_string() => "Feign HTTP".to_string()),
+            request,
+        })
+    }
+
+    pub fn build_with_config(
+        url: &str,
+        method: &str,
+        config: HttpConfig,
+    ) -> Result<RequestWrapper> {
+        let mut request = Request::builder();
+        if let Some(millisecond) = config.connect_timeout {
+            request = request.connect_timeout(Duration::from_millis(millisecond as u64));
+        }
+        if let Some(millisecond) = config.timeout {
+            request = request.timeout(Duration::from_millis(millisecond as u64));
+        }
+        let url = Url::parse(url).map_err(Error::build)?;
+        request = request
+            .uri(url.to_string())
+            .method(method.to_uppercase().as_str())
+            .redirect_policy(RedirectPolicy::Limit(10));
+        Ok(RequestWrapper {
+            url,
+            headers: map!(
+                "user-agent".to_string() => "Feign HTTP".to_string()),
+            request,
+        })
+    }
+
     fn set_header(mut self) -> Self {
         let mut request = self.request;
         for (k, v) in &self.headers {
@@ -126,12 +130,12 @@ impl RequestWrapper {
 
                 // Client or server error.
                 if status.is_client_error() || status.is_server_error() {
-                    return Err(Error::status(url, status).into());
+                    return Err(Error::status(url, status));
                 }
 
                 Ok(ResponseWrapper { response })
             }
-            Err(e) => Err(Error::new(ErrorKind::Request, Some(e)).with_url(url).into()),
+            Err(e) => Err(Error::new(ErrorKind::Request, Some(e)).with_url(url)),
         };
     }
 

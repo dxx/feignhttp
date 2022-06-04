@@ -11,10 +11,12 @@ pub(crate) type BoxError = Box<dyn StdError + Send + Sync>;
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    Request,
-    Encode,
-    Decode,
-    Status(StatusCode),
+    Build, // Indicates an error occurred while build http client.
+    Config, // Indicates an error occurred while crate http config.
+    Encode, // Indicates an error occurred while encode request body.
+    Decode, // Indicates an error occurred while encode response body.
+    Request, // Indicates an error occurred while request target url.
+    Status(StatusCode), // Indicates an error occurred when the http status is not ok.
 }
 
 /// The errors that may occur when processing a request.
@@ -42,6 +44,14 @@ impl Error {
         }
     }
 
+    pub(crate) fn build<E: Into<BoxError>>(e: E) -> Error {
+        Error::new(ErrorKind::Build, Some(e))
+    }
+
+    pub(crate) fn config<E: Into<BoxError>>(e: E) -> Error {
+        Error::new(ErrorKind::Config, Some(e))
+    }
+
     pub(crate) fn decode<E: Into<BoxError>>(e: E) -> Error {
         Error::new(ErrorKind::Decode, Some(e))
     }
@@ -59,19 +69,27 @@ impl Error {
         self
     }
 
-    pub fn is_request(&self) -> bool {
-        matches!(self.inner.kind, ErrorKind::Request)
+    pub fn is_build_error(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Build)
     }
 
-    pub fn is_encode(&self) -> bool {
+    pub fn is_config_error(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Config)
+    }
+
+    pub fn is_encode_error(&self) -> bool {
         matches!(self.inner.kind, ErrorKind::Encode)
     }
 
-    pub fn is_decode(&self) -> bool {
+    pub fn is_decode_error(&self) -> bool {
         matches!(self.inner.kind, ErrorKind::Decode)
     }
 
-    pub fn is_status(&self) -> bool {
+    pub fn is_request_error(&self) -> bool {
+        matches!(self.inner.kind, ErrorKind::Request)
+    }
+
+    pub fn is_status_error(&self) -> bool {
         matches!(self.inner.kind, ErrorKind::Status(_))
     }
 }
@@ -103,6 +121,8 @@ impl fmt::Debug for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.inner.kind {
+            ErrorKind::Build => f.write_str("error build client")?,
+            ErrorKind::Config => f.write_str("error create config")?,
             ErrorKind::Request => f.write_str("error sending request")?,
             ErrorKind::Encode => f.write_str("error encoding request body")?,
             ErrorKind::Decode => f.write_str("error decoding response body")?,
