@@ -170,16 +170,16 @@ impl HttpResponse for ResponseWrapper {
         self.response.status()
     }
 
+    async fn none(self) -> Result<()> {
+        Ok(())
+    }
+
     async fn text(self) -> Result<String> {
         self.response.text().await.map_err(Error::decode)
     }
 }
 
 impl ResponseWrapper {
-    pub async fn none(self) -> Result<()> {
-        Ok(())
-    }
-
     #[cfg(feature = "json")]
     pub async fn json<T>(self) -> Result<T>
     where

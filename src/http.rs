@@ -104,5 +104,7 @@ pub trait HttpRequest {
 pub trait HttpResponse {
     fn status(&self) -> http::StatusCode;
 
+    async fn none(self) -> Result<()>;
+
     async fn text(self) -> Result<String>;
 }
