@@ -75,7 +75,7 @@ fn test_validate_return_value2() {
 }
 
 #[test]
-fn test_validate_arg() {
+fn test_validate_attr() {
     // error: unknown arg type: aaa
     //    |  pub async fn get(#[aaa] a: i32) -> Result<String> {}
     //    |                     ^^^
@@ -85,13 +85,23 @@ fn test_validate_arg() {
 }
 
 #[test]
-fn test_validate_arg2() {
+fn test_validate_attr2() {
     // error: unknown arg type: bbb
     //    |  pub async fn get(a: i32, #[bbb] b: i32) -> Result<String> {}
     //    |                             ^^^
 
     // #[get("http://xxx")]
     // pub async fn get(a: i32, #[bbb] b: i32) -> Result<String> {}
+}
+
+#[test]
+fn test_validate_param() {
+    // error: unknown arg type: bbb
+    //    |  pub async fn get(#[param] a: Vec<String>) -> Result<String> {}
+    //    |                            ^^^^^^^^^^^^^^
+
+    // #[get("http://xxx")]
+    // pub async fn get(#[param] a: Vec<String>) -> Result<String> {}
 }
 
 #[test]
