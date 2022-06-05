@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp"
-version = "0.3.3"
+version = "0.4.0"
 authors = ["dxx <dx1898@foxmail.com>"]
 edition = "2021"
 description = "Declarative HTTP client for rust"
@@ -31,7 +31,7 @@ isahc-client = ["isahc"]
 json = ["serde_json", "reqwest/json", "isahc/json"]
 
 [dependencies]
-feignhttp-codegen = { version = "0.3", path = "codegen" }
+feignhttp-codegen = { version = "0.4", path = "codegen" }
 
 async-trait = "0.1"
 http = "0.2"
