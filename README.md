@@ -37,7 +37,7 @@ tokio = { version = "1", features = ["full"] }
 Add `feignhttp` in your `Cargo.toml` and use default feature:
 
 ```toml
-feignhttp = { version = "0.3" }
+feignhttp = { version = "0.4" }
 ```
 
 Then add the following code:
@@ -63,7 +63,7 @@ It will send get request to `https://api.github.com` and receive a plain text bo
 Using non-default HTTP backend:
 
 ```toml
-feignhttp = { version = "0.3", default-features = false, features = ["isahc-client"] }
+feignhttp = { version = "0.4", default-features = false, features = ["isahc-client"] }
 ```
 
 The `default-features = false` option disable default reqwest.
