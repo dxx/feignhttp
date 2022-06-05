@@ -51,7 +51,7 @@
 //! Add `feignhttp` in your `Cargo.toml` and use default feature:
 //!
 //! ```toml
-//! feignhttp = { version = "0.3" }
+//! feignhttp = { version = "0.4" }
 //! ```
 //! 
 //! Then add the following code:
@@ -77,7 +77,7 @@
 //! Using non-default HTTP backend:
 //!
 //! ```toml
-//! feignhttp = { version = "0.3", default-features = false, features = ["isahc-client"] }
+//! feignhttp = { version = "0.4", default-features = false, features = ["isahc-client"] }
 //! ```
 //!
 //! The `default-features = false` option disable default reqwest.
@@ -435,7 +435,7 @@
 //! ## Error Handling
 //! 
 //! FeignHTTP use [`feignhttp::Result`](https://docs.rs/feignhttp/latest/feignhttp/type.Result.html) to receive return result. The error is 
-//! [`Error`](https://docs.rs/feignhttp/latest/feignhttp/struct.Error.html) structure which has some error kinds and some useful methods.
+//! [`Error`](https://docs.rs/feignhttp/latest/feignhttp/struct.Error.html) struct which has some error kinds and some useful methods.
 //! [`ErrorKind`](https://docs.rs/feignhttp/latest/feignhttp/enum.ErrorKind.html) is used to indicate an error type.
 //! 
 //! Url is incorrect:
