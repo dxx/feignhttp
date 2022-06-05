@@ -107,4 +107,6 @@ pub trait HttpResponse {
     async fn none(self) -> Result<()>;
 
     async fn text(self) -> Result<String>;
+
+    async fn vec(self) -> Result<Vec<u8>>;
 }

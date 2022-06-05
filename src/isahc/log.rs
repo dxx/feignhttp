@@ -2,7 +2,7 @@ use http::{Request, Response};
 use isahc::AsyncBody;
 use log::debug;
 
-pub fn print_request_log(request: &Request<AsyncBody>, body: Option<String>) {
+pub fn print_request_log(request: &Request<AsyncBody>, body: Option<Vec<u8>>) {
     debug!(
         "---> {} {} {:?}",
         request.method().to_string(),
@@ -14,9 +14,12 @@ pub fn print_request_log(request: &Request<AsyncBody>, body: Option<String>) {
     }
     debug!("");
     let mut body_len = 0;
-    if let Some(body) = body {
-        debug!("{}", body);
-        body_len = body.len();
+    if let Some(vec) = body {
+        body_len = vec.len();
+        match String::from_utf8(vec) {
+            Ok(s) => debug!("{}", s),
+            Err(_) => {},
+        }
     }
     debug!("---> END HTTP ({}-byte body)", body_len);
 }

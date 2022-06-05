@@ -16,7 +16,10 @@ pub fn print_request_log(request: RequestBuilder) {
         let mut body_len = 0;
         if let Some(body) = request.body() {
             let body = body.as_bytes().unwrap();
-            debug!("{}", String::from_utf8(body.to_vec()).unwrap());
+            match String::from_utf8(body.to_vec()) {
+                Ok(s) => debug!("{}", s),
+                Err(_) => {},
+            }
             body_len = body.len();
         }
         debug!("---> END HTTP ({}-byte body)", body_len);

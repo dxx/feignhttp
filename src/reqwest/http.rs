@@ -162,6 +162,11 @@ impl RequestWrapper {
         let json = serde_json::to_string(json).map_err(Error::encode)?;
         self.send_body(Some(Body::from(json))).await
     }
+
+    pub async fn send_vec(mut self, vec: Vec<u8>) -> Result<ResponseWrapper> {
+        self.set_header_if_absent("content-type", "application/octet-stream".to_string());
+        self.send_body(Some(Body::from(vec))).await
+    }
 }
 
 #[async_trait]
@@ -176,6 +181,11 @@ impl HttpResponse for ResponseWrapper {
 
     async fn text(self) -> Result<String> {
         self.response.text().await.map_err(Error::decode)
+    }
+
+    async fn vec(self) -> Result<Vec<u8>> {
+        let by = self.response.bytes().await.map_err(Error::decode)?;
+        Ok(by.to_vec())
     }
 }
 

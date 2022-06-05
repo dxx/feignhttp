@@ -118,7 +118,7 @@ impl RequestWrapper {
         let request = self.set_header().request.body(async_body).map_err(Error::build)?;
 
         #[cfg(feature = "log")]
-        print_request_log(&request, body.map(|vec| String::from_utf8(vec).unwrap()));
+        print_request_log(&request, body);
 
         return match request.send_async().await {
             Ok(response) => {
@@ -166,6 +166,11 @@ impl RequestWrapper {
         let json = serde_json::to_string(json).map_err(Error::encode)?;
         self.send_body(Some(json.as_bytes().to_vec())).await
     }
+
+    pub async fn send_vec(mut self, vec: Vec<u8>) -> Result<ResponseWrapper> {
+        self.set_header_if_absent("content-type", "application/octet-stream".to_string());
+        self.send_body(Some(vec)).await
+    }
 }
 
 #[async_trait]
@@ -180,6 +185,10 @@ impl HttpResponse for ResponseWrapper {
 
     async fn text(mut self) -> Result<String> {
         self.response.text().await.map_err(Error::decode)
+    }
+
+    async fn vec(mut self) -> Result<Vec<u8>> {
+        self.response.bytes().await.map_err(Error::decode)
     }
 }
 
