@@ -82,7 +82,7 @@
 //!
 //! The `default-features = false` option disable default reqwest.
 //! 
-//! ### Making a POST request
+//! ## Making a POST request
 //! 
 //! For a post request, you should use the `post` attribute macro to specify request method and use a `body` attribute to specify 
 //! a request body.
@@ -183,7 +183,7 @@
 //! 
 //! The `page` parameter will as query parameter in the url. An url which will be send is `https://api.github.com/repos/dxx/feignhttp?page=1`.
 //! 
-//! Note: A function parameter without `query` attribute will as a query parameter by default.
+//! **Note**: A function parameter without `query` attribute will as a query parameter by default.
 //! 
 //! ## Headers
 //! 
@@ -213,8 +213,27 @@
 //! }
 //! ```
 //! 
-//! A header `accept:application/vnd.github.v3+json ` will be send.
-//!
+//! A header `accept: application/vnd.github.v3+json` will be added.
+//! 
+//! You also can use `headers` key to specify one or more headers in `get` attribute:
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//! 
+//! #[get("https://httpbin.org/headers", headers = "key1: value1; key2: value2")]
+//! async fn headers() -> feignhttp::Result<String> {}
+//! 
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let r = headers().await?;
+//!     println!("headers result: {}", r);
+//! 
+//!     Ok(())
+//! }
+//! ```
+//! 
+//! The format of `headers` must be `header-key1: header-value1; header-key2: header-value2;...`.
+//! 
 //! ## Form
 //!
 //! Using `form` to specify form parameter:
@@ -388,7 +407,124 @@
 //!
 //! ## Params
 //! 
+//! Sometimes you need dynamic values, like config or others. `param` is designed to support such ability. You can use 
+//! `param` to specify a value that used as a dynamic replacement.
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//!
+//! #[get(url = "https://httpbin.org/delay/5", timeout = "{time}")]
+//! async fn timeout(#[param] time: u16) -> feignhttp::Result<String> {}
+//! ```
+//! 
+//! When call `timeout` function, the time's value will replace the `{time}`.
+//! 
+//! Another example is replace headers:
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//!
+//! #[get("https://httpbin.org/headers", headers = "token: {token}")]
+//! async fn headers(#[param] token: &str) -> feignhttp::Result<String> {}
+//! 
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // A reqeut with a header `token: ZmVpZ25odHRw`.
+//!     let res = headers("ZmVpZ25odHRw").await?;
+//!     println!("headers: {}", res);
+//! 
+//!     Ok(())
+//! }
+//! ```
+//! 
+//! **Note**: `param` can't replace placeholder in url or path.
+//! 
 //! ## Error Handling
+//! 
+//! FeignHTTP use [`feignhttp::Result`](https://docs.rs/feignhttp/latest/feignhttp/type.Result.html) to receive return result. The error is 
+//! [`Error`](https://docs.rs/feignhttp/latest/feignhttp/struct.Error.html) structure which has some error kinds and some useful methods.
+//! [`ErrorKind`](https://docs.rs/feignhttp/latest/feignhttp/enum.ErrorKind.html) is used to indicate an error type.
+//! 
+//! Url is incorrect:
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//! 
+//! #[get("httpbin.org/anything")]
+//! async fn url_error() -> feignhttp::Result<()> {}
+//! 
+//! #[tokio::main]
+//! async fn main() {
+//!     match url_error().await {
+//!         Err(err) => {
+//!             // Build client error.
+//!             if err.is_build_error() {
+//!                 println!("url_error: {}", err);
+//!             }
+//!         },
+//!         _ => {}
+//!     }
+//! }
+//! ```
+//! 
+//! Parse config error:
+//! 
+//! ```rust, no_run
+//! use feignhttp::get;
+//! 
+//! #[get(url = "https://httpbin.org/delay/3", timeout = "abc")]
+//! async fn config_error() -> feignhttp::Result<()> {}
+//! 
+//! #[tokio::main]
+//! async fn main() {
+//!     match config_error().await {
+//!         Err(err) => {
+//!             // Parse config error.
+//!             if err.is_config_error() {
+//!                 println!("config_error: {}", err);
+//!             }
+//!         },
+//!         _ => {}
+//!     }
+//! }
+//! ```
+//! When parsing the configuration, an error is thrown if the value is incorrect. `timeout` is an integer type, when parse `abc` to integer will throw an error.
+//! 
+//! HTTP status is an importmant info about response. The status code can tell whether the client or server is abnormal.
+//! The following is an example of handling through HTTP status:
+//! 
+//! ```rust, no_run
+//! use feignhttp::{get, ErrorKind};
+//! 
+//! #[get(url = "https://httpbin.org/123")]
+//! async fn status_error() -> feignhttp::Result<()> {}
+//! 
+//! #[tokio::main]
+//! async fn main() {
+//!     match status_error().await {
+//!         Err(err) => {
+//!             // Status error.
+//!             if err.is_status_error() {
+//!                 println!("status_error: {}", err);
+//!             }
+//!             if let ErrorKind::Status(status) = err.error_kind() {
+//!             
+//!                 println!("status error code: {}", status.as_u16());
+//! 
+//!                 if status.is_client_error() {
+//!                     // Handle error.
+//!                 }
+//!                 if status.is_server_error() {
+//!                     // Handle error.
+//!                 }
+//!             }
+//!         },
+//!         _ => {}
+//!     }
+//! }
+//! ```
+//! 
+//! For more examples, see [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/error.rs).
 //! 
 //! ## Logs
 //! 
@@ -401,11 +537,11 @@
 //! 
 //! ## Optional Features
 //!
-//! The following features are available. The default features are `reqwest-client`.
-//! * **reqwest-client** *(default)*: Use `reqwest` as the HTTP backend.
-//! * **isahc-client**: Use `isahc` as the HTTP backend.
-//! * **json**: Enable json serialize and deserialize.
-//! * **log**: Enable request and response logs.
+//! The following features are available. The default features are `reqwest-client`
+//! * **reqwest-client** *(default)*: Use `reqwest` as the HTTP backend
+//! * **isahc-client**: Use `isahc` as the HTTP backend
+//! * **json**: Enable json serialization and deserialization
+//! * **log**: Enable request and response logs
 
 mod http;
 mod error;
