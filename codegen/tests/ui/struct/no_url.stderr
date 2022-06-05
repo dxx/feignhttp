@@ -1,0 +1,7 @@
+error: metadata url not specified
+ --> tests/ui/struct/no_url.rs:9:1
+  |
+9 | #[feign(aaa = "http://xxx")]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `feign` (in Nightly builds, run with -Z macro-backtrace for more info)

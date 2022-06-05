@@ -1,0 +1,5 @@
+error: request must have only one of body or form
+  --> tests/ui/func/body_form.rs:10:32
+   |
+10 | pub async fn send_post(#[body] b: S, #[form] f: S) -> Result<String> {}
+   |                                ^^^^^^^^^^^^^^^^^^

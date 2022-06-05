@@ -1,0 +1,7 @@
+error: metadata url is invalid
+ --> tests/ui/func/invalid_url.rs:9:1
+  |
+9 | #[get(url + "/aaa")]
+  | ^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `get` (in Nightly builds, run with -Z macro-backtrace for more info)

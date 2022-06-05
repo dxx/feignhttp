@@ -1,0 +1,5 @@
+error: function must have a return value
+ --> tests/ui/func/return_value.rs:8:5
+  |
+8 | pub async fn send_get() {}
+  |     ^^^^^^^^^^^^^^^^^^^

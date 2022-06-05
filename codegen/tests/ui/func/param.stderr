@@ -1,0 +1,5 @@
+error: unsupported param parameter: `a: Vec < String >`
+ --> tests/ui/func/param.rs:8:32
+  |
+8 | pub async fn send_get(#[param] a: Vec<String>) -> Result<String> {}
+  |                                ^^^^^^^^^^^^^^

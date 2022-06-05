@@ -1,0 +1,5 @@
+error: only support async fn
+ --> tests/ui/func/async.rs:8:5
+  |
+8 | pub fn send_get() {}
+  |     ^^

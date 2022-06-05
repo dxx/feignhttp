@@ -1,0 +1,5 @@
+error: request must have only one body
+  --> tests/ui/func/body.rs:10:32
+   |
+10 | pub async fn send_post(#[body] b: B, #[body] b2: B) -> Result<String> {}
+   |                                ^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,7 @@
+error: metadata url not specified
+ --> tests/ui/func/no_url2.rs:7:1
+  |
+7 | #[get(path = "/xxx")]
+  | ^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `get` (in Nightly builds, run with -Z macro-backtrace for more info)

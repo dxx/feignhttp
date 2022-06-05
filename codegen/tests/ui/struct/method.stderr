@@ -1,0 +1,5 @@
+error: unknown request method marker: req
+  --> tests/ui/struct/method.rs:11:7
+   |
+11 |     #[req]
+   |       ^^^

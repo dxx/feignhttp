@@ -1,0 +1,5 @@
+error: two or more form parameters only supports scalar types, &str or String
+  --> tests/ui/func/form2.rs:10:32
+   |
+10 | pub async fn send_post(#[form] a: i32, #[form] b: &i32, #[form] f: F) -> Result<String> {}
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

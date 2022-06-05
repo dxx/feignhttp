@@ -1,0 +1,5 @@
+error: one form parameter only supports scalar types, &str, String or struct
+ --> tests/ui/func/form.rs:8:32
+  |
+8 | pub async fn send_post(#[form] s: &String) -> Result<String> {}
+  |                                ^^^^^^^^^^

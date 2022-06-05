@@ -1,0 +1,5 @@
+error: return value must be Result
+ --> tests/ui/func/return_value2.rs:8:5
+  |
+8 | pub async fn send_get() -> i32 {}
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^

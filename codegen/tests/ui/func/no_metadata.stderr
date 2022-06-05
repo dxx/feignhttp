@@ -1,0 +1,7 @@
+error: no metadata assign
+ --> tests/ui/func/no_metadata.rs:7:1
+  |
+7 | #[get]
+  | ^^^^^^
+  |
+  = note: this error originates in the attribute macro `get` (in Nightly builds, run with -Z macro-backtrace for more info)
