@@ -69,6 +69,26 @@ async fn test_get_json() {
 }
 
 #[tokio::test]
+async fn test_get_vec() {
+    let _mock = mock("GET", "/vec")
+        .with_header("content-type", "application/octet-stream")
+        .with_body(r#"aaa"#)
+        .create();
+
+    let url = format!("http://{}/vec", server_address());
+    let method = "GET";
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .build()
+        .unwrap();
+    let response = request.send().await.unwrap();
+    let vec = response.vec().await.unwrap();
+
+    assert_eq!(vec![97, 97, 97], vec);
+}
+
+#[tokio::test]
 #[should_panic]
 async fn test_client_error() {
     let _mock = mock("GET", "/")

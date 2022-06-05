@@ -46,3 +46,20 @@ async fn test_get_json() {
         assert_eq!(r#"User { code: 200, message: "success" }"#, format!("{:?}", user));
     }
 }
+
+const VEC_URL: &str = "http://localhost:1234";
+
+#[get(url = VEC_URL, path = "/vec")]
+async fn get_data() -> feignhttp::Result<Vec<u8>> {}
+
+#[tokio::test]
+async fn test_get_vec() {
+    let _mock = mock("GET", "/vec")
+        .with_header("content-type", "application/octet-stream")
+        .with_body(r#"aaa"#)
+        .create();
+
+    let vec = get_data().await.unwrap();
+
+    assert_eq!(vec![97, 97, 97], vec);
+}

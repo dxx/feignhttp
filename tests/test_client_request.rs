@@ -146,12 +146,32 @@ async fn test_send_json() {
 }
 
 #[tokio::test]
+async fn test_send_vec() {
+    let _mock = mock("POST", "/")
+        .match_header("content-type", "application/octet-stream")
+        .match_body(r#"aaa"#)
+        .create();
+
+    let url = format!("http://{}", server_address());
+    let method = "POST";
+
+    let vec = vec![97, 97, 97];
+
+    let request = HttpClient::builder()
+        .url(&url)
+        .method(method)
+        .build()
+        .unwrap();
+    request.send_vec(vec).await.unwrap();
+}
+
+#[tokio::test]
 #[should_panic]
 async fn test_connect_timeout() {
     let url = "http://site_dne.com";
     let method = "GET";
     let config = HttpConfig{
-        connect_timeout: Some(3000), // 3000 millisecond
+        connect_timeout: Some(3000), // 3000 millisecond.
         timeout: None,
     };
     let request = HttpClient::builder()
@@ -170,7 +190,7 @@ async fn test_timeout() {
     let method = "GET";
     let config = HttpConfig{
         connect_timeout: None,
-        timeout: Some(3000), // 3000 millisecond
+        timeout: Some(3000), // 3000 millisecond.
     };
     let request = HttpClient::builder()
         .url(&url)

@@ -25,10 +25,11 @@ async fn test_post() {
 }
 
 
-#[post(url = "http://localhost:1234/post_header")]
+#[post(url = "http://localhost:1234/post_header", headers = "auth: password; pwd: {pwd}")]
 async fn post_header(
-    #[header] auth: String,
+    #[header] auth: String, // Overried `auth: password`.
     #[header("name")] username: &str,
+    #[param] pwd: &str,
 ) -> feignhttp::Result<String> {}
 
 #[tokio::test]
@@ -36,9 +37,10 @@ async fn test_header() {
     let _mock = mock("POST", "/post_header")
         .match_header("auth", "name")
         .match_header("name", "jack")
+        .match_header("pwd", "MTIzNDU2")
         .create();
 
-    post_header("name".to_string(), "jack").await.unwrap();
+    post_header("name".to_string(), "jack", "MTIzNDU2").await.unwrap();
 }
 
 
@@ -118,6 +120,20 @@ async fn test_send_json() {
 }
 
 
+#[post(url = "http://localhost:1234/post_vec")]
+async fn post_data(#[body] data: Vec<u8>) -> feignhttp::Result<String> {}
+
+#[tokio::test]
+async fn test_send_vec() {
+    let _mock = mock("POST", "/post_vec")
+        .match_header("content-type", "application/octet-stream")
+        .match_body(r#"aaa"#)
+        .create();
+
+    post_data(vec![97, 97, 97]).await.unwrap();
+}
+
+
 #[get(url = "http://site_dne.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 
@@ -135,4 +151,18 @@ async fn timeout() -> feignhttp::Result<String> {}
 #[should_panic]
 async fn test_timeout() {
     timeout().await.unwrap();
+}
+
+#[get(url = "https://httpbin.org/delay/3", timeout = "{time}")]
+async fn dynamic_timeout(#[param] time: u16) -> feignhttp::Result<String> {}
+
+#[tokio::test]
+#[should_panic]
+async fn test_dynamic_timeout1() {
+    dynamic_timeout(2000).await.unwrap();
+}
+
+#[tokio::test]
+async fn test_dynamic_timeout2() {
+    dynamic_timeout(5000).await.unwrap();
 }
