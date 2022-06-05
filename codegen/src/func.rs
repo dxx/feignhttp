@@ -5,6 +5,8 @@ use quote::{quote, ToTokens};
 use std::str::FromStr;
 use std::collections::HashMap;
 
+const CONFIG_KEYS: [&str; 2] = ["connect_timeout", "timeout"];
+
 pub struct FnMetadata {
     // Url is a token stream, so it can be retrieved by a variable.
     pub url: proc_macro2::TokenStream,
@@ -50,9 +52,17 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     let mut config_keys = Vec::new();
     let mut config_values = Vec::new();
     for (k, v) in meta_map.iter() {
+        if !CONFIG_KEYS.contains(&k.as_str()) {
+            continue;
+        }
         config_keys.push(k);
         config_values.push(v);
     }
+
+    let (header_keys, header_values) = match meta_map.get("headers") {
+        Some(val) => parse_header_values(&val)?,
+        None => (vec![], vec![]),
+    };
 
     let mut item_fn = syn::parse::<syn::ItemFn>(item_stream)?;
 
@@ -151,6 +161,14 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
             )*
 
             let mut header_map: HashMap<&str, String> = HashMap::new();
+
+            // Header in `#[get("", headers="")]` added before header in `#[header]` added.
+            #(
+                let key = &util::replace(#header_keys, &param_map);
+                let value = util::replace(#header_values, &param_map);
+                header_map.insert(key, value);
+            )*
+
             #(
                 header_map.insert(#header_names, format!("{}", #header_vars));
             )*
@@ -201,6 +219,38 @@ fn find_var_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
         .filter(|a| a.arg_type == arg_type)
         .map(|a| a.var_type.clone())
         .collect()
+}
+
+fn parse_header_values(s: &str) -> syn::Result<(Vec<String>, Vec<String>)> {
+    let (mut key_vec, mut value_vec) = (vec![], vec![]);
+    if s.len() <= 0 {
+        return Ok((key_vec, value_vec));
+    }
+    let s_split = s.split(";");
+    for header_str in s_split {
+        let header_split = header_str.split(":");
+        let header_vec: Vec<&str> = header_split.into_iter().collect();
+        if header_vec.len() != 2 {
+            return Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("headers format is incorrect: {}", header_str)));
+        }
+        let k = header_vec[0].trim().to_string();
+        if k.len() == 0 {
+            return Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("headers format is incorrect: {}", header_str)));
+        }
+        let v = header_vec[1].trim().to_string();
+        if v.len() == 0 {
+            return Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("headers format is incorrect: {}", header_str)));
+        }
+        key_vec.push(k);
+        value_vec.push(v);
+    }
+    return Ok((key_vec, value_vec));
 }
 
 fn is_support_types(t: &str) -> bool {
