@@ -49,7 +49,7 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
 
     let mut config_keys = Vec::new();
     let mut config_values = Vec::new();
-    for (k, v) in meta_map {
+    for (k, v) in meta_map.iter() {
         config_keys.push(k);
         config_values.push(v);
     }
@@ -147,7 +147,7 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
 
             let mut config_map: HashMap<&str, String> = HashMap::new();
             #(
-                config_map.insert(#config_keys, util::replace(&#config_values, &param_map));
+                config_map.insert(#config_keys, util::replace(#config_values, &param_map));
             )*
 
             let mut header_map: HashMap<&str, String> = HashMap::new();
@@ -220,6 +220,7 @@ fn is_support_types(t: &str) -> bool {
 
 fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {
     let body_type_str = body_type.to_token_stream().to_string();
+    if body_type_str.contains("Vec < u8 >") { return quote! {send_vec(#body_var)} };
     return if body_type_str.contains("String") || body_type_str.contains("& str") {
         quote! {send_text(#body_var .to_string())}
     } else {
@@ -230,6 +231,7 @@ fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2
 fn get_return_fn(return_type: &syn::Type) -> proc_macro2::TokenStream {
     let return_type_str = return_type.to_token_stream().to_string();
     if return_type_str == "()" { return quote! {none} }
+    if return_type_str.contains("Vec < u8 >") { return quote! {vec} }
     let is_text = if return_type_str.contains("String") { true } else { false };
     return if is_text {
         quote! {text}
