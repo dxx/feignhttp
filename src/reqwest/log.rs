@@ -1,5 +1,5 @@
-use reqwest::{RequestBuilder, Response};
 use log::debug;
+use reqwest::{RequestBuilder, Response};
 
 pub fn print_request_log(request: RequestBuilder) {
     if let Ok(request) = request.build() {
@@ -18,7 +18,7 @@ pub fn print_request_log(request: RequestBuilder) {
             let body = body.as_bytes().unwrap();
             match String::from_utf8(body.to_vec()) {
                 Ok(s) => debug!("{}", s),
-                Err(_) => {},
+                Err(_) => {}
             }
             body_len = body.len();
         }

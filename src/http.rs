@@ -1,4 +1,7 @@
-use crate::{error::{Result, Error}, RequestWrapper};
+use crate::{
+    error::{Result, Error},
+    RequestWrapper,
+};
 use async_trait::async_trait;
 use std::collections::HashMap;
 

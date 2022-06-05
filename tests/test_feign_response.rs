@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
-use feignhttp::{get};
+use feignhttp::get;
 
-use serde::Deserialize;
 use mockito::mock;
+use serde::Deserialize;
 
 const TEXT_URL: &str = "http://localhost:1234";
 
@@ -12,9 +12,7 @@ async fn get_text() -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_get_text() {
-    let _mock = mock("GET", "/text")
-        .with_body("Hello, i' m text")
-        .create();
+    let _mock = mock("GET", "/text").with_body("Hello, i' m text").create();
 
     let text = get_text().await.unwrap();
 
@@ -36,14 +34,18 @@ async fn get_json() -> feignhttp::Result<User> {}
 
 #[tokio::test]
 async fn test_get_json() {
-    #[cfg(feature = "json")] {
+    #[cfg(feature = "json")]
+    {
         let _mock = mock("GET", "/json")
             .with_body(r#"{ "code": 200, "message": "success" }"#)
             .create();
 
         let user = get_json().await.unwrap();
 
-        assert_eq!(r#"User { code: 200, message: "success" }"#, format!("{:?}", user));
+        assert_eq!(
+            r#"User { code: 200, message: "success" }"#,
+            format!("{:?}", user)
+        );
     }
 }
 

@@ -1,4 +1,7 @@
-use std::{io::{Write, Read}, path::PathBuf};
+use std::{
+    io::{Read, Write},
+    path::PathBuf,
+};
 
 use feignhttp::{get, post};
 
@@ -20,12 +23,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let image_data = get_image().await?;
     println!("get image ok: len {}", image_data.len());
 
-    let path = PathBuf::new().join(dir.clone()).join("./examples/rust-logo.svg");
+    let path = PathBuf::new()
+        .join(dir.clone())
+        .join("./examples/rust-logo.svg");
     let mut file = std::fs::File::create(path)?;
     file.write_all(&image_data)?;
 
 
-    let path = PathBuf::new().join(dir).join("./examples/crab.png");
+    let path = PathBuf::new()
+        .join(dir)
+        .join("./examples/crab.png");
     let mut file = std::fs::File::open(path)?;
     let mut vec = vec![];
     file.read_to_end(&mut vec)?;

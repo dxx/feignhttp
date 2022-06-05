@@ -1,6 +1,6 @@
 use feignhttp::post;
 
-use serde::{Serialize};
+use serde::Serialize;
 
 // Serialize: Specifies serialization.
 #[derive(Debug, Serialize)]

@@ -1,4 +1,4 @@
-use feignhttp::{get, feign};
+use feignhttp::{feign, get};
 
 #[get(url = "http://site_dne.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
@@ -19,7 +19,7 @@ async fn main() {
     match connect_timeout().await {
         Ok(res) => {
             println!("connect_timeout: {}", res);
-        },
+        }
         Err(err) => {
             println!("connect_timeout: {:?}", err);
         }
@@ -28,7 +28,7 @@ async fn main() {
     match timeout().await {
         Ok(res) => {
             println!("timeout: {}", res);
-        },
+        }
         Err(err) => {
             println!("timeout: {:?}", err);
         }
@@ -37,7 +37,7 @@ async fn main() {
     match Http::get().await {
         Ok(res) => {
             println!("Http::get: {}", res);
-        },
+        }
         Err(err) => {
             println!("Http::get: {:?}", err);
         }

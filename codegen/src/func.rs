@@ -1,9 +1,9 @@
 use crate::enu::{ArgType, Method};
-use crate::util::{parse_url_stream, parse_exprs, parse_args, parse_return_type};
+use crate::util::{parse_args, parse_exprs, parse_return_type, parse_url_stream};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use std::str::FromStr;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 const CONFIG_KEYS: [&str; 2] = ["connect_timeout", "timeout"];
 
@@ -44,7 +44,10 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
 }
 
 /// Generate function code.
-pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+pub fn fn_impl(
+    metadata: FnMetadata,
+    item_stream: TokenStream,
+) -> syn::Result<proc_macro2::TokenStream> {
     let url = metadata.url;
     let method = metadata.method.to_str();
     let meta_map = metadata.meta_map;
@@ -69,7 +72,10 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     let sig = &mut item_fn.sig;
     let asyncness = &sig.asyncness;
     if asyncness.is_none() {
-        return Err(syn::Error::new_spanned(sig.fn_token, "only support async fn"));
+        return Err(syn::Error::new_spanned(
+            sig.fn_token,
+            "only support async fn"
+        ));
     }
 
     let vis = &item_fn.vis;
@@ -96,11 +102,13 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     if form_vars.len() > 0 && body_vars.len() > 0 {
         return Err(syn::Error::new_spanned(
             &sig.inputs,
-            "request must have only one of body or form"));
+            "request must have only one of body or form",
+        ));
     } else if body_vars.len() > 1 {
         return Err(syn::Error::new_spanned(
             &sig.inputs,
-            "request must have only one body"));
+            "request must have only one body",
+        ));
     }
 
     // Valid param types.
@@ -112,7 +120,13 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
             let ty = p_type.to_token_stream().to_string().replace(" ", "");
             if !is_support_types(&ty) {
                 return Err(syn::Error::new_spanned(
-                    &sig.inputs, format!("unsupported param parameter: `{}: {}`", p_name, p_type.to_token_stream())));
+                    &sig.inputs,
+                    format!(
+                        "unsupported param parameter: `{}: {}`",
+                        p_name,
+                        p_type.to_token_stream()
+                    )
+                ));
             }
         }
     }
@@ -122,16 +136,16 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
         let body_types = find_var_types(&args, ArgType::BODY);
         send_fn_call = get_body_fn_call(
             body_types.get(0).unwrap(),
-            body_vars.get(0).unwrap());
+            body_vars.get(0).unwrap(),
+        );
     } else if !form_vars.is_empty() {
         let form_types = find_var_types(&args, ArgType::FORM);
         match get_form_fn_call(&form_names, &form_types, &form_vars) {
             Ok(fn_call) => {
                 send_fn_call = fn_call;
-            },
+            }
             Err(e) => {
-                return Err(syn::Error::new_spanned(
-                    &sig.inputs, e));
+                return Err(syn::Error::new_spanned(&sig.inputs, e));
             }
         }
     }
@@ -140,7 +154,8 @@ pub fn fn_impl(metadata: FnMetadata, item_stream: TokenStream) -> syn::Result<pr
     if return_args.is_empty() {
         return Err(syn::Error::new_spanned(
             &sig.output,
-            "function must have generic parameters"));
+            "function must have generic parameters",
+        ));
     }
     let return_type = return_args.get(0).unwrap();
     let return_fn = get_return_fn(return_type);
@@ -233,19 +248,22 @@ fn parse_header_values(s: &str) -> syn::Result<(Vec<String>, Vec<String>)> {
         if header_vec.len() != 2 {
             return Err(syn::Error::new(
                 proc_macro2::Span::call_site(),
-                format!("headers format is incorrect: {}", header_str)));
+                format!("headers format is incorrect: {}", header_str)),
+            );
         }
         let k = header_vec[0].trim().to_string();
         if k.len() == 0 {
             return Err(syn::Error::new(
                 proc_macro2::Span::call_site(),
-                format!("headers format is incorrect: {}", header_str)));
+                format!("headers format is incorrect: {}", header_str)),
+            );
         }
         let v = header_vec[1].trim().to_string();
         if v.len() == 0 {
             return Err(syn::Error::new(
                 proc_macro2::Span::call_site(),
-                format!("headers format is incorrect: {}", header_str)));
+                format!("headers format is incorrect: {}", header_str)),
+            );
         }
         key_vec.push(k);
         value_vec.push(v);
@@ -255,46 +273,49 @@ fn parse_header_values(s: &str) -> syn::Result<(Vec<String>, Vec<String>)> {
 
 fn is_support_types(t: &str) -> bool {
     return match t {
-        "bool" |
-        "u8" | "u16" | "u32" | "u64" |
-        "i8" | "i16" | "i32" | "i64" |
-        "f32" | "f64" |
-        "char" | "String" | "&str" => {
-            true
-        },
-        _ => {
-            false
-        }
+        "bool" | "u8" | "u16" | "u32" | "u64" | "i8" | "i16" | "i32" | "i64" | "f32" | "f64" |
+        "char" | "String" | "&str" => true,
+        _ => false,
     }
 }
 
 fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {
     let body_type_str = body_type.to_token_stream().to_string();
-    if body_type_str.contains("Vec < u8 >") { return quote! {send_vec(#body_var)} };
+    if body_type_str.contains("Vec < u8 >") {
+        return quote! {send_vec(#body_var)}
+    };
     return if body_type_str.contains("String") || body_type_str.contains("& str") {
         quote! {send_text(#body_var .to_string())}
     } else {
         quote! {send_json(& #body_var)}
-    }
+    };
 }
 
 fn get_return_fn(return_type: &syn::Type) -> proc_macro2::TokenStream {
     let return_type_str = return_type.to_token_stream().to_string();
-    if return_type_str == "()" { return quote! {none} }
-    if return_type_str.contains("Vec < u8 >") { return quote! {vec} }
-    let is_text = if return_type_str.contains("String") { true } else { false };
+    if return_type_str == "()" {
+        return quote! {none}
+    }
+    if return_type_str.contains("Vec < u8 >") {
+        return quote! {vec}
+    }
+    let is_text = if return_type_str.contains("String") {
+        true
+    } else {
+        false
+    };
     return if is_text {
         quote! {text}
     } else {
         quote! {json}
-    }
+    };
 }
 
 fn get_form_fn_call(
     form_names: &Vec<String>,
     form_types: &Vec<syn::Type>,
     form_vars: &Vec<syn::Ident>,
-)-> Result<proc_macro2::TokenStream, String> {
+) -> Result<proc_macro2::TokenStream, String> {
     if form_names.is_empty() {
         return Err("no form parameters".to_string());
     }
@@ -308,7 +329,11 @@ fn get_form_fn_call(
                 if is_support_types(&ty) {
                     let mut token_str = "send_form(&vec![".to_string();
                     token_str.push_str("(");
-                    token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
+                    token_str.push_str(&format!(
+                        "\"{}\", format!(\"{{}}\", {})",
+                        form_name,
+                        form_var.to_string()
+                    ));
                     token_str.push_str("),");
                     token_str.push_str("])");
                     Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
@@ -319,20 +344,28 @@ fn get_form_fn_call(
             syn::Type::Reference(t) => {
                 let ty = t.to_token_stream().to_string();
                 if is_support_types(&ty.replace(" ", "").replace("&", "")) {
-                    return Err(format!("one form parameter only supports scalar types, &str, String or struct"));
+                    return Err(format!(
+                        "one form parameter only supports scalar types, &str, String or struct"
+                    ));
                 } else if ty.contains("& str") {
                     let mut token_str = "send_form(&vec![".to_string();
                     token_str.push_str("(");
-                    token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
+                    token_str.push_str(&format!(
+                        "\"{}\", format!(\"{{}}\", {})",
+                        form_name,
+                        form_var.to_string()
+                    ));
                     token_str.push_str("),");
                     token_str.push_str("])");
-                    return Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
+                    return Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap());
                 }
                 Ok(quote! {send_form(& #form_var)})
             }
-            _ => {
-                Err(format!("unsupported form parameter: `{}: {}`", form_name, form_type.to_token_stream()))
-            }
+            _ => Err(format!(
+                    "unsupported form parameter: `{}: {}`",
+                    form_name,
+                    form_type.to_token_stream()
+                )),
         }
     } else {
         let mut token_str = "send_form(&vec![".to_string();
@@ -342,10 +375,16 @@ fn get_form_fn_call(
             let form_var = form_vars.get(i).unwrap();
             let ty = form_type.to_token_stream().to_string().replace(" ", "");
             if !is_support_types(&ty) {
-                return Err(format!("two or more form parameters only supports scalar types, &str or String"));
+                return Err(format!(
+                    "two or more form parameters only supports scalar types, &str or String"
+                ));
             }
             token_str.push_str("(");
-            token_str.push_str(&format!("\"{}\", format!(\"{{}}\", {})", form_name, form_var.to_string()));
+            token_str.push_str(&format!(
+                "\"{}\", format!(\"{{}}\", {})",
+                form_name,
+                form_var.to_string()
+            ));
             token_str.push_str("),");
         }
         token_str.push_str("])");

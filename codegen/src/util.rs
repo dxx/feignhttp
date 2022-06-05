@@ -1,16 +1,19 @@
 use crate::enu::ArgType;
 use crate::func::FnArg;
-use quote::{quote, ToTokens};
 use proc_macro::TokenStream;
-use std::str::FromStr;
+use quote::{quote, ToTokens};
 use std::collections::HashMap;
+use std::str::FromStr;
 
 /// Parse url and return url token stream.
 /// A URL can be an expression.
 pub fn parse_url_stream(attr: &TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let attr_str = attr.to_string();
     if attr_str.is_empty() {
-        return Err(syn::Error::new(proc_macro2::Span::call_site(), "no metadata assign"));
+        return Err(syn::Error::new(
+            proc_macro2::Span::call_site(),
+            "no metadata assign",
+        ));
     }
 
     let attrs = attr_str.split(",");
@@ -19,14 +22,16 @@ pub fn parse_url_stream(attr: &TokenStream) -> syn::Result<proc_macro2::TokenStr
     if let Some(expr_str) = exprs.first() {
         let expr_str = expr_str.trim();
         let url_expr = syn::parse::<syn::Expr>(
-            TokenStream::from_str(expr_str).unwrap())?;
+            TokenStream::from_str(expr_str).unwrap()
+        )?;
         let url_stream = parse_url(&url_expr)?;
         
         // Skip the url.
         for i in 1..exprs.len() {
             let exp_str = exprs[i].trim();
             let url_expr = syn::parse::<syn::Expr>(
-                TokenStream::from_str(exp_str).unwrap())?;
+                TokenStream::from_str(exp_str).unwrap()
+            )?;
 
             match url_expr {
                 // An assignment path: path = xxx.
@@ -40,13 +45,16 @@ pub fn parse_url_stream(attr: &TokenStream) -> syn::Result<proc_macro2::TokenStr
                             return Ok(quote!(#url_stream .to_string() + #right));
                         }
                     }
-                },
+                }
                 _ => {}
             }
         }
         return Ok(quote!(#url_stream .to_string()));
     }
-    Err(syn::Error::new(proc_macro2::Span::call_site(), "no metadata assign"))
+    Err(syn::Error::new(
+        proc_macro2::Span::call_site(),
+        "no metadata assign",
+    ))
 }
 
 /// Parse and validate the url.
@@ -90,7 +98,8 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
     let exprs: Vec<&str> = attrs.into_iter().map(|u| u).collect();
     for exp_str in exprs.into_iter() {
         let expr = syn::parse::<syn::Expr>(
-            TokenStream::from_str(exp_str.trim()).unwrap()).unwrap();
+            TokenStream::from_str(exp_str.trim()).unwrap()
+        ).unwrap();
         match expr {
             // An assignment path: key = xxx.
             syn::Expr::Assign(assign) => {
@@ -101,16 +110,16 @@ pub fn parse_exprs(attr: &TokenStream) -> HashMap<String, String> {
                         match expr_lit.lit {
                             syn::Lit::Str(s) => {
                                 expr_map.insert(key, s.value());
-                            },
+                            }
                             syn::Lit::Int(i) => {
                                 expr_map.insert(key, i.to_string());
-                            },
+                            }
                             syn::Lit::Float(f) => {
                                 expr_map.insert(key, f.to_string());
-                            },
+                            }
                             syn::Lit::Bool(b) => {
                                 expr_map.insert(key, format!("{}", b.value()));
-                            },
+                            }
                             _ => {}
                         }
                     }
@@ -164,8 +173,7 @@ pub fn parse_args(sig: &mut syn::Signature) -> syn::Result<Vec<FnArg>> {
                                 }
                             },
                             _=> {
-                                if let Some(name_value) = get_meta_str_value(
-                                    nested_meta, "name") {
+                                if let Some(name_value) = get_meta_str_value(nested_meta, "name") {
                                     name = name_value;
                                 }
                             }
@@ -196,8 +204,7 @@ pub fn parse_return_type(sig: &syn::Signature) -> syn::Result<Vec<syn::Type>> {
                 ident,
                 arguments:
                     syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
-                        args,
-                        ..
+                        args, ..
                     }),
             }) = t_path.path.segments.last()
             {

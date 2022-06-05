@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use feignhttp::{HttpClient, HttpConfig, map};
+use feignhttp::{map, HttpClient, HttpConfig};
 
 use mockito::{mock, server_address, Matcher};
 use serde::Serialize;
@@ -59,7 +59,10 @@ async fn test_query() {
         ("id", "1".to_string()),
         ("name", "xxx".to_string()),
         ("name", "xxx2".to_string()),
-    ].iter().cloned().collect();
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let request = HttpClient::builder()
         .url(&url)
@@ -84,7 +87,10 @@ async fn test_send_form() {
         ("id", "1".to_string()),
         ("name", "xxx".to_string()),
         ("name", "xxx2".to_string()),
-    ].iter().cloned().collect();
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let request = HttpClient::builder()
         .url(&url)
@@ -116,7 +122,8 @@ async fn test_send_text() {
 
 #[tokio::test]
 async fn test_send_json() {
-    #[cfg(feature = "json")] {
+    #[cfg(feature = "json")]
+    {
         let _mock = mock("POST", "/")
             .match_header("content-type", "application/json")
             .match_body(r#"{"id":1,"name":"jack"}"#)
@@ -170,7 +177,7 @@ async fn test_send_vec() {
 async fn test_connect_timeout() {
     let url = "http://site_dne.com";
     let method = "GET";
-    let config = HttpConfig{
+    let config = HttpConfig {
         connect_timeout: Some(3000), // 3000 millisecond.
         timeout: None,
     };
@@ -188,7 +195,7 @@ async fn test_connect_timeout() {
 async fn test_timeout() {
     let url = "https://httpbin.org/delay/5".to_string();
     let method = "GET";
-    let config = HttpConfig{
+    let config = HttpConfig {
         connect_timeout: None,
         timeout: Some(3000), // 3000 millisecond.
     };

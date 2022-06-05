@@ -1,7 +1,7 @@
 use http::StatusCode;
 use std::error::Error as StdError;
-use std::result::Result as StdResult;
 use std::fmt;
+use std::result::Result as StdResult;
 use url::Url;
 
 /// A `Result` alias.
@@ -11,11 +11,11 @@ pub(crate) type BoxError = Box<dyn StdError + Send + Sync>;
 
 #[derive(Debug, Clone)]
 pub enum ErrorKind {
-    Build, // Indicates an error occurred while build http client.
-    Config, // Indicates an error occurred while crate http config.
-    Encode, // Indicates an error occurred while encode request body.
-    Decode, // Indicates an error occurred while encode response body.
-    Request, // Indicates an error occurred while request target url.
+    Build,              // Indicates an error occurred while build http client.
+    Config,             // Indicates an error occurred while crate http config.
+    Encode,             // Indicates an error occurred while encode request body.
+    Decode,             // Indicates an error occurred while encode response body.
+    Request,            // Indicates an error occurred while request target url.
     Status(StatusCode), // Indicates an error occurred when the http status is not ok.
 }
 
@@ -32,8 +32,8 @@ struct Inner {
 
 impl Error {
     pub(crate) fn new<E>(kind: ErrorKind, source: Option<E>) -> Error
-        where
-            E: Into<BoxError>,
+    where
+        E: Into<BoxError>,
     {
         Error {
             inner: Box::new(Inner {

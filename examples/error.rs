@@ -30,7 +30,7 @@ async fn main() {
             if err.is_build_error() {
                 println!("url_error: {}", err);
             }
-        },
+        }
         _ => {}
     }
 
@@ -40,7 +40,7 @@ async fn main() {
             if err.is_config_error() {
                 println!("config_error: {}", err);
             }
-        },
+        }
         _ => {}
     }
 
@@ -50,7 +50,7 @@ async fn main() {
             if err.is_request_error() {
                 println!("timeout_error: {}", err);
             }
-        },
+        }
         _ => {}
     }
 
@@ -61,7 +61,7 @@ async fn main() {
             if err.is_decode_error() {
                 println!("decode_error: {}", err);
             }
-        },
+        }
         _ => {}
     }
 
@@ -82,7 +82,7 @@ async fn main() {
                     // Handle error.
                 }
             }
-        },
+        }
         _ => {}
     }
 }

@@ -18,7 +18,7 @@ pub fn print_request_log(request: &Request<AsyncBody>, body: Option<Vec<u8>>) {
         body_len = vec.len();
         match String::from_utf8(vec) {
             Ok(s) => debug!("{}", s),
-            Err(_) => {},
+            Err(_) => {}
         }
     }
     debug!("---> END HTTP ({}-byte body)", body_len);

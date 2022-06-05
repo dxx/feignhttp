@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use feignhttp::util::replace;
+use std::collections::HashMap;
 
 #[test]
 fn test_one_path() {

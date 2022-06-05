@@ -170,11 +170,7 @@
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let r = contributors (
-//!         "dxx",
-//!         "feignhttp",
-//!         1,
-//!     ).await?;
+//!     let r = contributors("dxx", "feignhttp", 1).await?;
 //!     println!("contributors result: {}", r);
 //! 
 //!     Ok(())
@@ -201,12 +197,7 @@
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let r = commits(
-//!         "application/vnd.github.v3+json",
-//!         1,
-//!         5,
-//!     )
-//!     .await?;
+//!     let r = commits("application/vnd.github.v3+json", 1, 5).await?;
 //!     println!("commits result: {}", r);
 //! 
 //!     Ok(())
@@ -303,7 +294,8 @@
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     # #[cfg(feature = "json")] {
+//!     # #[cfg(feature = "json")]
+//!     # {
 //!     let r = issues("octocat", "hello-world", 1, 2).await?;
 //!     println!("issues: {:#?}", r);
 //!     # }
@@ -332,7 +324,8 @@
 //! 
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     # #[cfg(feature = "json")] {
+//!     # #[cfg(feature = "json")]
+//!     # {
 //!     let user = User {
 //!         id: 1,
 //!         name: "jack".to_string(),
@@ -461,7 +454,7 @@
 //!             if err.is_build_error() {
 //!                 println!("url_error: {}", err);
 //!             }
-//!         },
+//!         }
 //!         _ => {}
 //!     }
 //! }
@@ -483,7 +476,7 @@
 //!             if err.is_config_error() {
 //!                 println!("config_error: {}", err);
 //!             }
-//!         },
+//!         }
 //!         _ => {}
 //!     }
 //! }
@@ -518,7 +511,7 @@
 //!                     // Handle error.
 //!                 }
 //!             }
-//!         },
+//!         }
 //!         _ => {}
 //!     }
 //! }
@@ -543,8 +536,8 @@
 //! * **json**: Enable json serialization and deserialization
 //! * **log**: Enable request and response logs
 
-mod http;
 mod error;
+mod http;
 mod macros;
 
 #[cfg(feature = "reqwest-client")]
@@ -562,5 +555,5 @@ pub mod util;
 
 pub use feignhttp_codegen::*;
 
+pub use crate::error::{Error, ErrorKind, Result};
 pub use crate::http::*;
-pub use crate::error::{Result, Error, ErrorKind};

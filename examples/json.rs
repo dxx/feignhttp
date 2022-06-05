@@ -42,7 +42,8 @@ async fn post_user(#[body] user: User) -> feignhttp::Result<String> {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    #[cfg(feature = "json")] {
+    #[cfg(feature = "json")]
+    {
         let r = issues("octocat", "hello-world", 1, 2).await?;
         println!("issues: {:#?}", r);
 

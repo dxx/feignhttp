@@ -1,4 +1,4 @@
-use feignhttp::{get, feign};
+use feignhttp::{feign, get};
 
 #[get("https://httpbin.org/headers", headers = "token: {token}")]
 async fn headers(#[param] token: &str) -> feignhttp::Result<String> {}
@@ -9,7 +9,7 @@ async fn timeout(#[param] time: u16) -> feignhttp::Result<String> {}
 #[get(url = "https://httpbin.org/delay/{delay_time}", timeout = "{time}")]
 async fn dynamic_timeout(
     #[path] delay_time: u8, // Replace `{delay_time}` in url.
-    #[param] time: u16 // Replace `{time}`.
+    #[param] time: u16      // Replace `{time}`.
 ) -> feignhttp::Result<String> {}
 
 struct Http;
@@ -38,7 +38,7 @@ async fn main() {
     match timeout(3000).await {
         Ok(res) => {
             println!("timeout(3000) ok: {}\n", res);
-        },
+        }
         Err(err) => {
             // Execute here.
             println!("timeout(3000) err: {:?}\n", err);
@@ -49,7 +49,7 @@ async fn main() {
     match dynamic_timeout(5, 3000).await {
         Ok(res) => {
             println!("dynamic_timeout(5, 3000) ok: {}\n", res);
-        },
+        }
         Err(err) => {
             // Execute here.
             println!("dynamic_timeout(5, 3000) err: {:?}\n", err);
@@ -61,7 +61,7 @@ async fn main() {
         Ok(res) => {
             // Execute here.
             println!("dynamic_timeout(1, 3000) ok: {}\n", res);
-        },
+        }
         Err(err) => {
             println!("dynamic_timeout(1, 3000) err: {:?}\n", err);
         }
@@ -71,7 +71,7 @@ async fn main() {
     match Http::timeout(3000).await {
         Ok(res) => {
             println!("Http::timeout(3000) ok: {}\n", res);
-        },
+        }
         Err(err) => {
             // Execute here.
             println!("Http::timeout(3000) err: {:?}\n", err);
@@ -83,7 +83,7 @@ async fn main() {
         Ok(res) => {
             // Execute here.
             println!("Http::override_timeout(\"7000\") ok: {}\n", res);
-        },
+        }
         Err(err) => {
             println!("Http::override_timeout(\"7000\") err: {:?}\n", err);
         }

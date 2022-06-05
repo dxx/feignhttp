@@ -21,7 +21,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("RUST_LOG", "feignhttp=debug");
     env_logger::init();
 
-    #[cfg(feature = "json")] {
+    #[cfg(feature = "json")]
+    {
         let data = Data {
             id: 1,
             name: "test".to_string(),

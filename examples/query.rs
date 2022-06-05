@@ -10,11 +10,7 @@ async fn contributors(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let r = contributors (
-        "dxx",
-        "feignhttp",
-        1
-    ).await?;
+    let r = contributors("dxx", "feignhttp", 1).await?;
     println!("contributors result: {}", r);
 
     Ok(())

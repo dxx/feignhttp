@@ -1,12 +1,12 @@
+#[cfg(feature = "log")]
+use super::log::{print_request_log, print_response_log};
 use crate::{
     error::Error, error::ErrorKind, error::Result, http::HttpConfig, http::HttpRequest,
     http::HttpResponse, map,
 };
-#[cfg(feature = "log")]
-use super::log::{print_request_log, print_response_log};
 use async_trait::async_trait;
 use http::{request::Builder, Request, Response, StatusCode};
-use isahc::{prelude::*, AsyncBody, config::RedirectPolicy};
+use isahc::{config::RedirectPolicy, prelude::*, AsyncBody};
 use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
@@ -115,7 +115,11 @@ impl RequestWrapper {
         if let Some(body) = body.clone() {
             async_body = AsyncBody::from(body);
         }
-        let request = self.set_header().request.body(async_body).map_err(Error::build)?;
+        let request = self
+            .set_header()
+            .request
+            .body(async_body)
+            .map_err(Error::build)?;
 
         #[cfg(feature = "log")]
         print_request_log(&request, body);
@@ -152,7 +156,10 @@ impl RequestWrapper {
     where
         T: serde::ser::Serialize,
     {
-        self.set_header_if_absent("content-type", "application/x-www-form-urlencoded".to_string());
+        self.set_header_if_absent(
+            "content-type",
+            "application/x-www-form-urlencoded".to_string(),
+        );
         let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
         self.send_body(Some(form.as_bytes().to_vec())).await
     }

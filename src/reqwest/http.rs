@@ -1,10 +1,10 @@
+#[cfg(feature = "log")]
+use super::log::{print_request_log, print_response_log};
 use crate::{
     error::{Error, ErrorKind, Result},
     http::{HttpConfig, HttpRequest, HttpResponse},
     map,
 };
-#[cfg(feature = "log")]
-use super::log::{print_request_log, print_response_log};
 use async_trait::async_trait;
 use http::StatusCode;
 use reqwest::{Body, Client, Method, RequestBuilder, Response};
@@ -148,7 +148,10 @@ impl RequestWrapper {
     where
         T: serde::ser::Serialize,
     {
-        self.set_header_if_absent("content-type", "application/x-www-form-urlencoded".to_string());
+        self.set_header_if_absent(
+            "content-type",
+            "application/x-www-form-urlencoded".to_string(),
+        );
         let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
         self.send_body(Some(Body::from(form))).await
     }

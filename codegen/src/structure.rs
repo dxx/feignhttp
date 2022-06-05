@@ -1,10 +1,10 @@
 use crate::enu::Method;
 use crate::func::{fn_impl, FnMetadata};
-use crate::util::{parse_url_stream, parse_exprs, get_metas, get_meta_str_value};
+use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, ItemImpl};
 use std::collections::HashMap;
+use syn::{parse_macro_input, ItemImpl};
 
 pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let url = match parse_url_stream(&attr) {
@@ -46,7 +46,8 @@ fn fn_to_streams(
                 let mut url = base_url.clone();
                 let mut meta_map = base_meta.clone();
                 let method_ident = Method::from_str(
-                    &attr.path.segments.last().unwrap().ident.to_string());
+                    &attr.path.segments.last().unwrap().ident.to_string()
+                );
                 let method = match method_ident {
                     Ok(method) => method,
                     Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
@@ -93,15 +94,11 @@ fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream>
                 }
                 _ => {
                     return match get_meta_str_value(nested_meta, "path") {
-                        Some(val) => {
-                            Ok(val.to_token_stream())
-                        },
-                        None => {
-                            Err(syn::Error::new_spanned(
+                        Some(val) => Ok(val.to_token_stream()),
+                        None => Err(syn::Error::new_spanned(
                                 nested_meta,
                                 "metadata path not specified or must be the first",
-                            ))
-                        }
+                            )),
                     }
                 }
             }
@@ -121,16 +118,16 @@ fn parse_fn_metas(attr: &syn::Attribute) -> HashMap<String, String> {
                     match name_value.lit {
                         syn::Lit::Str(s) => {
                             attr_map.insert(key, s.value());
-                        },
+                        }
                         syn::Lit::Int(i) => {
                             attr_map.insert(key, i.to_string());
-                        },
+                        }
                         syn::Lit::Float(f) => {
                             attr_map.insert(key, f.to_string());
-                        },
+                        }
                         syn::Lit::Bool(b) => {
                             attr_map.insert(key, format!("{}", b.value()));
-                        },
+                        }
                         _ => {}
                     }
                 }
