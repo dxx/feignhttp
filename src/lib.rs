@@ -523,12 +523,12 @@
 //!     }
 //! }
 //! ```
-//! 
+//! The status is [StatusCode](https://docs.rs/http/latest/http/status/struct.StatusCode.html) struct that supply by [http](https://crates.io/crates/http) crate.
 //! For more examples, see [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/error.rs).
 //! 
 //! ## Logs
 //! 
-//! FeignHTTP logs some useful information about requests and responses with the [log](https://docs.rs/log) crate.
+//! FeignHTTP logs some useful information about requests and responses with the [log](https://crates.io/crates/log) crate.
 //! To enable the log information, specify `log` feature in `Cargo.toml`, then set the log level to debug.
 //! 
 //! ```toml
