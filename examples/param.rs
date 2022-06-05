@@ -1,5 +1,8 @@
 use feignhttp::{get, feign};
 
+#[get("https://httpbin.org/headers", headers = "token: {token}")]
+async fn headers(#[param] token: &str) -> feignhttp::Result<String> {}
+
 #[get(url = "https://httpbin.org/delay/5", timeout = "{time}")]
 async fn timeout(#[param] time: u16) -> feignhttp::Result<String> {}
 
@@ -26,66 +29,63 @@ impl Http {
 
 #[tokio::main]
 async fn main() {
+    // A reqeut with a header `token: ZmVpZ25odHRw`.
+    let res = headers("ZmVpZ25odHRw").await.unwrap();
+    println!("headers: {}", res);
+
+
     // Request timeout is 3000ms.
     match timeout(3000).await {
         Ok(res) => {
-            println!("timeout(3000) ok: {}", res);
+            println!("timeout(3000) ok: {}\n", res);
         },
         Err(err) => {
             // Execute here.
-            println!("timeout(3000) err: {:?}", err);
+            println!("timeout(3000) err: {:?}\n", err);
         }
     }
-
-    println!();
 
     // The request url is https://httpbin.org/delay/5 and the request timeout is 3000ms.
     match dynamic_timeout(5, 3000).await {
         Ok(res) => {
-            println!("dynamic_timeout(5, 3000) ok: {}", res);
+            println!("dynamic_timeout(5, 3000) ok: {}\n", res);
         },
         Err(err) => {
             // Execute here.
-            println!("dynamic_timeout(5, 3000) err: {:?}", err);
+            println!("dynamic_timeout(5, 3000) err: {:?}\n", err);
         }
     }
-
-    println!();
 
     // The request url is https://httpbin.org/delay/1 and the request timeout is 3000ms.
     match dynamic_timeout(1, 3000).await {
         Ok(res) => {
             // Execute here.
-            println!("dynamic_timeout(1, 3000) ok: {}", res);
+            println!("dynamic_timeout(1, 3000) ok: {}\n", res);
         },
         Err(err) => {
-            println!("dynamic_timeout(1, 3000) err: {:?}", err);
+            println!("dynamic_timeout(1, 3000) err: {:?}\n", err);
         }
     }
-
-    println!();
 
     // The request timeout is 3000ms.
     match Http::timeout(3000).await {
         Ok(res) => {
-            println!("Http::timeout(3000) ok: {}", res);
+            println!("Http::timeout(3000) ok: {}\n", res);
         },
         Err(err) => {
             // Execute here.
-            println!("Http::timeout(3000) err: {:?}", err);
+            println!("Http::timeout(3000) err: {:?}\n", err);
         }
     }
-
-    println!();
 
     // The request timeout is 7000ms.
     match Http::override_timeout("7000").await {
         Ok(res) => {
             // Execute here.
-            println!("Http::override_timeout(\"7000\") ok: {}", res);
+            println!("Http::override_timeout(\"7000\") ok: {}\n", res);
         },
         Err(err) => {
-            println!("Http::override_timeout(\"7000\") err: {:?}", err);
+            println!("Http::override_timeout(\"7000\") err: {:?}\n", err);
         }
     }
 }

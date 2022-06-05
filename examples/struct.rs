@@ -43,13 +43,13 @@ impl Github {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = Github::home().await?;
-    println!("github result: {}", r);
+    println!("github result: {}\n", r);
 
     let r = Github::repository("dxx", "feignhttp").await?;
-    println!("repository result: {}", r);
+    println!("repository result: {}\n", r);
 
     let r = Github::contributors("dxx", "feignhttp", 1).await?;
-    println!("contributors result: {}", r);
+    println!("contributors result: {}\n", r);
 
     let r = Github::commits(
         "application/vnd.github.v3+json",
@@ -59,10 +59,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         1,
     )
     .await?;
-    println!("commits result: {}", r);
+    println!("commits result: {}\n", r);
 
     let r = Github{}.languages("dxx", "feignhttp").await?;
-    println!("languages result: {}", r);
+    println!("languages result: {}\n", r);
 
     Ok(())
 }
