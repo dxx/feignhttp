@@ -3,6 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/feignhttp.svg)](https://crates.io/crates/feignhttp)
 [![Documentation](https://docs.rs/feignhttp/badge.svg)](https://docs.rs/feignhttp)
 [![MIT licensed](https://img.shields.io/github/license/dxx/feignhttp.svg?color=blue)](./LICENSE)
+[![CI](https://github.com/seanmonstar/reqwest/workflows/CI/badge.svg)](https://github.com/seanmonstar/reqwest/actions?query=workflow%3ACI)
 
 FeignHTTP is a declarative HTTP client. Based on rust macros.
 
