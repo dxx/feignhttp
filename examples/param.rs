@@ -29,7 +29,7 @@ impl Http {
 
 #[tokio::main]
 async fn main() {
-    // A reqeut with a header `token: ZmVpZ25odHRw`.
+    // A request with a header `token: ZmVpZ25odHRw`.
     let res = headers("ZmVpZ25odHRw").await.unwrap();
     println!("headers: {}", res);
 
