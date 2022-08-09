@@ -281,10 +281,10 @@ fn is_support_types(t: &str) -> bool {
 
 fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {
     let body_type_str = body_type.to_token_stream().to_string();
-    if body_type_str.contains("Vec < u8 >") {
+    if body_type_str.ends_with("Vec < u8 >") {
         return quote! {send_vec(#body_var)}
     };
-    return if body_type_str.contains("String") || body_type_str.contains("& str") {
+    return if body_type_str.ends_with("String") || body_type_str.ends_with("& str") {
         quote! {send_text(#body_var .to_string())}
     } else {
         quote! {send_json(& #body_var)}
@@ -296,10 +296,10 @@ fn get_return_fn(return_type: &syn::Type) -> proc_macro2::TokenStream {
     if return_type_str == "()" {
         return quote! {none}
     }
-    if return_type_str.contains("Vec < u8 >") {
+    if return_type_str.ends_with("Vec < u8 >") {
         return quote! {vec}
     }
-    let is_text = if return_type_str.contains("String") {
+    let is_text = if return_type_str.ends_with("String") {
         true
     } else {
         false
