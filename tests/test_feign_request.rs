@@ -111,7 +111,6 @@ async fn post_json(#[body] user: User) -> feignhttp::Result<String> {}
 async fn test_send_json() {
     #[cfg(feature = "json")]
     {
-        println!("1421");
         let _mock = mock("POST", "/post_json")
             .match_header("content-type", "application/json")
             .match_body(r#"{"id":1,"name":"jack"}"#)
