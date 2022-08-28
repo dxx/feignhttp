@@ -8,10 +8,19 @@ async fn contributors(
     #[query] page: u32, // `#[query]` can also be removed.
 ) -> feignhttp::Result<String> {}
 
+#[get("https://httpbin.org/anything")]
+async fn anything(
+    #[query] id: &[i32],
+    #[query] name: Vec<&str>,
+) -> feignhttp::Result<String> {}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = contributors("dxx", "feignhttp", 1).await?;
     println!("contributors result: {}", r);
+
+    let r = anything(&[1, 2, 3], vec!["Bob", "Tom", "Jack"]).await?;
+    println!("anything result: {}", r);
 
     Ok(())
 }
