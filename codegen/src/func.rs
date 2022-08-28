@@ -81,19 +81,21 @@ pub fn fn_impl(
     let vis = &item_fn.vis;
     let args = parse_args(sig)?;
 
-    let header_names = find_type_names(&args, ArgType::HEADER);
+    let header_names = find_type_names(&args, ArgType::HEADER, |_fn_arg| true);
     let header_vars = find_type_vars(&args, ArgType::HEADER);
 
-    let path_names = find_type_names(&args, ArgType::PATH);
+    let path_names = find_type_names(&args, ArgType::PATH, |_fn_arg| true);
     let path_vars = find_type_vars(&args, ArgType::PATH);
 
-    let query_names = find_type_names(&args, ArgType::QUERY);
+    let query_names = find_type_names(&args, ArgType::QUERY, filter_query_array);
     let query_vars = find_type_vars(&args, ArgType::QUERY);
 
-    let form_names = find_type_names(&args, ArgType::FORM);
+    let (query_array_names, query_array_vars) = find_query_array(&args);
+
+    let form_names = find_type_names(&args, ArgType::FORM, |_fn_arg| true);
     let form_vars = find_type_vars(&args, ArgType::FORM);
 
-    let param_names = find_type_names(&args, ArgType::PARAM);
+    let param_names = find_type_names(&args, ArgType::PARAM, |_fn_arg| true);
     let param_vars = find_type_vars(&args, ArgType::PARAM);
 
     let body_vars = find_type_vars(&args, ArgType::BODY);
@@ -198,6 +200,13 @@ pub fn fn_impl(
                 query_vec.push((#query_names, format!("{}", #query_vars)));
             )*
 
+            #(
+                let query_array_name = #query_array_names;
+                for query_array_var in #query_array_vars {
+                    query_vec.push((query_array_name, format!("{}", query_array_var)));
+                }
+            )*
+
             let url = util::replace(&format!("{}", #url), &path_map);
 
             let config = HttpConfig::from_map(config_map)?;
@@ -215,9 +224,15 @@ pub fn fn_impl(
     Ok(stream)
 }
 
-fn find_type_names(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<String> {
+fn find_type_names(
+    args: &Vec<FnArg>,
+    arg_type: ArgType,
+    filter: impl Fn(&FnArg) -> bool
+) -> Vec<String>
+{
     args.iter()
         .filter(|a| a.arg_type == arg_type)
+        .filter(|a| filter(a))
         .map(|a| a.name.clone())
         .collect()
 }
@@ -234,6 +249,33 @@ fn find_var_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
         .filter(|a| a.arg_type == arg_type)
         .map(|a| a.var_type.clone())
         .collect()
+}
+
+fn filter_query_array(arg: &FnArg) -> bool {
+    let t = arg.var_type.to_token_stream().to_string();
+    if t.starts_with("& [") || t.starts_with("Vec") || t.starts_with("std :: vec :: Vec") {
+        return false;
+    }
+    true
+}
+
+fn find_query_array(args: &Vec<FnArg>) -> (Vec<String>, Vec<syn::Ident>) {
+    let args = args.iter()
+        .filter(|a| a.arg_type == ArgType::QUERY)
+        .filter(|a| {
+            let t = a.var_type.to_token_stream().to_string();
+            if t.starts_with("& [") || t.starts_with("Vec") || t.starts_with("std :: vec :: Vec") {
+                return true;
+            }
+            false
+        });
+    let (mut names, mut vars) = (vec![], vec![]);
+    for arg in args {
+        names.push(arg.name.clone());
+        vars.push(arg.var.clone());
+    }
+
+    (names, vars)
 }
 
 fn parse_header_values(s: &str) -> syn::Result<(Vec<String>, Vec<String>)> {
