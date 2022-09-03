@@ -253,7 +253,7 @@ fn find_var_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
 
 fn filter_query_array(arg: &FnArg) -> bool {
     let t = arg.var_type.to_token_stream().to_string();
-    if t.starts_with("& [") || t.starts_with("Vec") || t.starts_with("std :: vec :: Vec") {
+    if t.starts_with("& [") || t.starts_with("Vec") || t.starts_with("& Vec") || t.starts_with("std :: vec :: Vec") {
         return false;
     }
     true
