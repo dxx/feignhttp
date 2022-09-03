@@ -14,6 +14,12 @@ async fn anything(
     #[query] name: Vec<&str>,
 ) -> feignhttp::Result<String> {}
 
+#[get("https://httpbin.org/anything")]
+async fn anything_vec(
+    #[query] id: &[i32],
+    #[query] name: &Vec<String>,
+) -> feignhttp::Result<String> {}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = contributors("dxx", "feignhttp", 1).await?;
@@ -22,5 +28,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = anything(&[1, 2, 3], vec!["Bob", "Tom", "Jack"]).await?;
     println!("anything result: {}", r);
 
+    let mut names = Vec::<String>::new();
+    names.push("Bob".to_string());
+    names.push("Tom".to_string());
+    names.push("Jack".to_string());
+    let r = anything_vec(&[1, 2, 3], &names).await?;
     Ok(())
 }
