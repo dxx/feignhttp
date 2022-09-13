@@ -28,10 +28,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = anything(&[1, 2, 3], vec!["Bob", "Tom", "Jack"]).await?;
     println!("anything result: {}", r);
 
-    let mut names = Vec::<String>::new();
-    names.push("Bob".to_string());
-    names.push("Tom".to_string());
-    names.push("Jack".to_string());
+    let names = vec!["Bob".to_string(), "Tom".to_string(), "Jack".to_string()];
     let r = anything_vec(&[1, 2, 3], &names).await?;
+    println!("anything vec result: {}", r);
+
     Ok(())
 }
