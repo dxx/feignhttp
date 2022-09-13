@@ -264,7 +264,7 @@ fn find_query_array(args: &Vec<FnArg>) -> (Vec<String>, Vec<syn::Ident>) {
         .filter(|a| a.arg_type == ArgType::QUERY)
         .filter(|a| {
             let t = a.var_type.to_token_stream().to_string();
-            if t.starts_with("& [") || t.starts_with("Vec") || t.starts_with("std :: vec :: Vec") {
+            if t.starts_with("& [") || t.starts_with("Vec") || t.starts_with("& Vec") || t.starts_with("std :: vec :: Vec") {
                 return true;
             }
             false
