@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp-codegen"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["dxx <dx1898@foxmail.com>"]
 edition = "2021"
 description = "FeignHTTP macro support"
