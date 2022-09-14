@@ -82,23 +82,23 @@ pub fn fn_impl(
     let args = parse_args(sig)?;
 
     let header_names = find_type_names(&args, ArgType::HEADER, |_fn_arg| true);
-    let header_vars = find_type_vars(&args, ArgType::HEADER);
+    let header_vars = find_type_vars(&args, ArgType::HEADER, |_fn_arg| true);
 
     let path_names = find_type_names(&args, ArgType::PATH, |_fn_arg| true);
-    let path_vars = find_type_vars(&args, ArgType::PATH);
+    let path_vars = find_type_vars(&args, ArgType::PATH, |_fn_arg| true);
 
     let query_names = find_type_names(&args, ArgType::QUERY, filter_query_array);
-    let query_vars = find_type_vars(&args, ArgType::QUERY);
+    let query_vars = find_type_vars(&args, ArgType::QUERY, filter_query_array);
 
     let (query_array_names, query_array_vars) = find_query_array(&args);
 
     let form_names = find_type_names(&args, ArgType::FORM, |_fn_arg| true);
-    let form_vars = find_type_vars(&args, ArgType::FORM);
+    let form_vars = find_type_vars(&args, ArgType::FORM, |_fn_arg| true);
 
     let param_names = find_type_names(&args, ArgType::PARAM, |_fn_arg| true);
-    let param_vars = find_type_vars(&args, ArgType::PARAM);
+    let param_vars = find_type_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
-    let body_vars = find_type_vars(&args, ArgType::BODY);
+    let body_vars = find_type_vars(&args, ArgType::BODY, |_fn_arg| true);
 
     // Valid form and body.
     if form_vars.len() > 0 && body_vars.len() > 0 {
@@ -237,9 +237,14 @@ fn find_type_names(
         .collect()
 }
 
-fn find_type_vars(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Ident> {
+fn find_type_vars(
+    args: &Vec<FnArg>,
+    arg_type: ArgType,
+    filter: impl Fn(&FnArg) -> bool,
+) -> Vec<syn::Ident> {
     args.iter()
         .filter(|a| a.arg_type == arg_type)
+        .filter(|a| filter(a))
         .map(|a| a.var.clone())
         .collect()
 }
