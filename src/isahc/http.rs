@@ -24,7 +24,7 @@ pub struct ResponseWrapper {
 }
 
 impl HttpRequest for RequestWrapper {
-    fn headers(mut self, headers: HashMap<&str, String>) -> Self {
+    fn headers(mut self, headers: HashMap<std::borrow::Cow<str>, String>) -> Self {
         for (k, v) in headers {
             self.headers.insert(k.to_lowercase(), v);
         }
@@ -126,7 +126,6 @@ impl RequestWrapper {
 
         return match request.send_async().await {
             Ok(response) => {
-
                 #[cfg(feature = "log")]
                 print_response_log(&response);
 

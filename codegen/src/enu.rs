@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 /// Http request method.
 pub enum Method {
@@ -29,7 +29,7 @@ impl Method {
 }
 
 /// Arg type.
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum ArgType {
     HEADER,
     PATH,
@@ -53,16 +53,18 @@ impl fmt::Display for ArgType {
     }
 }
 
-impl ArgType {
-    pub fn from_str(arg_type: &str) -> Result<ArgType, String> {
-        match arg_type {
-            "header" | "HEADER" => Ok(ArgType::HEADER),
-            "path" | "PATH" => Ok(ArgType::PATH),
-            "query" | "QUERY" => Ok(ArgType::QUERY),
-            "form" | "FORM" => Ok(ArgType::FORM),
-            "body" | "BODY" => Ok(ArgType::BODY),
-            "param" | "PARAM" => Ok(ArgType::PARAM),
-            _ => Err("unknown arg type: ".to_string() + arg_type),
+impl FromStr for ArgType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "header" => Ok(ArgType::HEADER),
+            "path" | "url_path" => Ok(ArgType::PATH),
+            "query" => Ok(ArgType::QUERY),
+            "form" => Ok(ArgType::FORM),
+            "body" => Ok(ArgType::BODY),
+            "param" => Ok(ArgType::PARAM),
+            _ => Err("unknown arg type: ".to_string() + s),
         }
     }
 }

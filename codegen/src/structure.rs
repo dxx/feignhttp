@@ -1,20 +1,21 @@
 use crate::enu::Method;
-use crate::func::{fn_impl, FnMetadata};
-use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream};
+use crate::func::{client_fn_impl, fn_impl, FnMetadata};
+use crate::util::{
+    get_meta_str_value, get_metas, parse_exprs, parse_exprs_attribute, parse_url_stream,
+};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use std::collections::HashMap;
+use syn::DeriveInput;
 use syn::{parse_macro_input, ItemImpl};
 
 pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let meta_map = parse_exprs(&attr.to_string());
+    let item_impl = parse_macro_input!(item as ItemImpl);
     let url = match parse_url_stream(&attr) {
         Ok(url) => url,
         Err(err) => return err.into_compile_error().into(),
     };
-
-    let meta_map = parse_exprs(&attr);
-
-    let item_impl = parse_macro_input!(item as ItemImpl);
 
     let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
         Ok(streams) => streams,
@@ -32,6 +33,34 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     stream.into()
 }
 
+pub fn feign_client_impl(item: TokenStream) -> TokenStream {
+    let derive = parse_macro_input!(item as DeriveInput);
+    let meta_map = derive
+        .attrs
+        .iter()
+        .find(|&x| x.path.is_ident("feign"))
+        .and_then(|x| parse_exprs_attribute(&x).ok())
+        .unwrap_or_default();
+
+    let gen = &derive.generics;
+    let ident = &derive.ident;
+
+    match derive.data {
+        syn::Data::Struct(struc) => match client_fn_impl(struc, meta_map) {
+            Ok(x) => quote! {
+                impl #gen ::feignhttp::FeignClient for #ident #gen {
+                    #x
+                }
+            }
+            .into(),
+            Err(e) => e.into_compile_error().into(),
+        },
+        _ => syn::Error::new_spanned(derive, "Expected a struct")
+            .into_compile_error()
+            .into(),
+    }
+}
+
 fn fn_to_streams(
     url: proc_macro2::TokenStream,
     items: Vec<syn::ImplItem>,
@@ -45,9 +74,8 @@ fn fn_to_streams(
             if let Some(attr) = attrs.last() {
                 let mut url = base_url.clone();
                 let mut meta_map = base_meta.clone();
-                let method_ident = Method::from_str(
-                    &attr.path.segments.last().unwrap().ident.to_string()
-                );
+                let method_ident =
+                    Method::from_str(&attr.path.segments.last().unwrap().ident.to_string());
                 let method = match method_ident {
                     Ok(method) => method,
                     Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
@@ -71,6 +99,7 @@ fn fn_to_streams(
                         meta_map,
                     },
                     item.to_token_stream().into(),
+                    false,
                 )?;
                 method_streams.push(fn_stream);
                 continue;
@@ -96,9 +125,9 @@ fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream>
                     return match get_meta_str_value(nested_meta, "path") {
                         Some(val) => Ok(val.to_token_stream()),
                         None => Err(syn::Error::new_spanned(
-                                nested_meta,
-                                "metadata path not specified or must be the first",
-                            )),
+                            nested_meta,
+                            "metadata path not specified or must be the first",
+                        )),
                     }
                 }
             }

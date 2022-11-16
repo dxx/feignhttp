@@ -6,19 +6,18 @@ async fn contributors(
     #[path] owner: &str,
     #[path] repo: &str,
     #[query] page: u32, // `#[query]` can also be removed.
-) -> feignhttp::Result<String> {}
+) -> feignhttp::Result<String> {
+}
 
 #[get("https://httpbin.org/anything")]
-async fn anything(
-    #[query] id: &[i32],
-    #[query] name: Vec<&str>,
-) -> feignhttp::Result<String> {}
+async fn anything(#[query] id: &[i32], #[query] name: Vec<&str>) -> feignhttp::Result<String> {}
 
 #[get("https://httpbin.org/anything")]
 async fn anything_vec(
     #[query] id: &[i32],
     #[query] name: &Vec<String>,
-) -> feignhttp::Result<String> {}
+) -> feignhttp::Result<String> {
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

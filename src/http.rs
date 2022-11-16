@@ -1,9 +1,9 @@
 use crate::{
-    error::{Result, Error},
+    error::{Error, Result},
     RequestWrapper,
 };
 use async_trait::async_trait;
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 /// An HTTP client to create RequestBuilder.
 pub struct HttpClient;
@@ -18,7 +18,7 @@ impl HttpClient {
 pub struct RequestBuilder<'a> {
     url: &'a str,
     method: &'a str,
-    headers: Option<HashMap<&'a str, String>>,
+    headers: Option<HashMap<Cow<'a, str>, String>>,
     query: Option<Vec<(&'a str, String)>>,
     config: Option<HttpConfig>,
 }
@@ -48,7 +48,7 @@ impl<'a> RequestBuilder<'a> {
         self
     }
 
-    pub fn headers(mut self, headers: HashMap<&'a str, String>) -> Self {
+    pub fn headers(mut self, headers: HashMap<Cow<'a, str>, String>) -> Self {
         self.headers = Some(headers);
         self
     }
@@ -97,7 +97,7 @@ impl HttpConfig {
 
 /// A trait of HTTP request.
 pub trait HttpRequest {
-    fn headers(self, headers: HashMap<&str, String>) -> Self;
+    fn headers(self, headers: HashMap<Cow<str>, String>) -> Self;
 
     fn query(self, query: Vec<(&str, String)>) -> Self;
 }
