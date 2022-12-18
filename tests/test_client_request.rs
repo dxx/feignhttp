@@ -31,9 +31,9 @@ async fn test_header() {
     let method = "GET";
 
     let header_map = map!(
-        "auth" => "name_pass".to_string(),
-        "username" => "jack".to_string(),
-        "pwd" => "xxx".to_string());
+        "auth".into() => "name_pass".to_string(),
+        "username".into() => "jack".to_string(),
+        "pwd".into() => "xxx".to_string());
 
     let request = HttpClient::builder()
         .url(&url)

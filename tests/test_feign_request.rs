@@ -1,4 +1,4 @@
-use feignhttp::{get, post};
+use feignhttp::{feign, get, post, Feign};
 
 use mockito::{mock, Matcher};
 use serde::Serialize;
@@ -13,7 +13,6 @@ async fn test_get() {
     get().await.unwrap();
 }
 
-
 #[post(url = "http://localhost:1234/post")]
 async fn post() -> feignhttp::Result<String> {}
 
@@ -24,7 +23,6 @@ async fn test_post() {
     post().await.unwrap();
 }
 
-
 #[post(
     url = "http://localhost:1234/post_header",
     headers = "auth: password; pwd: {pwd}"
@@ -33,7 +31,8 @@ async fn post_header(
     #[header] auth: String, // Overried `auth: password`.
     #[header("name")] username: &str,
     #[param] pwd: &str,
-) -> feignhttp::Result<String> {}
+) -> feignhttp::Result<String> {
+}
 
 #[tokio::test]
 async fn test_header() {
@@ -48,12 +47,8 @@ async fn test_header() {
         .unwrap();
 }
 
-
 #[post(url = "http://localhost:1234/post_query")]
-async fn post_query(
-    #[query] id: u32,
-    #[query("name")] name: String,
-) -> feignhttp::Result<String> {}
+async fn post_query(#[query] id: u32, #[query("name")] name: String) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_query() {
@@ -65,12 +60,8 @@ async fn test_query() {
     post_query(1, "xxx".to_string()).await.unwrap();
 }
 
-
 #[post(url = "http://localhost:1234/post_form")]
-async fn post_form(
-    #[form] id: i32,
-    #[form("name")] name: String,
-) -> feignhttp::Result<String> {}
+async fn post_form(#[form] id: i32, #[form("name")] name: String) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 async fn test_send_form() {
@@ -81,7 +72,6 @@ async fn test_send_form() {
 
     post_form(1, "xxx".to_string()).await.unwrap();
 }
-
 
 #[post(url = "http://localhost:1234/post_text")]
 async fn post_text(#[body] text: String) -> feignhttp::Result<String> {}
@@ -95,7 +85,6 @@ async fn test_send_text() {
 
     post_text("I' m text".to_string()).await.unwrap();
 }
-
 
 #[derive(Serialize)]
 struct User {
@@ -124,7 +113,6 @@ async fn test_send_json() {
     }
 }
 
-
 #[post(url = "http://localhost:1234/post_vec")]
 async fn post_data(#[body] data: Vec<u8>) -> feignhttp::Result<String> {}
 
@@ -138,7 +126,6 @@ async fn test_send_vec() {
     post_data(vec![97, 97, 97]).await.unwrap();
 }
 
-
 #[get(url = "http://site_dne.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 
@@ -147,7 +134,6 @@ async fn connect_timeout() -> feignhttp::Result<String> {}
 async fn test_connect_timeout() {
     connect_timeout().await.unwrap();
 }
-
 
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
@@ -170,4 +156,36 @@ async fn test_dynamic_timeout1() {
 #[tokio::test]
 async fn test_dynamic_timeout2() {
     dynamic_timeout(5000).await.unwrap();
+}
+
+#[derive(Feign)]
+struct TestClient {
+    #[param]
+    accept: &'static str,
+}
+#[feign(url = "http://localhost:1234", headers = "accept: {accept}")]
+impl TestClient {
+    #[get]
+    async fn home(&self) -> feignhttp::Result<String> {}
+
+    #[get("/repos", headers = "accept: application/json")]
+    async fn repository(&self) -> feignhttp::Result<String> {}
+}
+
+#[tokio::test]
+async fn test_client_struct() {
+    let _mock_home = mock("GET", "/")
+        .match_header("accept", "application/octet-stream")
+        .create();
+
+    let _mock_repo = mock("GET", "/repos")
+        .match_header("accept", "application/json")
+        .create();
+
+    let client = TestClient {
+        accept: "application/octet-stream",
+    };
+
+    client.home().await.unwrap();
+    client.repository().await.unwrap();
 }

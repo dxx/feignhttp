@@ -1,5 +1,0 @@
-error: unknown arg type: aaa
- --> tests/ui/func/attr.rs:8:25
-  |
-8 | pub async fn send_get(#[aaa] a: i32) -> Result<String> {}
-  |                         ^^^

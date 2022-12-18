@@ -8,8 +8,6 @@ fn test_func() {
     t.compile_fail("tests/ui/func/async.rs");
     t.compile_fail("tests/ui/func/return_value.rs");
     t.compile_fail("tests/ui/func/return_value2.rs");
-    t.compile_fail("tests/ui/func/attr.rs");
-    t.compile_fail("tests/ui/func/attr2.rs");
     t.compile_fail("tests/ui/func/param.rs");
     t.compile_fail("tests/ui/func/form.rs");
     t.compile_fail("tests/ui/func/form2.rs");

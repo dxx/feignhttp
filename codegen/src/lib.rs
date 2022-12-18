@@ -3,10 +3,15 @@ mod func;
 mod structure;
 mod util;
 
-use proc_macro::TokenStream;
 use enu::Method;
-use structure::feign_impl;
 use func::http_impl;
+use proc_macro::TokenStream;
+use structure::{feign_client_impl, feign_impl};
+
+#[proc_macro_derive(Feign, attributes(url_path, query, header, param, feign))]
+pub fn feign_client(item: TokenStream) -> TokenStream {
+    feign_client_impl(item)
+}
 
 #[proc_macro_attribute]
 pub fn feign(attr: TokenStream, item: TokenStream) -> TokenStream {

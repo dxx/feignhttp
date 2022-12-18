@@ -1,4 +1,4 @@
-use feignhttp::{feign, get};
+use feignhttp::{feign, get, Feign};
 
 #[get(url = "http://site_dne.com", connect_timeout = 3000)]
 async fn connect_timeout() -> feignhttp::Result<String> {}
@@ -6,12 +6,13 @@ async fn connect_timeout() -> feignhttp::Result<String> {}
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
+#[derive(Feign)]
 struct Http;
 
 #[feign(url = "http://site_dne.com", connect_timeout = 3000)]
 impl Http {
     #[get("", connect_timeout = 5000)] // 5000 will override 3000.
-    async fn get() -> feignhttp::Result<String> {}
+    async fn get(&self) -> feignhttp::Result<String> {}
 }
 
 #[tokio::main]
@@ -34,7 +35,7 @@ async fn main() {
         }
     }
 
-    match Http::get().await {
+    match Http.get().await {
         Ok(res) => {
             println!("Http::get: {}", res);
         }

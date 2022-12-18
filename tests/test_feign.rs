@@ -1,4 +1,4 @@
-use feignhttp::{feign, get};
+use feignhttp::{feign, get, Feign};
 
 #[get("https://api.github.com")]
 pub async fn get() -> feignhttp::Result<String> {}
@@ -6,15 +6,15 @@ pub async fn get() -> feignhttp::Result<String> {}
 #[get("https://api.github.com", path = "/abc")]
 pub async fn get_not_found() -> feignhttp::Result<String> {}
 
-
 const URL: &str = "https://api.github.com";
 
+#[derive(Feign)]
 pub struct Feign;
 
 #[feign(url = URL)]
 impl Feign {
     #[get("/users/{user}")]
-    async fn user(#[path] user: &str) -> feignhttp::Result<String> {}
+    async fn user(&self, #[path] user: &str) -> feignhttp::Result<String> {}
 }
 
 #[tokio::test]
@@ -25,7 +25,7 @@ async fn test_fn() {
 
 #[tokio::test]
 async fn test_struct() {
-    let r = Feign::user("dxx").await.unwrap();
+    let r = Feign.user("dxx").await.unwrap();
     println!("{}", r);
 }
 
