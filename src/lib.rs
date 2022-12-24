@@ -544,7 +544,6 @@ mod macros;
 
 #[cfg(feature = "reqwest-client")]
 mod reqwest;
-
 #[cfg(feature = "reqwest-client")]
 pub use crate::reqwest::*;
 
@@ -556,8 +555,8 @@ pub use crate::isahc::*;
 #[doc(hidden)]
 pub mod util;
 
-use std::collections::HashMap;
 pub use feignhttp_codegen::*;
+use std::collections::HashMap;
 
 pub use crate::error::{Error, ErrorKind, Result};
 pub use crate::http::*;

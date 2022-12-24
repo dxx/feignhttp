@@ -25,7 +25,7 @@ struct FeignClient {
     accept: &'static str,
     #[header("content-type")]
     c_type: &'static str,
-    #[query(name="say")]
+    #[query(name = "say")]
     say: &'static str,
 }
 #[feign(url = "http://localhost:1234", headers = "accept: {accept}")]
@@ -54,7 +54,7 @@ async fn test_feign_client() {
     let client = FeignClient {
         accept: "application/octet-stream",
         c_type: "none",
-        say: "hello"
+        say: "hello",
     };
 
     client.home().await.unwrap();

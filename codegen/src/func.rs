@@ -1,7 +1,7 @@
 use crate::enu::{ArgType, Method};
 use crate::util::{
-    parse_args_from_sig, parse_args_from_struct,
-    parse_exprs, parse_return_type, parse_url_stream, remove_url_attr,
+    parse_args_from_sig, parse_args_from_struct, parse_exprs, parse_return_type, parse_url_stream,
+    remove_url_attr,
 };
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -48,9 +48,7 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
     }
 }
 
-pub fn client_fn_impl(
-    mut item_struct: DataStruct,
-) -> syn::Result<proc_macro2::TokenStream> {
+pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::TokenStream> {
     let args = parse_args_from_struct(&mut item_struct)?;
 
     let header_names = find_type_names(&args, ArgType::HEADER, |_fn_arg| true);

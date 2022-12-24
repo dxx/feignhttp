@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let t = NameQuery {
         name: vec!["Bob", "Tom", "Jack"],
     };
-    let r= t.anything_name().await?;
+    let r = t.anything_name().await?;
     println!("anything name result: {}", r);
 
     Ok(())
