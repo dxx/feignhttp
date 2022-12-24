@@ -1,4 +1,4 @@
-use feignhttp::{feign, get, post, Feign};
+use feignhttp::{get, post};
 
 use mockito::{mock, Matcher};
 use serde::Serialize;
@@ -124,68 +124,4 @@ async fn test_send_vec() {
         .create();
 
     post_data(vec![97, 97, 97]).await.unwrap();
-}
-
-#[get(url = "http://site_dne.com", connect_timeout = 3000)]
-async fn connect_timeout() -> feignhttp::Result<String> {}
-
-#[tokio::test]
-#[should_panic]
-async fn test_connect_timeout() {
-    connect_timeout().await.unwrap();
-}
-
-#[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
-async fn timeout() -> feignhttp::Result<String> {}
-
-#[tokio::test]
-#[should_panic]
-async fn test_timeout() {
-    timeout().await.unwrap();
-}
-
-#[get(url = "https://httpbin.org/delay/3", timeout = "{time}")]
-async fn dynamic_timeout(#[param] time: u16) -> feignhttp::Result<String> {}
-
-#[tokio::test]
-#[should_panic]
-async fn test_dynamic_timeout1() {
-    dynamic_timeout(2000).await.unwrap();
-}
-
-#[tokio::test]
-async fn test_dynamic_timeout2() {
-    dynamic_timeout(5000).await.unwrap();
-}
-
-#[derive(Feign)]
-struct TestClient {
-    #[param]
-    accept: &'static str,
-}
-#[feign(url = "http://localhost:1234", headers = "accept: {accept}")]
-impl TestClient {
-    #[get]
-    async fn home(&self) -> feignhttp::Result<String> {}
-
-    #[get("/repos", headers = "accept: application/json")]
-    async fn repository(&self) -> feignhttp::Result<String> {}
-}
-
-#[tokio::test]
-async fn test_client_struct() {
-    let _mock_home = mock("GET", "/")
-        .match_header("accept", "application/octet-stream")
-        .create();
-
-    let _mock_repo = mock("GET", "/repos")
-        .match_header("accept", "application/json")
-        .create();
-
-    let client = TestClient {
-        accept: "application/octet-stream",
-    };
-
-    client.home().await.unwrap();
-    client.repository().await.unwrap();
 }
