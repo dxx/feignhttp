@@ -49,14 +49,8 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
 
 pub fn client_fn_impl(
     mut item_struct: DataStruct,
-    metadata: HashMap<String, String>,
 ) -> syn::Result<proc_macro2::TokenStream> {
     let args = parse_args_from_struct(&mut item_struct)?;
-
-    let (header_keys, header_values) = match metadata.get("headers") {
-        Some(val) => parse_header_values(&val)?,
-        None => (vec![], vec![]),
-    };
 
     let header_names = find_type_names(&args, ArgType::HEADER, |_fn_arg| true);
     let header_vars = find_type_vars(&args, ArgType::HEADER, |_fn_arg| true);
@@ -81,23 +75,11 @@ pub fn client_fn_impl(
         }
 
         fn header_map(&self) -> ::std::collections::HashMap<std::borrow::Cow<str>, String> {
-            use std::borrow::Cow;
-
-            let param_map = self.param_map();
-            let mut header_map = ::std::collections::HashMap::new();
-
-            // Header in `#[get("", headers="")]` added before header in `#[header]` added.
+            let mut out = ::std::collections::HashMap::new();
             #(
-                let key = ::feignhttp::util::replace(#header_keys, &param_map);
-                let value = ::feignhttp::util::replace(#header_values, &param_map);
-                header_map.insert(Cow::Owned(key), value);
+                out.insert(std::borrow::Cow::Borrowed(#header_names), format!("{}", self.#header_vars));
             )*
-
-            #(
-                header_map.insert(Cow::Borrowed(#header_names), format!("{}", self.#header_vars));
-            )*
-
-                header_map
+            out
         }
 
         fn path_map(&self) -> ::std::collections::HashMap<&str, String> {
@@ -105,7 +87,6 @@ pub fn client_fn_impl(
             #(
                 out.insert(#path_names, format!("{}", self.#path_vars));
             )*
-
             out
         }
 

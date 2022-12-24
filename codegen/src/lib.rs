@@ -8,7 +8,7 @@ use func::http_impl;
 use proc_macro::TokenStream;
 use structure::{feign_client_impl, feign_impl};
 
-#[proc_macro_derive(Feign, attributes(url_path, query, header, param, feign))]
+#[proc_macro_derive(Feign, attributes(url_path, query, header, param))]
 pub fn feign_client(item: TokenStream) -> TokenStream {
     feign_client_impl(item)
 }

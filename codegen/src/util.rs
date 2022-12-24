@@ -129,7 +129,7 @@ fn lit_to_string(lit: Lit) -> String {
     }
 }
 
-pub fn parse_exprs_attribute(att: &Attribute) -> syn::Result<HashMap<String, String>> {
+pub fn _parse_exprs_attribute(att: &Attribute) -> syn::Result<HashMap<String, String>> {
     let metas = att.parse_args::<Metas>()?;
 
     let map: HashMap<String, String> = metas.0.into_iter().map(|x| (x.0, x.1)).collect();

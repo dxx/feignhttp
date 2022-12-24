@@ -1,7 +1,7 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
 use crate::util::{
-    get_meta_str_value, get_metas, parse_exprs, parse_exprs_attribute, parse_url_stream,
+    get_meta_str_value, get_metas, parse_exprs, parse_url_stream,
 };
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -35,18 +35,12 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 pub fn feign_client_impl(item: TokenStream) -> TokenStream {
     let derive = parse_macro_input!(item as DeriveInput);
-    let meta_map = derive
-        .attrs
-        .iter()
-        .find(|&x| x.path.is_ident("feign"))
-        .and_then(|x| parse_exprs_attribute(&x).ok())
-        .unwrap_or_default();
 
     let gen = &derive.generics;
     let ident = &derive.ident;
 
     match derive.data {
-        syn::Data::Struct(struc) => match client_fn_impl(struc, meta_map) {
+        syn::Data::Struct(struc) => match client_fn_impl(struc) {
             Ok(x) => quote! {
                 impl #gen ::feignhttp::FeignClient for #ident #gen {
                     #x
