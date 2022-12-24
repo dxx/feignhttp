@@ -1,7 +1,7 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
 use crate::util::{
-    get_meta_str_value, get_metas, parse_exprs, parse_url_stream,
+    get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr,
 };
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -10,12 +10,13 @@ use syn::DeriveInput;
 use syn::{parse_macro_input, ItemImpl};
 
 pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let meta_map = parse_exprs(&attr.to_string());
-    let item_impl = parse_macro_input!(item as ItemImpl);
     let url = match parse_url_stream(&attr) {
         Ok(url) => url,
         Err(err) => return err.into_compile_error().into(),
     };
+
+    let meta_map = parse_exprs(&remove_url_attr(&attr.to_string()));
+    let item_impl = parse_macro_input!(item as ItemImpl);
 
     let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
         Ok(streams) => streams,

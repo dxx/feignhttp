@@ -84,6 +84,16 @@ pub fn parse_url(url_expr: &syn::Expr) -> syn::Result<proc_macro2::TokenStream> 
     };
 }
 
+pub fn remove_url_attr(attr: &str) -> String {
+    let attrs = attr.split(",");
+    let mut exprs: Vec<&str> = attrs.into_iter().map(|u| u).collect();
+    if exprs.len() <= 0 {
+        return "".into();
+    }
+    exprs.remove(0);
+    return exprs.join(",");
+}
+
 struct Metas(Vec<Meta>);
 impl Parse for Metas {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {

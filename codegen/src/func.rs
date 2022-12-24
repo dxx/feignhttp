@@ -1,6 +1,7 @@
 use crate::enu::{ArgType, Method};
 use crate::util::{
-    parse_args_from_sig, parse_args_from_struct, parse_exprs, parse_return_type, parse_url_stream,
+    parse_args_from_sig, parse_args_from_struct,
+    parse_exprs, parse_return_type, parse_url_stream, remove_url_attr,
 };
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
@@ -30,7 +31,7 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
         Err(err) => return err.into_compile_error().into(),
     };
 
-    let meta_map = parse_exprs(&attr.to_string());
+    let meta_map = parse_exprs(&remove_url_attr(&attr.to_string()));
 
     let stream = fn_impl(
         FnMetadata {
