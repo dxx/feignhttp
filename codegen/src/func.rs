@@ -60,6 +60,7 @@ pub fn client_fn_impl(
 
     let query_names = find_type_names(&args, ArgType::QUERY, filter_query_array);
     let query_vars = find_type_vars(&args, ArgType::QUERY, filter_query_array);
+
     let (query_array_names, query_array_vars) = find_query_array(&args);
 
     let param_names = find_type_names(&args, ArgType::PARAM, |_fn_arg| true);
@@ -69,7 +70,7 @@ pub fn client_fn_impl(
         fn param_map(&self) -> ::std::collections::HashMap<&str, String> {
             let mut out = ::std::collections::HashMap::new();
             #(
-                out.insert(#param_names, format!("{}",self.#param_vars));
+                out.insert(#param_names, format!("{}", self.#param_vars));
             )*
             out
         }
@@ -98,7 +99,7 @@ pub fn client_fn_impl(
 
             #(
                 let query_array_name = #query_array_names;
-                for query_array_var in #query_array_vars {
+                for query_array_var in self.#query_array_vars.iter() {
                     query_vec.push((query_array_name, format!("{}", query_array_var)));
                 }
             )*
