@@ -2,6 +2,8 @@ use feignhttp::{feign, Feign};
 
 #[derive(Feign)]
 struct Github {
+    // `url_path` and `param` are used to set the sharing configuration.
+    // The other two for sharing settings are `header` and `query`.
     #[url_path("owner")]
     user: &'static str,
     #[url_path]
@@ -15,6 +17,7 @@ struct Github {
     headers = "Accept: {accept}"
 )]
 impl Github {
+    // The method must have a self argument.
     #[get]
     async fn home(&self) -> feignhttp::Result<String> {}
 
@@ -33,7 +36,6 @@ impl Github {
     ) -> feignhttp::Result<String> {
     }
 
-    // Structure method still send request.
     #[get(path = "/languages")]
     async fn languages(&self) -> feignhttp::Result<String> {}
 }
