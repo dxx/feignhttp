@@ -347,32 +347,38 @@
 //! ```rust, no_run
 //! use feignhttp::{feign, Feign};
 //!
-//! const GITHUB_URL: &str = "https://api.github.com";
-//!
 //! #[derive(Feign)]
-//! struct Github;
-//!
-//! #[feign(url = GITHUB_URL)]
+//! struct Github {
+//!     // `url_path` and `param` are used to set the sharing configuration.
+//!     // The other two for sharing settings are `header` and `query`.
+//!     #[url_path("owner")]
+//!     user: &'static str,
+//!     #[url_path]
+//!     repo: &'static str,
+//!     #[param]
+//!     accept: &'static str,
+//! }
+//! 
+//! #[feign(
+//!     url = "https://api.github.com/repos/{owner}/{repo}",
+//!     headers = "Accept: {accept}"
+//! )]
 //! impl Github {
+//!     // The method must have a self argument.
 //!     #[get]
 //!     async fn home(&self) -> feignhttp::Result<String> {}
-//!
-//!     #[get("/repos/{owner}/{repo}")]
-//!     async fn repository(
+//! 
+//!     #[get(path = "", headers = "Accept: application/json")]
+//!     async fn repository(&self) -> feignhttp::Result<String> {}
+//! 
+//!     #[get("/commits")]
+//!     async fn commits(
 //!         &self,
-//!         #[path("owner")] user: &str,
-//!         #[path] repo: &str,
+//!         #[header] accept: &str,
+//!         #[query] page: u32,
+//!         #[query] per_page: u32,
 //!     ) -> feignhttp::Result<String> {}
-//!
-//!     // ...
-//!     
-//!     // Structure method still send request
-//!     #[get(path = "/repos/{owner}/{repo}/languages")]
-//!     async fn languages(
-//!         &self,
-//!         #[path] owner: &str,
-//!         #[path] repo: &str,
-//!     ) -> feignhttp::Result<String> {}
+//! 
 //! }
 //! ```
 //!
