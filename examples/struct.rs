@@ -2,8 +2,8 @@ use feignhttp::{feign, Feign};
 
 #[derive(Feign)]
 struct Github {
-    // `url_path` and `param` are used to set the sharing data.
-    // The other two for sharing data are `header` and `query`.
+    // `url_path` and `param` are used to set the shared data.
+    // The other two for share data are `header` and `query`.
     #[url_path("owner")]
     user: &'static str,
     #[url_path]
