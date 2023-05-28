@@ -17,16 +17,15 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let meta_map = parse_exprs(&remove_url_attr(&attr.to_string()));
     let item_impl = parse_macro_input!(item as ItemImpl);
+    let impl_signature = impl_signature(&item_impl);
 
     let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
         Ok(streams) => streams,
         Err(err) => return err.into_compile_error().into(),
     };
 
-    let ty = &item_impl.self_ty;
-
     let stream = quote! {
-        impl #ty {
+        #impl_signature {
           #(#fn_streams)*
         }
     };
@@ -54,6 +53,23 @@ pub fn feign_client_impl(item: TokenStream) -> TokenStream {
             .into_compile_error()
             .into(),
     }
+}
+
+fn impl_signature(item_impl: &ItemImpl) -> proc_macro2::TokenStream {
+    let impl_token = &item_impl.impl_token;
+    let generics = &item_impl.generics;
+    let trait_token = match &item_impl.trait_ {
+        Some(trait_) => {
+            let t0 = &trait_.0;
+            let t1 = &trait_.1;
+            let t2 = &trait_.2;
+            Some(quote! { #t0 #t1 #t2 })
+        },
+        None => None
+    };
+    let self_ty = &item_impl.self_ty;
+
+    quote! { #impl_token #generics #trait_token #self_ty }
 }
 
 fn fn_to_streams(
