@@ -430,7 +430,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // A reqeut with a header `token: ZmVpZ25odHRw`.
+//!     // A request with a header `token: ZmVpZ25odHRw`.
 //!     let res = headers("ZmVpZ25odHRw").await?;
 //!     println!("headers: {}", res);
 //!
