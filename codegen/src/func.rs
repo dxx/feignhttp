@@ -51,19 +51,15 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
 pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::TokenStream> {
     let args = parse_args_from_struct(&mut item_struct)?;
 
-    let header_names = find_type_names(&args, ArgType::HEADER, |_fn_arg| true);
-    let header_vars = find_type_vars(&args, ArgType::HEADER, |_fn_arg| true);
+    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |_fn_arg| true);
 
-    let path_names = find_type_names(&args, ArgType::PATH, |_fn_arg| true);
-    let path_vars = find_type_vars(&args, ArgType::PATH, |_fn_arg| true);
+    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
 
-    let query_names = find_type_names(&args, ArgType::QUERY, filter_query_array);
-    let query_vars = find_type_vars(&args, ArgType::QUERY, filter_query_array);
+    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, filter_query_array);
 
     let (query_array_names, query_array_vars) = find_query_array(&args);
 
-    let param_names = find_type_names(&args, ArgType::PARAM, |_fn_arg| true);
-    let param_vars = find_type_vars(&args, ArgType::PARAM, |_fn_arg| true);
+    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
     let tokens = quote!(
         fn param_map(&self) -> ::std::collections::HashMap<&str, String> {
@@ -148,22 +144,17 @@ pub fn fn_impl(
     let vis = &item_fn.vis;
     let args = parse_args_from_sig(sig)?;
 
-    let header_names = find_type_names(&args, ArgType::HEADER, |_fn_arg| true);
-    let header_vars = find_type_vars(&args, ArgType::HEADER, |_fn_arg| true);
+    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |_fn_arg| true);
 
-    let path_names = find_type_names(&args, ArgType::PATH, |_fn_arg| true);
-    let path_vars = find_type_vars(&args, ArgType::PATH, |_fn_arg| true);
+    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
 
-    let query_names = find_type_names(&args, ArgType::QUERY, filter_query_array);
-    let query_vars = find_type_vars(&args, ArgType::QUERY, filter_query_array);
+    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, filter_query_array);
 
     let (query_array_names, query_array_vars) = find_query_array(&args);
 
-    let form_names = find_type_names(&args, ArgType::FORM, |_fn_arg| true);
-    let form_vars = find_type_vars(&args, ArgType::FORM, |_fn_arg| true);
+    let (form_names, form_vars) = find_type_name_vars(&args, ArgType::FORM, |_fn_arg| true);
 
-    let param_names = find_type_names(&args, ArgType::PARAM, |_fn_arg| true);
-    let param_vars = find_type_vars(&args, ArgType::PARAM, |_fn_arg| true);
+    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
     let body_vars = find_type_vars(&args, ArgType::BODY, |_fn_arg| true);
 
@@ -299,16 +290,21 @@ pub fn fn_impl(
     Ok(stream)
 }
 
-fn find_type_names(
+fn find_type_name_vars(
     args: &Vec<FnArg>,
     arg_type: ArgType,
     filter: impl Fn(&FnArg) -> bool,
-) -> Vec<String> {
-    args.iter()
+) -> (Vec<String>, Vec<syn::Ident>) {
+    let args = args
+        .iter()
         .filter(|a| a.arg_type == arg_type)
-        .filter(|a| filter(a))
-        .map(|a| a.name.clone())
-        .collect()
+        .filter(|a| filter(a));
+    let (mut names, mut vars) = (vec![], vec![]);
+    for arg in args {
+        names.push(arg.name.clone());
+        vars.push(arg.var.clone());
+    }
+    (names, vars)
 }
 
 fn find_type_vars(
@@ -332,14 +328,7 @@ fn find_var_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
 
 fn filter_query_array(arg: &FnArg) -> bool {
     let t = arg.var_type.to_token_stream().to_string();
-    if t.starts_with("& [")
-        || t.starts_with("Vec")
-        || t.starts_with("& Vec")
-        || t.starts_with("std :: vec :: Vec")
-    {
-        return false;
-    }
-    true
+    !is_sequences(&t)
 }
 
 fn find_query_array(args: &Vec<FnArg>) -> (Vec<String>, Vec<syn::Ident>) {
@@ -348,14 +337,7 @@ fn find_query_array(args: &Vec<FnArg>) -> (Vec<String>, Vec<syn::Ident>) {
         .filter(|a| a.arg_type == ArgType::QUERY)
         .filter(|a| {
             let t = a.var_type.to_token_stream().to_string();
-            if t.starts_with("& [")
-                || t.starts_with("Vec")
-                || t.starts_with("& Vec")
-                || t.starts_with("std :: vec :: Vec")
-            {
-                return true;
-            }
-            false
+            is_sequences(&t)
         });
     let (mut names, mut vars) = (vec![], vec![]);
     for arg in args {
@@ -407,6 +389,17 @@ fn is_support_types(t: &str) -> bool {
         | "char" | "String" | "&str" => true,
         _ => false,
     };
+}
+
+fn is_sequences(t: &str) -> bool {
+    if t.starts_with("& [")
+        || t.starts_with("Vec")
+        || t.starts_with("& Vec")
+        || t.starts_with("std :: vec :: Vec")
+    {
+        return true;
+    }
+    false
 }
 
 fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {
