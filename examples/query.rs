@@ -43,12 +43,6 @@ struct NameQuery<'a> {
 impl<'a> NameQuery<'_> {
     #[get]
     async fn anything_name(&self) -> feignhttp::Result<String> {}
-
-    #[get]
-async fn anything_struct(&self,
-    #[query] q: Query,
-) -> feignhttp::Result<String> {
-}
 }
 
 #[tokio::main]
@@ -73,11 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let t = NameQuery {
         name: vec!["Bob", "Tom", "Jack"],
     };
-    let query = Query {
-        id: 100,
-        name: String::from("Bob1")
-    };
-    let r = t.anything_struct(query).await?;
+    let r = t.anything_name().await?;
     println!("anything name result: {}", r);
 
     Ok(())
