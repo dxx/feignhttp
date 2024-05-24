@@ -57,7 +57,8 @@ pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::T
 
     let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, filter_query_array);
 
-    let (query_array_names, query_array_vars) = find_query_array(&args);
+    let (query_array_names, query_array_vars) =
+        find_type_name_vars(&args, ArgType::QUERY,|fn_arg| !filter_query_array(fn_arg));
 
     let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
@@ -144,13 +145,21 @@ pub fn fn_impl(
     let vis = &item_fn.vis;
     let args = parse_args_from_sig(sig)?;
 
-    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |_fn_arg| true);
+    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, filter_struct);
+
+    let (_header_struct_names, header_struct_vars) =
+        find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
 
     let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
 
-    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, filter_query_array);
+    let (query_names, query_vars) =
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg) && filter_struct(fn_arg));
 
-    let (query_array_names, query_array_vars) = find_query_array(&args);
+    let (query_array_names, query_array_vars) =
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg));
+
+    let (_query_struct_names, query_struct_vars) =
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_struct(fn_arg));
 
     let (form_names, form_vars) = find_type_name_vars(&args, ArgType::FORM, |_fn_arg| true);
 
@@ -173,7 +182,7 @@ pub fn fn_impl(
 
     // Valid param types.
     if param_names.len() > 0 {
-        let param_types = find_var_types(&args, ArgType::PARAM);
+        let param_types = find_arg_types(&args, ArgType::PARAM);
         for i in 0..param_types.len() {
             let p_name = param_names.get(i).unwrap();
             let p_type = param_types.get(i).unwrap();
@@ -193,10 +202,10 @@ pub fn fn_impl(
 
     let mut send_fn_call = quote! {send()};
     if !body_vars.is_empty() {
-        let body_types = find_var_types(&args, ArgType::BODY);
+        let body_types = find_arg_types(&args, ArgType::BODY);
         send_fn_call = get_body_fn_call(body_types.get(0).unwrap(), body_vars.get(0).unwrap());
     } else if !form_vars.is_empty() {
-        let form_types = find_var_types(&args, ArgType::FORM);
+        let form_types = find_arg_types(&args, ArgType::FORM);
         match get_form_fn_call(&form_names, &form_types, &form_vars) {
             Ok(fn_call) => {
                 send_fn_call = fn_call;
@@ -230,7 +239,7 @@ pub fn fn_impl(
         #vis #sig {
             use feignhttp::FeignClient as _;
             use std::collections::HashMap;
-            use feignhttp::{HttpClient, HttpConfig, HttpResponse, util};
+            use feignhttp::{HttpClient, HttpConfig, HttpResponse, ser, util};
             use std::borrow::Cow;
 
             let mut param_map: HashMap<&str, String> = #param_map;
@@ -256,6 +265,13 @@ pub fn fn_impl(
                 header_map.insert(Cow::Borrowed(#header_names), #header_vars.to_string());
             )*
 
+            #(
+                let map = ser::to_map(& #header_struct_vars)?;
+                for (key, value) in map {
+                    header_map.insert(Cow::Owned(key), value);
+                }
+            )*
+
             let mut path_map: HashMap<&str, String> = #path_map;
             #(
                 path_map.insert(#path_names, #path_vars.to_string());
@@ -270,6 +286,13 @@ pub fn fn_impl(
                 let query_array_name = #query_array_names;
                 for query_array_var in #query_array_vars {
                     query_vec.push((query_array_name, query_array_var.to_string()));
+                }
+            )*
+
+            #(
+                let map = ser::to_map(& #query_struct_vars)?;
+                for (key, value) in map.iter() {
+                    query_vec.push((key.as_str(), value.to_string()));
                 }
             )*
 
@@ -297,8 +320,8 @@ fn find_type_name_vars(
 ) -> (Vec<String>, Vec<syn::Ident>) {
     let args = args
         .iter()
-        .filter(|a| a.arg_type == arg_type)
-        .filter(|a| filter(a));
+        .filter(|arg| arg.arg_type == arg_type)
+        .filter(|arg| filter(arg));
     let (mut names, mut vars) = (vec![], vec![]);
     for arg in args {
         names.push(arg.name.clone());
@@ -313,39 +336,37 @@ fn find_type_vars(
     filter: impl Fn(&FnArg) -> bool,
 ) -> Vec<syn::Ident> {
     args.iter()
-        .filter(|a| a.arg_type == arg_type)
-        .filter(|a| filter(a))
-        .map(|a| a.var.clone())
+        .filter(|arg| arg.arg_type == arg_type)
+        .filter(|arg| filter(arg))
+        .map(|arg: &FnArg| arg.var.clone())
         .collect()
 }
 
-fn find_var_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
+fn find_arg_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
     args.iter()
-        .filter(|a| a.arg_type == arg_type)
-        .map(|a| a.var_type.clone())
+        .filter(|arg| arg.arg_type == arg_type)
+        .map(|arg| arg.var_type.clone())
         .collect()
 }
 
 fn filter_query_array(arg: &FnArg) -> bool {
-    let t = arg.var_type.to_token_stream().to_string();
-    !is_sequences(&t)
+    let ty = arg.var_type.to_token_stream().to_string();
+    !is_sequences(&ty.replace(" ", ""))
 }
 
-fn find_query_array(args: &Vec<FnArg>) -> (Vec<String>, Vec<syn::Ident>) {
-    let args = args
-        .iter()
-        .filter(|a| a.arg_type == ArgType::QUERY)
-        .filter(|a| {
-            let t = a.var_type.to_token_stream().to_string();
-            is_sequences(&t)
-        });
-    let (mut names, mut vars) = (vec![], vec![]);
-    for arg in args {
-        names.push(arg.name.clone());
-        vars.push(arg.var.clone());
+fn filter_struct(arg: &FnArg) -> bool {
+    let var_type = &arg.var_type;
+    match var_type {
+        syn::Type::Path(t) => {
+            let ty = t.to_token_stream().to_string();
+            !is_support_struct(&ty.replace(" ", ""))
+        }
+        syn::Type::Reference(t) => {
+            let ty = t.to_token_stream().to_string();
+            !is_support_struct(&ty.replace(" ", ""))
+        }
+        _ => true,
     }
-
-    (names, vars)
 }
 
 fn parse_header_values(s: &str) -> syn::Result<(Vec<String>, Vec<String>)> {
@@ -391,11 +412,19 @@ fn is_support_types(t: &str) -> bool {
     };
 }
 
+fn is_support_struct(t: &str) -> bool {
+    if is_support_types(t) || is_sequences(t) {
+        false
+    } else {
+        true
+    }
+}
+
 fn is_sequences(t: &str) -> bool {
-    if t.starts_with("& [")
+    if t.starts_with("&[")
         || t.starts_with("Vec")
-        || t.starts_with("& Vec")
-        || t.starts_with("std :: vec :: Vec")
+        || t.starts_with("&Vec")
+        || t.starts_with("std::vec::Vec")
     {
         return true;
     }
