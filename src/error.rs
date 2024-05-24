@@ -11,12 +11,13 @@ pub(crate) type BoxError = Box<dyn StdError + Send + Sync>;
 
 #[derive(Debug, Clone)]
 pub enum ErrorKind {
-    Build,              // Indicates an error occurred while build http client.
-    Config,             // Indicates an error occurred while crate http config.
-    Encode,             // Indicates an error occurred while encode request body.
-    Decode,             // Indicates an error occurred while encode response body.
-    Request,            // Indicates an error occurred while request target url.
+    Build,              // Indicates an error occurred when build http client.
+    Config,             // Indicates an error occurred when crate http config.
+    Encode,             // Indicates an error occurred when encode request body.
+    Decode,             // Indicates an error occurred when encode response body.
+    Request,            // Indicates an error occurred when request target url.
     Status(StatusCode), // Indicates an error occurred when the http status is not ok.
+    Serialize(String),   // Indicates an error occurred when serialized by serde.
 }
 
 /// The errors that may occur when processing a request.
@@ -138,6 +139,9 @@ impl fmt::Display for Error {
                     "HTTP status server error"
                 };
                 write!(f, "{} ({})", prefix, status_code)?;
+            },
+            ErrorKind::Serialize(ref msg) => {
+                f.write_str(msg)?
             }
         }
 

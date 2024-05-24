@@ -559,6 +559,8 @@ mod isahc;
 pub use crate::isahc::*;
 
 #[doc(hidden)]
+pub mod ser;
+#[doc(hidden)]
 pub mod util;
 
 pub use feignhttp_codegen::*;
