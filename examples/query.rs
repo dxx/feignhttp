@@ -1,4 +1,6 @@
 use feignhttp::get;
+use feignhttp::{feign, Feign};
+use serde::Serialize;
 
 // Using `#[query]` to specify query parameter.
 #[get("https://api.github.com/repos/{owner}/{repo}/contributors")]
@@ -19,7 +21,17 @@ async fn anything_vec(
 ) -> feignhttp::Result<String> {
 }
 
-use feignhttp::{feign, Feign};
+#[derive(Serialize)]
+pub struct Query {
+    pub id: i32,
+    pub name: String
+}
+
+#[get("https://httpbin.org/anything")]
+async fn anything_struct(
+    #[query] q: Query,
+) -> feignhttp::Result<String> {
+}
 
 #[derive(Feign)]
 struct NameQuery<'a> {
@@ -31,6 +43,12 @@ struct NameQuery<'a> {
 impl<'a> NameQuery<'_> {
     #[get]
     async fn anything_name(&self) -> feignhttp::Result<String> {}
+
+    #[get]
+async fn anything_struct(&self,
+    #[query] q: Query,
+) -> feignhttp::Result<String> {
+}
 }
 
 #[tokio::main]
@@ -45,10 +63,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = anything_vec(&[1, 2, 3], &names).await?;
     println!("anything vec result: {}", r);
 
+    let query = Query {
+        id: 100,
+        name: String::from("Bob")
+    };
+    let r = anything_struct(query).await?;
+    println!("anything struct result: {}", r);
+
     let t = NameQuery {
         name: vec!["Bob", "Tom", "Jack"],
     };
-    let r = t.anything_name().await?;
+    let query = Query {
+        id: 100,
+        name: String::from("Bob1")
+    };
+    let r = t.anything_struct(query).await?;
     println!("anything name result: {}", r);
 
     Ok(())
