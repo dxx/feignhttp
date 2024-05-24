@@ -24,7 +24,7 @@ async fn dynamic_timeout(#[param] time: u16) -> feignhttp::Result<String> {}
 #[tokio::test]
 #[should_panic]
 async fn test_dynamic_timeout1() {
-    dynamic_timeout(2000).await.unwrap();
+    dynamic_timeout(200).await.unwrap();
 }
 
 #[tokio::test]
