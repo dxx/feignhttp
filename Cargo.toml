@@ -25,10 +25,15 @@ members = ["codegen"]
 [features]
 default = ["reqwest-client"]
 
-reqwest-client = ["reqwest"]
-isahc-client = ["isahc"]
+reqwest-client = ["dep:reqwest"]
+isahc-client = ["dep:isahc"]
 
-json = ["serde_json", "reqwest/json", "isahc/json"]
+json = ["dep:serde_json"]
+
+reqwest-json = ["reqwest-client", "json", "reqwest/json"]
+isahc-json = ["isahc-client", "json", "isahc/json"]
+
+log = ["dep:log"]
 
 [dependencies]
 feignhttp-codegen = { version = "0.6", path = "codegen" }
