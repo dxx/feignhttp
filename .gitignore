@@ -1,9 +1,20 @@
 # IDE
+.idea/
+.vscode/
+*.iml
 
-.idea
-
+# OS
+.DS_Store
+Thumbs.db
 
 # cargo
-
-target
+target/
 Cargo.lock
+
+# backup
+*.swp
+*.swo
+*~
+
+# debug
+*.pdb
