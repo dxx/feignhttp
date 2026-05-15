@@ -17,7 +17,7 @@ pub enum ErrorKind {
     Decode,             // Indicates an error occurred when encode response body.
     Request,            // Indicates an error occurred when request target url.
     Status(StatusCode), // Indicates an error occurred when the http status is not ok.
-    Serialize(String),   // Indicates an error occurred when serialized by serde.
+    Serialize(String),  // Indicates an error occurred when serialized by serde.
 }
 
 /// The errors that may occur when processing a request.

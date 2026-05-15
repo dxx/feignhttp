@@ -1,31 +1,101 @@
-use crate::{
-    error::{Error, Result},
-    RequestWrapper,
-};
+use crate::FeignContext;
+use crate::{error::Result, ClientConfig, ClientWrapper, RequestConfig, RequestWrapper};
 use async_trait::async_trait;
-use std::{borrow::Cow, collections::HashMap};
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+
+/// Define a trait for code generation.
+pub trait FeignClientBuilder: Sized {
+    type Target;
+
+    fn new() -> Self;
+
+    fn client(self, client: ClientWrapper) -> Self;
+
+    fn config(self, config: ClientConfig) -> Self;
+
+    fn context<C>(self, context: C) -> Self
+    where
+        C: FeignContext + 'static;
+
+    fn build(self) -> Result<Self::Target>;
+}
+
+/// A trait for HTTP clients.
+pub trait Client: Sized + Clone {
+    type Inner;
+
+    fn new() -> Result<Self>;
+
+    fn with_config(config: ClientConfig) -> Result<Self>;
+
+    fn with_client(client: Self::Inner) -> Result<Self>;
+
+    fn get_client(&self) -> &Self::Inner;
+}
+
+/// A trait of HTTP request.
+pub trait HttpRequest {
+    fn headers(self, headers: HashMap<&str, String>) -> Self;
+
+    fn query(self, query: Vec<(&str, String)>) -> Self;
+}
+
+/// A trait of HTTP response.
+#[async_trait]
+pub trait HttpResponse {
+    fn status(&self) -> http::StatusCode;
+
+    async fn none(self) -> Result<()>;
+
+    async fn text(self) -> Result<String>;
+
+    async fn vec(self) -> Result<Vec<u8>>;
+
+    #[cfg(feature = "json")]
+    async fn json<T>(mut self) -> Result<T>
+    where
+        T: serde::de::DeserializeOwned;
+
+}
 
 /// An HTTP client to create RequestBuilder.
 pub struct HttpClient;
 
 impl HttpClient {
-    pub fn builder<'a>() -> RequestBuilder<'a> {
-        RequestBuilder::new()
+    pub fn new() -> Result<ClientWrapper> {
+        ClientWrapper::with_config(ClientConfig {
+            connect_timeout: Some(10000),
+            timeout: Some(10000),
+        })
+    }
+
+    pub fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
+        ClientWrapper::with_config(config)
+    }
+
+    pub fn shared() -> &'static ClientWrapper {
+        static SHARED: Lazy<ClientWrapper> =
+            Lazy::new(|| HttpClient::new().expect("shared http client failed to initialize"));
+
+        &SHARED
     }
 }
 
 /// An HTTP requet builder to make requests.
 pub struct RequestBuilder<'a> {
+    client: ClientWrapper,
     url: &'a str,
     method: &'a str,
-    headers: Option<HashMap<Cow<'a, str>, String>>,
+    headers: Option<HashMap<&'a str, String>>,
     query: Option<Vec<(&'a str, String)>>,
-    config: Option<HttpConfig>,
+    config: Option<RequestConfig>,
 }
 
 impl<'a> RequestBuilder<'a> {
-    pub fn new() -> Self {
+    pub fn new(client: ClientWrapper) -> Self {
         Self {
+            client,
             url: "",
             method: "",
             headers: None,
@@ -43,12 +113,12 @@ impl<'a> RequestBuilder<'a> {
         self
     }
 
-    pub fn config(mut self, config: HttpConfig) -> Self {
+    pub fn config(mut self, config: RequestConfig) -> Self {
         self.config = Some(config);
         self
     }
 
-    pub fn headers(mut self, headers: HashMap<Cow<'a, str>, String>) -> Self {
+    pub fn headers(mut self, headers: HashMap<&'a str, String>) -> Self {
         self.headers = Some(headers);
         self
     }
@@ -60,8 +130,10 @@ impl<'a> RequestBuilder<'a> {
 
     pub fn build(self) -> Result<RequestWrapper> {
         let mut request = match self.config {
-            Some(config) => RequestWrapper::build_with_config(self.url, self.method, config)?,
-            None => RequestWrapper::build_default(self.url, self.method)?,
+            Some(config) => {
+                RequestWrapper::with_config(self.client, self.url, self.method, config)?
+            }
+            None => RequestWrapper::new(self.client, self.url, self.method)?,
         };
         if let Some(header_map) = self.headers {
             request = request.headers(header_map);
@@ -71,45 +143,4 @@ impl<'a> RequestBuilder<'a> {
         }
         Ok(request)
     }
-}
-
-/// Configuration of an HTTP request.
-pub struct HttpConfig {
-    pub connect_timeout: Option<u64>,
-    pub timeout: Option<u64>,
-}
-
-impl HttpConfig {
-    pub fn from_map(config_map: HashMap<&str, String>) -> Result<Self> {
-        let mut config = HttpConfig {
-            connect_timeout: None,
-            timeout: None,
-        };
-        if let Some(connect_timeout) = config_map.get("connect_timeout") {
-            config.connect_timeout = Some(connect_timeout.parse::<u64>().map_err(Error::config)?);
-        }
-        if let Some(timeout) = config_map.get("timeout") {
-            config.timeout = Some(timeout.parse::<u64>().map_err(Error::config)?);
-        }
-        Ok(config)
-    }
-}
-
-/// A trait of HTTP request.
-pub trait HttpRequest {
-    fn headers(self, headers: HashMap<Cow<str>, String>) -> Self;
-
-    fn query(self, query: Vec<(&str, String)>) -> Self;
-}
-
-/// A trait of HTTP response.
-#[async_trait]
-pub trait HttpResponse {
-    fn status(&self) -> http::StatusCode;
-
-    async fn none(self) -> Result<()>;
-
-    async fn text(self) -> Result<String>;
-
-    async fn vec(self) -> Result<Vec<u8>>;
 }

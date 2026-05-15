@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-use feignhttp::{HttpClient, HttpResponse};
+use feignhttp::{HttpClient, HttpResponse, RequestBuilder};
 
 use mockito::{mock, server_address};
 use serde::Deserialize;
@@ -12,7 +12,7 @@ async fn test_response() {
 
     let url = format!("http://{}", server_address());
     let method = "GET";
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -28,7 +28,7 @@ async fn test_get_text() {
 
     let url = format!("http://{}/text", server_address());
     let method = "GET";
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -55,7 +55,7 @@ async fn test_get_json() {
 
         let url = format!("http://{}/json", server_address());
         let method = "GET";
-        let request = HttpClient::builder()
+        let request = RequestBuilder::new(HttpClient::new().unwrap())
             .url(&url)
             .method(method)
             .build()
@@ -79,7 +79,7 @@ async fn test_get_vec() {
 
     let url = format!("http://{}/vec", server_address());
     let method = "GET";
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -97,7 +97,7 @@ async fn test_client_error() {
 
     let url = format!("http://{}", server_address());
     let method = "GET";
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -112,7 +112,7 @@ async fn test_server_error() {
 
     let url = format!("http://{}", server_address());
     let method = "GET";
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()

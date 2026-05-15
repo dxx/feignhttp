@@ -86,6 +86,7 @@ async fn test_send_text() {
     post_text("I' m text".to_string()).await.unwrap();
 }
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct User {
     id: i32,

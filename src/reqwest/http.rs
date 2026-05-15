@@ -1,20 +1,63 @@
 #[cfg(feature = "log")]
 use super::log::{print_request_log, print_response_log};
 use crate::{
+    config::{ClientConfig, RequestConfig},
     error::{Error, ErrorKind, Result},
-    http::{HttpConfig, HttpRequest, HttpResponse},
+    http::{Client as ClientTrait, HttpRequest, HttpResponse},
     map,
 };
 use async_trait::async_trait;
 use http::StatusCode;
 use reqwest::{Body, Client, Method, RequestBuilder, Response};
+use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
-use std::{borrow::Cow, collections::HashMap};
 use url::Url;
+
+#[derive(Clone)]
+pub struct ClientWrapper {
+    reqwest_client: Client,
+}
+
+impl ClientTrait for ClientWrapper {
+    type Inner = Client;
+
+    fn new() -> Result<ClientWrapper> {
+        let client = Client::new();
+        Ok(ClientWrapper {
+            reqwest_client: client,
+        })
+    }
+
+    fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
+        let mut client_builder = Client::builder();
+        if let Some(millisecond) = config.connect_timeout {
+            client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
+        }
+        if let Some(millisecond) = config.timeout {
+            client_builder = client_builder.timeout(Duration::from_millis(millisecond));
+        }
+        let client = client_builder.build().map_err(Error::build)?;
+        Ok(ClientWrapper {
+            reqwest_client: client,
+        })
+    }
+
+    fn with_client(client: Client) -> Result<ClientWrapper> {
+        Ok(ClientWrapper {
+            reqwest_client: client,
+        })
+    }
+
+    fn get_client(&self) -> &Client {
+        &self.reqwest_client
+    }
+}
 
 /// A wrapper of HTTP request.
 pub struct RequestWrapper {
+    #[allow(dead_code)]
+    client_wrapper: ClientWrapper,
     url: Url,
     headers: HashMap<String, String>,
     request: RequestBuilder,
@@ -26,7 +69,7 @@ pub struct ResponseWrapper {
 }
 
 impl HttpRequest for RequestWrapper {
-    fn headers(mut self, headers: HashMap<Cow<str>, String>) -> Self {
+    fn headers(mut self, headers: HashMap<&str, String>) -> Self {
         for (k, v) in headers {
             self.headers.insert(k.to_lowercase(), v);
         }
@@ -51,13 +94,15 @@ impl HttpRequest for RequestWrapper {
 }
 
 impl RequestWrapper {
-    pub fn build_default(url: &str, method: &str) -> Result<RequestWrapper> {
+    pub fn new(client_wrapper: ClientWrapper, url: &str, method: &str) -> Result<RequestWrapper> {
         let url = Url::from_str(url).map_err(Error::build)?;
-        let request = Client::new().request(
+        let request = client_wrapper.get_client().request(
             Method::from_str(method.to_uppercase().as_str()).map_err(Error::build)?,
             url.clone(),
         );
+
         Ok(RequestWrapper {
+            client_wrapper,
             url,
             headers: map!(
                 "user-agent".to_string() => "Feign HTTP".to_string()),
@@ -65,24 +110,22 @@ impl RequestWrapper {
         })
     }
 
-    pub fn build_with_config(
+    pub fn with_config(
+        client_wrapper: ClientWrapper,
         url: &str,
         method: &str,
-        config: HttpConfig,
+        config: RequestConfig,
     ) -> Result<RequestWrapper> {
-        let mut client = Client::builder();
-        if let Some(millisecond) = config.connect_timeout {
-            client = client.connect_timeout(Duration::from_millis(millisecond));
-        }
-        if let Some(millisecond) = config.timeout {
-            client = client.timeout(Duration::from_millis(millisecond));
-        }
         let url = Url::from_str(url).map_err(Error::build)?;
-        let request = client.build().map_err(Error::build)?.request(
+        let mut request = client_wrapper.get_client().request(
             Method::from_str(method.to_uppercase().as_str()).map_err(Error::build)?,
             url.clone(),
         );
+        if let Some(millisecond) = config.timeout {
+            request = request.timeout(Duration::from_millis(millisecond));
+        }
         Ok(RequestWrapper {
+            client_wrapper,
             url,
             headers: map!(
                 "user-agent".to_string() => "Feign HTTP".to_string()),
@@ -189,11 +232,9 @@ impl HttpResponse for ResponseWrapper {
         let by = self.response.bytes().await.map_err(Error::decode)?;
         Ok(by.to_vec())
     }
-}
 
-impl ResponseWrapper {
     #[cfg(feature = "json")]
-    pub async fn json<T>(self) -> Result<T>
+    async fn json<T>(self) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
     {

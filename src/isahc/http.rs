@@ -1,18 +1,64 @@
 #[cfg(feature = "log")]
 use super::log::{print_request_log, print_response_log};
 use crate::{
-    error::Error, error::ErrorKind, error::Result, http::HttpConfig, http::HttpRequest,
-    http::HttpResponse, map,
+    config::{ClientConfig, RequestConfig},
+    error::{Error, ErrorKind, Result},
+    http::{Client, HttpRequest, HttpResponse},
+    map,
 };
 use async_trait::async_trait;
 use http::{request::Builder, Request, Response, StatusCode};
-use isahc::{config::RedirectPolicy, prelude::*, AsyncBody};
+use isahc::{config::RedirectPolicy, prelude::*, AsyncBody, HttpClient};
 use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
 
+#[derive(Clone)]
+pub struct ClientWrapper {
+    isahc_client: HttpClient,
+}
+
+impl Client for ClientWrapper {
+    type Inner = HttpClient;
+
+    fn new() -> Result<ClientWrapper> {
+        let mut client_builder = HttpClient::builder();
+        client_builder = client_builder.redirect_policy(RedirectPolicy::Limit(10));
+        let client = client_builder.build().map_err(Error::build)?;
+        Ok(ClientWrapper {
+            isahc_client: client,
+        })
+    }
+
+    fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
+        let mut client_builder = HttpClient::builder();
+        if let Some(millisecond) = config.connect_timeout {
+            client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
+        }
+        if let Some(millisecond) = config.timeout {
+            client_builder = client_builder.timeout(Duration::from_millis(millisecond));
+        }
+        client_builder = client_builder.redirect_policy(RedirectPolicy::Limit(10));
+        let client = client_builder.build().map_err(Error::build)?;
+        Ok(ClientWrapper {
+            isahc_client: client,
+        })
+    }
+
+    fn with_client(client: HttpClient) -> Result<ClientWrapper> {
+        Ok(ClientWrapper {
+            isahc_client: client,
+        })
+    }
+
+    fn get_client(&self) -> &HttpClient {
+        &self.isahc_client
+    }
+}
+
 /// A wrapper of HTTP request.
 pub struct RequestWrapper {
+    client_wrapper: ClientWrapper,
     url: Url,
     headers: HashMap<String, String>,
     request: Builder,
@@ -24,7 +70,7 @@ pub struct ResponseWrapper {
 }
 
 impl HttpRequest for RequestWrapper {
-    fn headers(mut self, headers: HashMap<std::borrow::Cow<str>, String>) -> Self {
+    fn headers(mut self, headers: HashMap<&str, String>) -> Self {
         for (k, v) in headers {
             self.headers.insert(k.to_lowercase(), v);
         }
@@ -55,13 +101,13 @@ impl HttpRequest for RequestWrapper {
 }
 
 impl RequestWrapper {
-    pub fn build_default(url: &str, method: &str) -> Result<RequestWrapper> {
+    pub fn new(client_wrapper: ClientWrapper, url: &str, method: &str) -> Result<RequestWrapper> {
         let url = Url::parse(url).map_err(Error::build)?;
         let request = Request::builder()
             .uri(url.to_string())
-            .method(method.to_uppercase().as_str())
-            .redirect_policy(RedirectPolicy::Limit(10));
+            .method(method.to_uppercase().as_str());
         Ok(RequestWrapper {
+            client_wrapper,
             url,
             headers: map!(
                 "user-agent".to_string() => "Feign HTTP".to_string()),
@@ -69,24 +115,22 @@ impl RequestWrapper {
         })
     }
 
-    pub fn build_with_config(
+    pub fn with_config(
+        client_wrapper: ClientWrapper,
         url: &str,
         method: &str,
-        config: HttpConfig,
+        config: RequestConfig,
     ) -> Result<RequestWrapper> {
         let mut request = Request::builder();
-        if let Some(millisecond) = config.connect_timeout {
-            request = request.connect_timeout(Duration::from_millis(millisecond));
-        }
         if let Some(millisecond) = config.timeout {
             request = request.timeout(Duration::from_millis(millisecond));
         }
         let url = Url::parse(url).map_err(Error::build)?;
         request = request
             .uri(url.to_string())
-            .method(method.to_uppercase().as_str())
-            .redirect_policy(RedirectPolicy::Limit(10));
+            .method(method.to_uppercase().as_str());
         Ok(RequestWrapper {
+            client_wrapper,
             url,
             headers: map!(
                 "user-agent".to_string() => "Feign HTTP".to_string()),
@@ -111,6 +155,7 @@ impl RequestWrapper {
 
     async fn send_body(self, body: Option<Vec<u8>>) -> Result<ResponseWrapper> {
         let url = self.url.clone();
+        let client_wrapper = self.client_wrapper.clone();
         let mut async_body = AsyncBody::from(());
         if let Some(body) = body.clone() {
             async_body = AsyncBody::from(body);
@@ -124,7 +169,7 @@ impl RequestWrapper {
         #[cfg(feature = "log")]
         print_request_log(&request, body);
 
-        return match request.send_async().await {
+        return match client_wrapper.get_client().send_async(request).await {
             Ok(response) => {
                 #[cfg(feature = "log")]
                 print_response_log(&response);
@@ -196,14 +241,13 @@ impl HttpResponse for ResponseWrapper {
     async fn vec(mut self) -> Result<Vec<u8>> {
         self.response.bytes().await.map_err(Error::decode)
     }
-}
 
-impl ResponseWrapper {
     #[cfg(feature = "json")]
-    pub async fn json<T>(mut self) -> Result<T>
+    async fn json<T>(mut self) -> Result<T>
     where
-        T: serde::de::DeserializeOwned + Unpin,
+        T: serde::de::DeserializeOwned,
     {
-        self.response.json::<T>().await.map_err(Error::decode)
+        let bytes = self.response.bytes().await.map_err(Error::decode)?;
+        serde_json::from_slice(&bytes).map_err(Error::decode)
     }
 }

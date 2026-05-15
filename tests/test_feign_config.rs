@@ -1,6 +1,6 @@
 use feignhttp::get;
 
-#[get(url = "http://site_dne.com", connect_timeout = 3000)]
+#[get(url = "http://site_dne.com")]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 
 #[tokio::test]

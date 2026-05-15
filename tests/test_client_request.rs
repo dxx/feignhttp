@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use feignhttp::{map, HttpClient, HttpConfig};
+use feignhttp::{ClientConfig, ClientWrapper, HttpClient, RequestBuilder, RequestConfig, map};
 
 use mockito::{mock, server_address, Matcher};
 use serde::Serialize;
@@ -11,7 +11,7 @@ async fn test_request() {
 
     let url = format!("http://{}", server_address());
     let method = "GET";
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -35,7 +35,7 @@ async fn test_header() {
         "username".into() => "jack".to_string(),
         "pwd".into() => "xxx".to_string());
 
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .headers(header_map)
@@ -64,7 +64,7 @@ async fn test_query() {
     .cloned()
     .collect();
 
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .query(query_vec)
@@ -92,7 +92,7 @@ async fn test_send_form() {
     .cloned()
     .collect();
 
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -112,7 +112,7 @@ async fn test_send_text() {
 
     let text = r#"I' m text"#;
 
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -143,7 +143,7 @@ async fn test_send_json() {
             name: "jack".to_string(),
         };
 
-        let request = HttpClient::builder()
+        let request = RequestBuilder::new(HttpClient::new().unwrap())
             .url(&url)
             .method(method)
             .build()
@@ -164,7 +164,7 @@ async fn test_send_vec() {
 
     let vec = vec![97, 97, 97];
 
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .build()
@@ -174,17 +174,29 @@ async fn test_send_vec() {
 
 #[tokio::test]
 #[should_panic]
+async fn test_default_timeout() {
+    let url = "https://httpbin.org/delay/15".to_string();
+    let method = "GET";
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
+        .url(&url)
+        .method(method)
+        .build()
+        .unwrap();
+    request.send().await.unwrap();
+}
+
+#[tokio::test]
+#[should_panic]
 async fn test_connect_timeout() {
     let url = "http://site_dne.com";
     let method = "GET";
-    let config = HttpConfig {
+    let config = ClientConfig {
         connect_timeout: Some(3000), // 3000 millisecond.
         timeout: None,
     };
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::with_config(config).unwrap())
         .url(&url)
         .method(method)
-        .config(config)
         .build()
         .unwrap();
     request.send().await.unwrap();
@@ -195,14 +207,43 @@ async fn test_connect_timeout() {
 async fn test_timeout() {
     let url = "https://httpbin.org/delay/5".to_string();
     let method = "GET";
-    let config = HttpConfig {
-        connect_timeout: None,
+    let config = RequestConfig {
         timeout: Some(3000), // 3000 millisecond.
     };
-    let request = HttpClient::builder()
+    let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
         .method(method)
         .config(config)
+        .build()
+        .unwrap();
+    request.send().await.unwrap();
+}
+
+#[tokio::test]
+async fn test_custom_client() {
+    let _mock = mock("GET", "/").create();
+
+    let url = format!("http://{}", server_address());
+    let method = "GET";
+
+    use feignhttp::{Client, ClientWrapper};
+
+    let client_wrapper;
+
+    #[cfg(feature = "reqwest-client")]
+    {
+        let client = reqwest::Client::new();
+        client_wrapper = ClientWrapper::with_client(client).unwrap();
+    }
+    #[cfg(feature = "isahc-client")]
+    {
+        let client = isahc::HttpClient::new().unwrap();
+        client_wrapper = ClientWrapper::with_client(client).unwrap();
+    }
+    
+    let request = RequestBuilder::new(client_wrapper)
+        .url(&url)
+        .method(method)
         .build()
         .unwrap();
     request.send().await.unwrap();

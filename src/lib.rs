@@ -544,6 +544,8 @@
 //! * **json**: Enable json serialization and deserialization
 //! * **log**: Enable request and response logs
 
+mod config;
+mod context;
 mod error;
 mod http;
 mod macros;
@@ -564,14 +566,8 @@ pub mod ser;
 pub mod util;
 
 pub use feignhttp_codegen::*;
-use std::collections::HashMap;
 
 pub use crate::error::{Error, ErrorKind, Result};
+pub use crate::context::*;
+pub use crate::config::*;
 pub use crate::http::*;
-
-pub trait FeignClient {
-    fn param_map(&self) -> HashMap<&str, String>;
-    fn header_map(&self) -> HashMap<std::borrow::Cow<str>, String>;
-    fn path_map(&self) -> HashMap<&str, String>;
-    fn query_map(&self) -> Vec<(&str, String)>;
-}
