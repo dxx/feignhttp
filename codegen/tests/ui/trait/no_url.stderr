@@ -1,0 +1,7 @@
+error: metadata url not specified
+ --> tests/ui/trait/no_url.rs:7:1
+  |
+7 | #[feign(aaa = "http://xxx")]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `feign` (in Nightly builds, run with -Z macro-backtrace for more info)

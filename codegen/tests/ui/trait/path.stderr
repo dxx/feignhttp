@@ -1,0 +1,5 @@
+error: metadata path not specified or must be the first
+ --> tests/ui/trait/path.rs:9:11
+  |
+9 |     #[get(aaa = "/aaa")]
+  |           ^^^^^^^^^^^^

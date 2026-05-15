@@ -94,7 +94,9 @@ pub fn remove_url_attr(attr: &str) -> String {
     return exprs.join(",");
 }
 
+#[allow(dead_code)]
 struct Metas(Vec<Meta>);
+
 impl Parse for Metas {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let mut out = Vec::new();

@@ -1,0 +1,5 @@
+error: unknown request method marker: req
+ --> tests/ui/trait/method.rs:9:7
+  |
+9 |     #[req]
+  |       ^^^

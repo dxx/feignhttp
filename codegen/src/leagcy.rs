@@ -1,135 +1,63 @@
-use crate::enu::{ArgType, Method};
+use crate::enu::{ArgType};
+use crate::func::{FnArg, FnMetadata, client_fn_impl};
 use crate::util::{
-    parse_args_from_sig, parse_args_from_struct, parse_exprs, parse_return_type, parse_url_stream,
-    remove_url_attr,
+    parse_args_from_sig, parse_return_type,
 };
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use std::collections::HashMap;
+use syn::{DeriveInput, parse_macro_input};
 use std::str::FromStr;
-use syn::DataStruct;
 
 const CONFIG_KEYS: [&str; 1] = ["timeout"];
 
-pub struct FnMetadata {
-    // Url is a token stream, so it can be retrieved by a variable.
-    pub url: proc_macro2::TokenStream,
-    pub method: Method,
-    pub meta_map: HashMap<String, String>,
-}
+pub fn leagcy_feign_client_impl(item: TokenStream) -> TokenStream {
+    let derive = parse_macro_input!(item as DeriveInput);
 
-pub struct FnArg {
-    pub arg_type: ArgType,
-    pub name: String,
-    pub var: syn::Ident,
-    pub var_type: syn::Type,
-}
+    let gen = &derive.generics;
+    let ident = &derive.ident;
 
-pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenStream {
-    let url = match parse_url_stream(&attr) {
-        Ok(url) => url,
-        Err(err) => return err.into_compile_error().into(),
-    };
-
-    let meta_map = parse_exprs(&remove_url_attr(&attr.to_string()));
-
-    let stream = fn_impl(
-        FnMetadata {
-            url,
-            method,
-            meta_map,
+    match derive.data {
+        syn::Data::Struct(struc) => match client_fn_impl(struc) {
+            Ok(x) => quote! {
+                impl #gen ::feignhttp::FeignContext for #ident #gen {
+                    #x
+                }
+            }
+            .into(),
+            Err(e) => e.into_compile_error().into(),
         },
-        item,
-        true,
-    );
-    match stream {
-        Ok(stream) => stream.into(),
-        Err(err) => err.into_compile_error().into(),
+        _ => syn::Error::new_spanned(derive, "Expected a struct")
+            .into_compile_error()
+            .into(),
     }
 }
 
-pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::TokenStream> {
-    let args = parse_args_from_struct(&mut item_struct)?;
-
-    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |_fn_arg| true);
-
-    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
-
-    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg));
-
-    let (query_array_names, query_array_vars) =
-        find_type_name_vars(&args, ArgType::QUERY,|fn_arg| filter_query_array(fn_arg));
-
-    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
-
-    let tokens = quote!(
-        fn param_map(&self) -> ::std::collections::HashMap<&str, String> {
-            let mut out = ::std::collections::HashMap::new();
-            #(
-                out.insert(#param_names, format!("{}", self.#param_vars));
-            )*
-            out
-        }
-
-        fn header_map(&self) -> ::std::collections::HashMap<&str, String> {
-            let mut out = ::std::collections::HashMap::new();
-            #(
-                out.insert(#header_names, format!("{}", self.#header_vars));
-            )*
-            out
-        }
-
-        fn path_map(&self) -> ::std::collections::HashMap<&str, String> {
-            let mut out = ::std::collections::HashMap::new();
-            #(
-                out.insert(#path_names, format!("{}", self.#path_vars));
-            )*
-            out
-        }
-
-        fn query_map(&self) -> Vec<(&str, String)> {
-            let mut query_vec: Vec<(&str, String)> = Vec::new();
-            #(
-                query_vec.push((#query_names, format!("{}", self.#query_vars)));
-            )*
-
-            #(
-                let query_array_name = #query_array_names;
-                for query_array_var in self.#query_array_vars.iter() {
-                    query_vec.push((query_array_name, format!("{}", query_array_var)));
-                }
-            )*
-            query_vec
-        }
-    );
-
-    Ok(tokens)
-}
-
 /// Generate function code.
-pub fn fn_impl(
+#[deprecated(since = "0.6.0", note = "use `feign` on impl is deprecated, please use it on trait")]
+pub fn leagcy_fn_impl(
     metadata: FnMetadata,
     item_stream: TokenStream,
-    from_fn: bool,
+    empty_maps: bool,
 ) -> syn::Result<proc_macro2::TokenStream> {
     let url = metadata.url;
     let method = metadata.method.to_str();
     let meta_map = metadata.meta_map;
 
     let mut item_fn = syn::parse::<syn::ItemFn>(item_stream)?;
+
     let sig = &mut item_fn.sig;
 
     let mut config_keys = Vec::new();
     let mut config_values = Vec::new();
     for (k, v) in meta_map.iter() {
         let key = k.as_str();
-        if from_fn == true && key == "connect_timeout" {
+        if key == "connect_timeout" {
             return Err(syn::Error::new_spanned(
                 sig.fn_token,
-                "`connect_timeout` is not support, please use trait instead",
+                "`connect_timeout` is not support on method or impl, please use trait instead",
             ));
         }
-        if !CONFIG_KEYS.contains(&k.as_str()) {
+        if !CONFIG_KEYS.contains(&key) {
             continue;
         }
         config_keys.push(k);
@@ -140,6 +68,7 @@ pub fn fn_impl(
         Some(val) => parse_header_values(&val)?,
         None => (vec![], vec![]),
     };
+
 
     let asyncness = &sig.asyncness;
     if asyncness.is_none() {
@@ -152,21 +81,21 @@ pub fn fn_impl(
     let vis = &item_fn.vis;
     let args = parse_args_from_sig(sig)?;
 
-    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
+    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, filter_struct);
 
     let (_header_struct_names, header_struct_vars) =
-        find_type_name_vars(&args, ArgType::HEADER, |fn_arg| filter_struct(fn_arg));
+        find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
 
     let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
 
     let (query_names, query_vars) =
-        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg) && !filter_struct(fn_arg));
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg) && filter_struct(fn_arg));
 
     let (query_array_names, query_array_vars) =
-        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg));
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg));
 
     let (_query_struct_names, query_struct_vars) =
-        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_struct(fn_arg));
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_struct(fn_arg));
 
     let (form_names, form_vars) = find_type_name_vars(&args, ArgType::FORM, |_fn_arg| true);
 
@@ -234,22 +163,19 @@ pub fn fn_impl(
     let return_fn = get_return_fn(return_type);
 
     #[rustfmt::skip]
-    let param_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.param_map() ) };
+    let param_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.param_map() ) };
     #[rustfmt::skip]
-    let header_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.header_map() ) };
+    let header_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.header_map() ) };
     #[rustfmt::skip]
-    let path_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.path_map() ) };
+    let path_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.path_map() ) };
     #[rustfmt::skip]
-    let query_map = if from_fn { quote! ( Vec::new() ) } else { quote! ( self.query_map() ) };
-
-    let client = if from_fn { quote! { HttpClient::shared() } } else { quote! { self.client } };
+    let query_map = if empty_maps { quote! ( Vec::new() ) } else { quote! ( self.query_map() ) };
 
     let stream = quote! {
         #vis #sig {
             use feignhttp::FeignContext as _;
             use std::collections::HashMap;
             use feignhttp::{HttpClient, RequestConfig, RequestBuilder, HttpResponse, ser, util};
-            //use std::borrow::Cow;
 
             let mut param_map: HashMap<&str, String> = #param_map;
             #(
@@ -276,8 +202,8 @@ pub fn fn_impl(
 
             #(
                 let map = ser::to_map(& #header_struct_vars)?;
-                for (key, value) in map.iter() {
-                    header_map.insert(key.as_str(), value.to_string());
+                for (key, value) in map {
+                    header_map.insert(key.as_str(), value);
                 }
             )*
 
@@ -308,8 +234,9 @@ pub fn fn_impl(
             let url = util::replace(&format!("{}", #url), &path_map);
 
             let config = RequestConfig::from_map(config_map)?;
-
-            let request = RequestBuilder::new(#client.clone())
+            
+            let client = HttpClient::shared();
+            let request = RequestBuilder::new(client.clone())
                 .url(&url)
                 .method(#method)
                 .config(config)
@@ -365,7 +292,7 @@ fn find_arg_types(args: &Vec<FnArg>, arg_type: ArgType) -> Vec<syn::Type> {
 
 fn filter_query_array(arg: &FnArg) -> bool {
     let ty = arg.var_type.to_token_stream().to_string();
-    is_sequences(&ty.replace(" ", ""))
+    !is_sequences(&ty.replace(" ", ""))
 }
 
 fn filter_struct(arg: &FnArg) -> bool {
@@ -373,13 +300,13 @@ fn filter_struct(arg: &FnArg) -> bool {
     match var_type {
         syn::Type::Path(t) => {
             let ty = t.to_token_stream().to_string();
-            is_support_struct(&ty.replace(" ", ""))
+            !is_support_struct(&ty.replace(" ", ""))
         }
         syn::Type::Reference(t) => {
             let ty = t.to_token_stream().to_string();
-            is_support_struct(&ty.replace(" ", ""))
+            !is_support_struct(&ty.replace(" ", ""))
         }
-        _ => false,
+        _ => true,
     }
 }
 

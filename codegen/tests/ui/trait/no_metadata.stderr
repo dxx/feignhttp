@@ -1,0 +1,7 @@
+error: no metadata assign
+ --> tests/ui/trait/no_metadata.rs:7:1
+  |
+7 | #[feign]
+  | ^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `feign` (in Nightly builds, run with -Z macro-backtrace for more info)

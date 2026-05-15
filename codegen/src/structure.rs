@@ -1,10 +1,9 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
-use crate::util::{
-    get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr,
-};
+use crate::leagcy::leagcy_fn_impl;
+use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr};
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use std::collections::HashMap;
 use syn::DeriveInput;
 use syn::{parse_macro_input, ItemImpl};
@@ -16,24 +15,139 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     let meta_map = parse_exprs(&remove_url_attr(&attr.to_string()));
-    let item_impl = parse_macro_input!(item as ItemImpl);
-    let impl_signature = impl_signature(&item_impl);
+    let item_parse = parse_macro_input!(item as syn::Item);
 
-    let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
-        Ok(streams) => streams,
-        Err(err) => return err.into_compile_error().into(),
-    };
+    match item_parse {
+        syn::Item::Trait(item_trait) => {
+            let trait_ident = &item_trait.ident;
+            let builder_ident = format_ident!("{}Builder", trait_ident);
 
-    let stream = quote! {
-        #impl_signature {
-          #(#fn_streams)*
+            let trait_fn_streams =
+                match fn_to_streams_for_trait(url.clone(), &item_trait.items, meta_map.clone()) {
+                    Ok(streams) => streams,
+                    Err(err) => return err.into_compile_error().into(),
+                };
+
+            quote! {
+                pub struct #trait_ident {
+                    client: ::feignhttp::ClientWrapper,
+                    context: Option<Box<dyn ::feignhttp::FeignContext>>,
+                }
+
+                pub struct #builder_ident {
+                    client: Option<::feignhttp::ClientWrapper>,
+                    config: Option<::feignhttp::ClientConfig>,
+                    context: Option<Box<dyn ::feignhttp::FeignContext>>,
+                }
+
+                impl ::feignhttp::FeignClientBuilder for #builder_ident {
+                    type Target = #trait_ident;
+
+                    fn new() -> Self {
+                        Self {
+                            client: None,
+                            config: None,
+                            context: None,
+                        }
+                    }
+
+                    fn client(mut self, client: ::feignhttp::ClientWrapper) -> Self {
+                        self.client = Some(client);
+                        self
+                    }
+
+                    fn config(mut self, config: ::feignhttp::ClientConfig) -> Self {
+                        self.config = Some(config);
+                        self
+                    }
+
+                    fn context<C>(mut self, context: C) -> Self
+                    where
+                        C: ::feignhttp::FeignContext + 'static,
+                    {
+                        self.context = Some(Box::new(context));
+                        self
+                    }
+
+                    fn build(self) -> ::feignhttp::Result<Self::Target> {
+                        let client = match self.client {
+                            Some(client) => client,
+                            None => match self.config {
+                                Some(config) => ::feignhttp::HttpClient::with_config(config)?,
+                                None => ::feignhttp::HttpClient::new()?,
+                            },
+                        };
+                        Ok(#trait_ident {
+                            client,
+                            context: self.context,
+                        })
+                    }
+                }
+
+                impl #trait_ident {
+                    pub fn builder() -> #builder_ident {
+                        #builder_ident::new()
+                    }
+
+                    #(#trait_fn_streams)*
+                }
+
+                impl ::feignhttp::FeignContext for #trait_ident {
+
+                    fn param_map(&self) -> std::collections::HashMap<&str, String> {
+                        match &self.context {
+                            Some(f) => (**f).param_map(),
+                            None => std::collections::HashMap::new()
+                        }
+                    }
+
+                    fn header_map(&self) -> std::collections::HashMap<&str, String> {
+                        match &self.context {
+                            Some(f) => (**f).header_map(),
+                            None => std::collections::HashMap::new()
+                        }
+                    }
+
+                    fn path_map(&self) -> std::collections::HashMap<&str, String> {
+                        match &self.context {
+                            Some(f) => (**f).path_map(),
+                            None => std::collections::HashMap::new()
+                        }
+                    }
+
+                    fn query_map(&self) -> Vec<(&str, String)> {
+                        match &self.context {
+                            Some(f) => (**f).query_map(),
+                            None => Vec::new()
+                        }
+                    }
+                }
+            }
+            .into()
         }
-    };
+        syn::Item::Impl(item_impl) => {
+            let impl_signature = impl_signature(&item_impl);
 
-    stream.into()
+            let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
+                Ok(streams) => streams,
+                Err(err) => return err.into_compile_error().into(),
+            };
+
+            let stream = quote! {
+                #impl_signature {
+                #(#fn_streams)*
+                }
+            };
+
+            stream.into()
+        }
+        _ => syn::Error::new_spanned(item_parse, "Expected a trait or impl")
+            .into_compile_error()
+            .into(),
+    }
 }
 
-pub fn feign_client_impl(item: TokenStream) -> TokenStream {
+pub fn feign_context_impl(item: TokenStream) -> TokenStream {
     let derive = parse_macro_input!(item as DeriveInput);
 
     let gen = &derive.generics;
@@ -42,7 +156,7 @@ pub fn feign_client_impl(item: TokenStream) -> TokenStream {
     match derive.data {
         syn::Data::Struct(struc) => match client_fn_impl(struc) {
             Ok(x) => quote! {
-                impl #gen ::feignhttp::FeignClient for #ident #gen {
+                impl #gen ::feignhttp::FeignContext for #ident #gen {
                     #x
                 }
             }
@@ -64,8 +178,8 @@ fn impl_signature(item_impl: &ItemImpl) -> proc_macro2::TokenStream {
             let t1 = &trait_.1;
             let t2 = &trait_.2;
             Some(quote! { #t0 #t1 #t2 })
-        },
-        None => None
+        }
+        None => None,
     };
     let self_ty = &item_impl.self_ty;
 
@@ -103,7 +217,8 @@ fn fn_to_streams(
                     meta_map.insert(k, v);
                 }
 
-                let fn_stream = fn_impl(
+                #[allow(deprecated)]
+                let fn_stream = leagcy_fn_impl(
                     FnMetadata {
                         url,
                         method,
@@ -176,4 +291,80 @@ fn parse_fn_metas(attr: &syn::Attribute) -> HashMap<String, String> {
         }
     }
     attr_map
+}
+
+fn fn_to_streams_for_trait(
+    url: proc_macro2::TokenStream,
+    items: &[syn::TraitItem],
+    meta_map: HashMap<String, String>,
+) -> syn::Result<Vec<proc_macro2::TokenStream>> {
+    let base_url = url;
+    let base_meta = meta_map;
+    let mut trait_fn_streams = Vec::new();
+
+    for item in items.iter() {
+        if let syn::TraitItem::Method(trait_method) = item {
+            if let Some(attr) = trait_method.attrs.last() {
+                let mut url = base_url.clone();
+                let mut meta_map = base_meta.clone();
+
+                let method_ident =
+                    Method::from_str(&attr.path.segments.last().unwrap().ident.to_string());
+                let method = match method_ident {
+                    Ok(method) => method,
+                    Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
+                };
+
+                let fn_path = parse_fn_path(attr)?;
+                if !fn_path.is_empty() {
+                    url = quote!(#url + #fn_path);
+                }
+
+                let map = parse_fn_metas(attr);
+                for (k, v) in map {
+                    meta_map.insert(k, v);
+                }
+
+                let item_fn = trait_method_to_item_fn(trait_method);
+                let fn_stream = fn_impl(
+                    FnMetadata {
+                        url,
+                        method,
+                        meta_map,
+                    },
+                    item_fn.into_token_stream().into(),
+                    false,
+                )?;
+                trait_fn_streams.push(fn_stream);
+            }
+        }
+    }
+
+    Ok(trait_fn_streams)
+}
+
+fn trait_method_to_item_fn(trait_method: &syn::TraitItemMethod) -> syn::ItemFn {
+    let sig = &trait_method.sig;
+
+    syn::ItemFn {
+        attrs: trait_method.attrs.clone(),
+        vis: syn::Visibility::Inherited,
+        sig: syn::Signature {
+            constness: None,
+            asyncness: sig.asyncness,
+            unsafety: None,
+            abi: None,
+            fn_token: sig.fn_token,
+            ident: sig.ident.clone(),
+            generics: sig.generics.clone(),
+            paren_token: sig.paren_token,
+            inputs: sig.inputs.clone(),
+            output: sig.output.clone(),
+            variadic: None,
+        },
+        block: Box::new(syn::Block {
+            stmts: vec![],
+            brace_token: syn::token::Brace::default(),
+        }),
+    }
 }

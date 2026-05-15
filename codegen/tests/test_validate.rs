@@ -24,3 +24,13 @@ fn test_struct() {
     t.compile_fail("tests/ui/struct/method.rs");
     t.compile_fail("tests/ui/struct/path.rs");
 }
+
+#[test]
+fn test_trait() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/ui/trait/no_metadata.rs");
+    t.compile_fail("tests/ui/trait/no_url.rs");
+    t.compile_fail("tests/ui/trait/no_url2.rs");
+    t.compile_fail("tests/ui/trait/method.rs");
+    t.compile_fail("tests/ui/trait/path.rs");
+}
