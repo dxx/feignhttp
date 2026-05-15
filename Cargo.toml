@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["dxx <dx1898@foxmail.com>"]
 edition = "2021"
 description = "Declarative HTTP client for rust"
@@ -31,13 +31,14 @@ isahc-client = ["isahc"]
 json = ["serde_json", "reqwest/json", "isahc/json"]
 
 [dependencies]
-feignhttp-codegen = { version = "0.5", path = "codegen" }
+feignhttp-codegen = { version = "0.6", path = "codegen" }
 
 async-trait = "0.1"
 http = "0.2"
 url = "2.2"
 serde = "1.0"
 serde_urlencoded = "0.7"
+once_cell = "1.21.1"
 
 # Optional deps...
 
@@ -56,6 +57,5 @@ log = { version = "0.4", optional = true }
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
-once_cell = "1.12.0"
 mockito = "0.23.3"
 env_logger = "0.8.3"
