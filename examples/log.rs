@@ -4,6 +4,7 @@ use feignhttp::post;
 
 use serde::Serialize;
 
+#[allow(dead_code)]
 #[derive(Serialize)]
 struct Data {
     id: i32,

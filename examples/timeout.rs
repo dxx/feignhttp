@@ -1,17 +1,19 @@
 use feignhttp::{feign, get, Feign};
 
-#[get(url = "http://site_dne.com", connect_timeout = 3000)]
+/// The default connect_timeout is 10000 milliseconds.
+#[get(url = "http://site_dne.com")]
 async fn connect_timeout() -> feignhttp::Result<String> {}
 
+/// The default timeout is 10000 milliseconds.
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
 #[derive(Feign)]
 struct Http;
 
-#[feign(url = "http://site_dne.com", connect_timeout = 3000)]
+#[feign(url = "http://site_dne.com")]
 impl Http {
-    #[get("", connect_timeout = 5000)] // 5000 will override 3000.
+    #[get("")] // The default connect_timeout is 10000 milliseconds..
     async fn get(&self) -> feignhttp::Result<String> {}
 }
 

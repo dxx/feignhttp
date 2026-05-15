@@ -13,6 +13,7 @@ async fn timeout_error() -> feignhttp::Result<()> {}
 async fn status_error() -> feignhttp::Result<()> {}
 
 
+#[allow(dead_code)]
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 struct User {
     id: i32,
