@@ -23,7 +23,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 members = ["codegen"]
 
 [features]
-default = ["reqwest-client"]
+default = ["reqwest-middleware-client"]
 
 reqwest-client = ["dep:reqwest"]
 reqwest-middleware-client = ["dep:reqwest-middleware", "dep:reqwest"]
@@ -32,7 +32,7 @@ isahc-client = ["dep:isahc"]
 json = ["dep:serde_json"]
 
 reqwest-json = ["reqwest-client", "json", "reqwest/json"]
-reqwest-middleware-json = ["reqwest-middleware-client", "json", "reqwest/json"]
+reqwest-middleware-json = ["reqwest-middleware-client", "json", "reqwest-middleware/json", "reqwest/json"]
 isahc-json = ["isahc-client", "json", "isahc/json"]
 
 log = ["dep:log"]
