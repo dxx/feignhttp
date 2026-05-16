@@ -1,4 +1,4 @@
-use feignhttp::get;
+use feignhttp::{FeignClientBuilder, feign, get};
 
 #[get(url = "http://site_dne.com")]
 async fn connect_timeout() -> feignhttp::Result<String> {}
@@ -30,4 +30,17 @@ async fn test_dynamic_timeout1() {
 #[tokio::test]
 async fn test_dynamic_timeout2() {
     dynamic_timeout(5000).await.unwrap();
+}
+
+#[feign(url = "https://httpbin.org", timeout = 3000)]
+pub trait RequestConfig {
+    #[get("/delay/5")]
+    async fn timeout(&self) -> feignhttp::Result<String>;
+}
+
+#[tokio::test]
+#[should_panic]
+async fn test_timeout_from_trait() {
+    let request = RequestConfigBuilder::new().build().unwrap();
+    request.timeout().await.unwrap();
 }

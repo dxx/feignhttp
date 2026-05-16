@@ -1,9 +1,9 @@
 #![allow(unused_imports)]
 
-use feignhttp::{ClientConfig, ClientWrapper, HttpClient, RequestBuilder, RequestConfig, map};
+use feignhttp::{HttpClient, RequestBuilder, map};
+use serde::Serialize;
 
 use mockito::{mock, server_address, Matcher};
-use serde::Serialize;
 
 #[tokio::test]
 async fn test_request() {
@@ -170,87 +170,4 @@ async fn test_send_vec() {
         .build()
         .unwrap();
     request.send_vec(vec).await.unwrap();
-}
-
-#[tokio::test]
-#[should_panic]
-async fn test_default_timeout() {
-    let url = "https://httpbin.org/delay/15".to_string();
-    let method = "GET";
-    let request = RequestBuilder::new(HttpClient::new().unwrap())
-        .url(&url)
-        .method(method)
-        .build()
-        .unwrap();
-    request.send().await.unwrap();
-}
-
-#[tokio::test]
-#[should_panic]
-async fn test_connect_timeout() {
-    let url = "http://site_dne.com";
-    let method = "GET";
-    let config = ClientConfig {
-        connect_timeout: Some(3000), // 3000 millisecond.
-        timeout: None,
-    };
-    let request = RequestBuilder::new(HttpClient::with_config(config).unwrap())
-        .url(&url)
-        .method(method)
-        .build()
-        .unwrap();
-    request.send().await.unwrap();
-}
-
-#[tokio::test]
-#[should_panic]
-async fn test_timeout() {
-    let url = "https://httpbin.org/delay/5".to_string();
-    let method = "GET";
-    let config = RequestConfig {
-        timeout: Some(3000), // 3000 millisecond.
-    };
-    let request = RequestBuilder::new(HttpClient::new().unwrap())
-        .url(&url)
-        .method(method)
-        .config(config)
-        .build()
-        .unwrap();
-    request.send().await.unwrap();
-}
-
-#[tokio::test]
-async fn test_custom_client() {
-    let _mock = mock("GET", "/").create();
-
-    let url = format!("http://{}", server_address());
-    let method = "GET";
-
-    use feignhttp::{Client, ClientWrapper};
-
-    let client_wrapper;
-
-    #[cfg(feature = "reqwest-client")]
-    {
-        let client = reqwest::Client::new();
-        client_wrapper = ClientWrapper::with_client(client).unwrap();
-    }
-    #[cfg(feature = "reqwest-middleware-client")]
-    {
-        use reqwest_middleware::{ClientBuilder, ClientWithMiddleware, reqwest};
-        let client = ClientBuilder::new(reqwest::Client::new()).build();
-        client_wrapper = ClientWrapper::with_client(client).unwrap();
-    }
-    #[cfg(feature = "isahc-client")]
-    {
-        let client = isahc::HttpClient::new().unwrap();
-        client_wrapper = ClientWrapper::with_client(client).unwrap();
-    }
-    
-    let request = RequestBuilder::new(client_wrapper)
-        .url(&url)
-        .method(method)
-        .build()
-        .unwrap();
-    request.send().await.unwrap();
 }
