@@ -1,8 +1,11 @@
-use http::StatusCode;
 use std::error::Error as StdError;
 use std::fmt;
 use std::result::Result as StdResult;
 use url::Url;
+#[cfg(feature = "isahc-client")]
+use http_0_2::StatusCode;
+#[cfg(not(feature = "isahc-client"))]
+use http_1_x::StatusCode;
 
 /// A `Result` alias.
 pub type Result<T> = StdResult<T, Error>;
@@ -139,10 +142,8 @@ impl fmt::Display for Error {
                     "HTTP status server error"
                 };
                 write!(f, "{} ({})", prefix, status_code)?;
-            },
-            ErrorKind::Serialize(ref msg) => {
-                f.write_str(msg)?
             }
+            ErrorKind::Serialize(ref msg) => f.write_str(msg)?,
         }
 
         if let Some(ref url) = self.inner.url {

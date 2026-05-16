@@ -1,6 +1,6 @@
-use serde::{ser, Serialize};
 use crate::error::Error;
 use crate::ErrorKind;
+use serde::{ser, Serialize};
 
 pub struct StringSerializer {}
 
@@ -75,7 +75,10 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
     }
 
     fn serialize_bytes(self, _v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support bytes")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support bytes")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
@@ -114,7 +117,10 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
     where
         T: ?Sized + Serialize,
     {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support newtype_struct")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support newtype_struct")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_newtype_variant<T>(
@@ -127,15 +133,24 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
     where
         T: ?Sized + Serialize,
     {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support newtype_variant")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support newtype_variant")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support sequences")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support sequences")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support tuple")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support tuple")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_tuple_struct(
@@ -143,7 +158,10 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
         _name: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleStruct, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support tuple_struct")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support tuple_struct")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_tuple_variant(
@@ -153,11 +171,17 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support tuple_variant")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support tuple_variant")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support map")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support map")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_struct(
@@ -165,7 +189,10 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
         _name: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support struct")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support struct")),
+            None::<Error>,
+        ))
     }
 
     fn serialize_struct_variant(
@@ -175,6 +202,9 @@ impl<'a> ser::Serializer for &'a mut StringSerializer {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
-        Err(Error::new(ErrorKind::Serialize(String::from("not support struct_variant")), None::<Error>))
+        Err(Error::new(
+            ErrorKind::Serialize(String::from("not support struct_variant")),
+            None::<Error>,
+        ))
     }
 }

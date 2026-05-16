@@ -1,6 +1,10 @@
 use crate::FeignContext;
 use crate::{error::Result, ClientConfig, ClientWrapper, RequestConfig, RequestWrapper};
 use async_trait::async_trait;
+#[cfg(feature = "isahc-client")]
+use http_0_2::StatusCode;
+#[cfg(not(feature = "isahc-client"))]
+use http_1_x::StatusCode;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
@@ -44,7 +48,7 @@ pub trait HttpRequest {
 /// A trait of HTTP response.
 #[async_trait]
 pub trait HttpResponse {
-    fn status(&self) -> http::StatusCode;
+    fn status(&self) -> StatusCode;
 
     async fn none(self) -> Result<()>;
 
@@ -56,7 +60,6 @@ pub trait HttpResponse {
     async fn json<T>(mut self) -> Result<T>
     where
         T: serde::de::DeserializeOwned;
-
 }
 
 /// An HTTP client to create RequestBuilder.

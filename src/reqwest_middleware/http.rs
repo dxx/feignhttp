@@ -8,7 +8,9 @@ use crate::{
 };
 use async_trait::async_trait;
 use http_1_x::StatusCode;
-use reqwest::{Body, Client, Method, RequestBuilder, Response};
+use reqwest_middleware::reqwest::{Body, Method, Response};
+use reqwest_middleware::RequestBuilder;
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
@@ -16,21 +18,22 @@ use url::Url;
 
 #[derive(Clone)]
 pub struct ClientWrapper {
-    reqwest_client: Client,
+    reqwest_middleware_client: ClientWithMiddleware,
 }
 
 impl ClientTrait for ClientWrapper {
-    type Inner = Client;
+    type Inner = ClientWithMiddleware;
 
     fn new() -> Result<ClientWrapper> {
-        let client = Client::new();
+        let client = reqwest_middleware::reqwest::Client::new();
+        let middleware_client = ClientBuilder::new(client).build();
         Ok(ClientWrapper {
-            reqwest_client: client,
+            reqwest_middleware_client: middleware_client,
         })
     }
 
     fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
-        let mut client_builder = Client::builder();
+        let mut client_builder = reqwest_middleware::reqwest::Client::builder();
         if let Some(millisecond) = config.connect_timeout {
             client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
         }
@@ -38,23 +41,23 @@ impl ClientTrait for ClientWrapper {
             client_builder = client_builder.timeout(Duration::from_millis(millisecond));
         }
         let client = client_builder.build().map_err(Error::build)?;
+        let middleware_client = ClientBuilder::new(client).build();
         Ok(ClientWrapper {
-            reqwest_client: client,
+            reqwest_middleware_client: middleware_client,
         })
     }
 
-    fn with_client(client: Client) -> Result<ClientWrapper> {
+    fn with_client(client: ClientWithMiddleware) -> Result<ClientWrapper> {
         Ok(ClientWrapper {
-            reqwest_client: client,
+            reqwest_middleware_client: client,
         })
     }
 
-    fn get_client(&self) -> &Client {
-        &self.reqwest_client
+    fn get_client(&self) -> &ClientWithMiddleware {
+        &self.reqwest_middleware_client
     }
 }
 
-/// A wrapper of HTTP request.
 pub struct RequestWrapper {
     client_wrapper: ClientWrapper,
     url: Url,
@@ -63,7 +66,6 @@ pub struct RequestWrapper {
     method: Method,
 }
 
-/// A wrapper of HTTP response.
 pub struct ResponseWrapper {
     response: Response,
 }
@@ -146,7 +148,7 @@ impl RequestWrapper {
     }
 
     fn set_header_if_absent(&mut self, k: &str, v: String) {
-        if let None = self.headers.get(k) {
+        if self.headers.get(k).is_none() {
             self.headers.insert(k.to_string(), v);
         }
     }
@@ -169,7 +171,6 @@ impl RequestWrapper {
 
                 let status = response.status();
 
-                // Client or server error.
                 if status.is_client_error() || status.is_server_error() {
                     return Err(Error::status(url, status));
                 }

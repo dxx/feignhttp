@@ -1,6 +1,4 @@
-use crate::{
-    error::{Error, Result},
-};
+use crate::error::{Error, Result};
 use std::collections::HashMap;
 
 /// Configuration of an HTTP client.

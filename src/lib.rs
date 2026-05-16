@@ -358,7 +358,7 @@
 //!     #[param]
 //!     accept: &'static str,
 //! }
-//! 
+//!
 //! #[feign(
 //!     url = "https://api.github.com/repos/{owner}/{repo}",
 //!     headers = "Accept: {accept}"
@@ -367,10 +367,10 @@
 //!     // The method must have a self argument.
 //!     #[get]
 //!     async fn home(&self) -> feignhttp::Result<String> {}
-//! 
+//!
 //!     #[get(path = "", headers = "Accept: application/json")]
 //!     async fn repository(&self) -> feignhttp::Result<String> {}
-//! 
+//!
 //!     #[get("/commits")]
 //!     async fn commits(
 //!         &self,
@@ -378,7 +378,7 @@
 //!         #[query] page: u32,
 //!         #[query] per_page: u32,
 //!     ) -> feignhttp::Result<String> {}
-//! 
+//!
 //! }
 //! ```
 //!
@@ -555,6 +555,11 @@ mod reqwest;
 #[cfg(feature = "reqwest-client")]
 pub use crate::reqwest::*;
 
+#[cfg(feature = "reqwest-middleware-client")]
+mod reqwest_middleware;
+#[cfg(feature = "reqwest-middleware-client")]
+pub use crate::reqwest_middleware::*;
+
 #[cfg(feature = "isahc-client")]
 mod isahc;
 #[cfg(feature = "isahc-client")]
@@ -567,7 +572,7 @@ pub mod util;
 
 pub use feignhttp_codegen::*;
 
-pub use crate::error::{Error, ErrorKind, Result};
-pub use crate::context::*;
 pub use crate::config::*;
+pub use crate::context::*;
+pub use crate::error::{Error, ErrorKind, Result};
 pub use crate::http::*;

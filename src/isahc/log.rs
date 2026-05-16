@@ -1,4 +1,4 @@
-use http::{Request, Response};
+use http_0_2::{Request, Response};
 use isahc::AsyncBody;
 use log::debug;
 

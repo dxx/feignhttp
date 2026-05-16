@@ -7,7 +7,7 @@ use crate::{
     map,
 };
 use async_trait::async_trait;
-use http::{request::Builder, Request, Response, StatusCode};
+use http_0_2::{request::Builder, Request, Response, StatusCode};
 use isahc::{config::RedirectPolicy, prelude::*, AsyncBody, HttpClient};
 use std::collections::HashMap;
 use std::time::Duration;

@@ -235,6 +235,12 @@ async fn test_custom_client() {
         let client = reqwest::Client::new();
         client_wrapper = ClientWrapper::with_client(client).unwrap();
     }
+    #[cfg(feature = "reqwest-middleware-client")]
+    {
+        use reqwest_middleware::{ClientBuilder, ClientWithMiddleware, reqwest};
+        let client = ClientBuilder::new(reqwest::Client::new()).build();
+        client_wrapper = ClientWrapper::with_client(client).unwrap();
+    }
     #[cfg(feature = "isahc-client")]
     {
         let client = isahc::HttpClient::new().unwrap();
