@@ -7,8 +7,8 @@ use crate::{
     map,
 };
 use async_trait::async_trait;
-use http_0_2::{request::Builder, Request, Response, StatusCode};
-use isahc::{config::RedirectPolicy, prelude::*, AsyncBody, HttpClient};
+use http_0_2::{Request, Response, StatusCode, request::Builder};
+use isahc::{AsyncBody, HttpClient, config::RedirectPolicy, prelude::*};
 use std::collections::HashMap;
 use std::time::Duration;
 use url::Url;
@@ -22,21 +22,29 @@ impl Client for ClientWrapper {
     type Inner = HttpClient;
 
     fn new() -> Result<ClientWrapper> {
-        let mut client_builder = HttpClient::builder();
-        client_builder = client_builder.redirect_policy(RedirectPolicy::Limit(10));
-        let client = client_builder.build().map_err(Error::build)?;
+        let client = HttpClient::builder()
+            .default_header("user-agent", "Feign HTTP")
+            .redirect_policy(RedirectPolicy::Limit(10))
+            .build()
+            .map_err(Error::build)?;
         Ok(ClientWrapper {
             isahc_client: client,
         })
     }
 
     fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
-        let mut client_builder = HttpClient::builder();
+        let mut client_builder = HttpClient::builder().default_header("user-agent", "Feign HTTP");
         if let Some(millisecond) = config.connect_timeout {
             client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
         }
         if let Some(millisecond) = config.timeout {
             client_builder = client_builder.timeout(Duration::from_millis(millisecond));
+        }
+        if let Some(_millisecond) = config.read_timeout {
+            #[cfg(feature = "log")]
+            log::warn!("isahc client does not support read_timeout, ignoring...");
+            #[cfg(not(feature = "log"))]
+            eprintln!("warning: isahc client does not support read_timeout, ignoring...");
         }
         client_builder = client_builder.redirect_policy(RedirectPolicy::Limit(10));
         let client = client_builder.build().map_err(Error::build)?;
@@ -109,8 +117,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!(
-                "user-agent".to_string() => "Feign HTTP".to_string()),
+            headers: map!(),
             request,
         })
     }
@@ -132,8 +139,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!(
-                "user-agent".to_string() => "Feign HTTP".to_string()),
+            headers: map!(),
             request,
         })
     }

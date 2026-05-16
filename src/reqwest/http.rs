@@ -23,19 +23,25 @@ impl ClientTrait for ClientWrapper {
     type Inner = Client;
 
     fn new() -> Result<ClientWrapper> {
-        let client = Client::new();
+        let client = Client::builder()
+            .user_agent("Feign HTTP")
+            .build()
+            .map_err(Error::build)?;
         Ok(ClientWrapper {
             reqwest_client: client,
         })
     }
 
     fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
-        let mut client_builder = Client::builder();
+        let mut client_builder = Client::builder().user_agent("Feign HTTP");
         if let Some(millisecond) = config.connect_timeout {
             client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
         }
         if let Some(millisecond) = config.timeout {
             client_builder = client_builder.timeout(Duration::from_millis(millisecond));
+        }
+        if let Some(millisecond) = config.read_timeout {
+            client_builder = client_builder.read_timeout(Duration::from_millis(millisecond));
         }
         let client = client_builder.build().map_err(Error::build)?;
         Ok(ClientWrapper {
@@ -107,7 +113,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
+            headers: map!(),
             request,
             method,
         })
@@ -130,7 +136,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
+            headers: map!(),
             request,
             method,
         })

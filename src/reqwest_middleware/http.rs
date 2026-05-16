@@ -8,8 +8,8 @@ use crate::{
 };
 use async_trait::async_trait;
 use http_1_x::StatusCode;
-use reqwest_middleware::reqwest::{Body, Method, Response};
 use reqwest_middleware::RequestBuilder;
+use reqwest_middleware::reqwest::{Body, Method, Response};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -25,7 +25,10 @@ impl ClientTrait for ClientWrapper {
     type Inner = ClientWithMiddleware;
 
     fn new() -> Result<ClientWrapper> {
-        let client = reqwest_middleware::reqwest::Client::new();
+        let client = reqwest_middleware::reqwest::Client::builder()
+            .user_agent("Feign HTTP")
+            .build()
+            .map_err(Error::build)?;
         let middleware_client = ClientBuilder::new(client).build();
         Ok(ClientWrapper {
             reqwest_middleware_client: middleware_client,
@@ -33,12 +36,16 @@ impl ClientTrait for ClientWrapper {
     }
 
     fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
-        let mut client_builder = reqwest_middleware::reqwest::Client::builder();
+        let mut client_builder =
+            reqwest_middleware::reqwest::Client::builder().user_agent("Feign HTTP");
         if let Some(millisecond) = config.connect_timeout {
             client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
         }
         if let Some(millisecond) = config.timeout {
             client_builder = client_builder.timeout(Duration::from_millis(millisecond));
+        }
+        if let Some(millisecond) = config.read_timeout {
+            client_builder = client_builder.read_timeout(Duration::from_millis(millisecond));
         }
         let client = client_builder.build().map_err(Error::build)?;
         let middleware_client = ClientBuilder::new(client).build();
@@ -109,7 +116,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
+            headers: map!(),
             request,
             method,
         })
@@ -132,7 +139,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
+            headers: map!(),
             request,
             method,
         })

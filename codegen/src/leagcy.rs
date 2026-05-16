@@ -51,10 +51,10 @@ pub fn leagcy_fn_impl(
     let mut config_values = Vec::new();
     for (k, v) in meta_map.iter() {
         let key = k.as_str();
-        if key == "connect_timeout" {
+        if key == "connect_timeout" || key == "read_timeout" {
             return Err(syn::Error::new_spanned(
                 sig.fn_token,
-                "`connect_timeout` is not support on method or impl, please use trait instead",
+                format!("`{}` is not support on method or impl, please use trait instead", key),
             ));
         }
         if !CONFIG_KEYS.contains(&key) {

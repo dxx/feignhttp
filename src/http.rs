@@ -70,6 +70,10 @@ impl HttpClient {
         ClientWrapper::with_config(ClientConfig {
             connect_timeout: Some(10000),
             timeout: Some(10000),
+            #[cfg(not(feature = "isahc-client"))]
+            read_timeout: Some(10000),
+            #[cfg(feature = "isahc-client")]
+            read_timeout: None,
         })
     }
 

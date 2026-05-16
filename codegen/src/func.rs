@@ -123,10 +123,10 @@ pub fn fn_impl(
     let mut config_values = Vec::new();
     for (k, v) in meta_map.iter() {
         let key = k.as_str();
-        if from_fn == true && key == "connect_timeout" {
+        if from_fn == true && (key == "connect_timeout" || key == "read_timeout") {
             return Err(syn::Error::new_spanned(
                 sig.fn_token,
-                "`connect_timeout` is not support, please use trait instead",
+                format!("`{}` is not support, please use custom config instead", key),
             ));
         }
         if !CONFIG_KEYS.contains(&k.as_str()) {
