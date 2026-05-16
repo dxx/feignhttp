@@ -81,12 +81,14 @@ pub fn leagcy_fn_impl(
     let vis = &item_fn.vis;
     let args = parse_args_from_sig(sig)?;
 
+    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
+
+    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
+
     let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, filter_struct);
 
     let (_header_struct_names, header_struct_vars) =
         find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
-
-    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
 
     let (query_names, query_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg) && filter_struct(fn_arg));
@@ -98,8 +100,6 @@ pub fn leagcy_fn_impl(
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_struct(fn_arg));
 
     let (form_names, form_vars) = find_type_name_vars(&args, ArgType::FORM, |_fn_arg| true);
-
-    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
     let body_vars = find_type_vars(&args, ArgType::BODY, |_fn_arg| true);
 
@@ -165,11 +165,11 @@ pub fn leagcy_fn_impl(
     #[rustfmt::skip]
     let param_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.param_map() ) };
     #[rustfmt::skip]
-    let header_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.header_map() ) };
-    #[rustfmt::skip]
     let path_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.path_map() ) };
     #[rustfmt::skip]
-    let query_map = if empty_maps { quote! ( Vec::new() ) } else { quote! ( self.query_map() ) };
+    let header_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.header_map()? ) };
+    #[rustfmt::skip]
+    let query_map = if empty_maps { quote! ( Vec::new() ) } else { quote! ( self.query_map()? ) };
 
     let stream = quote! {
         #vis #sig {

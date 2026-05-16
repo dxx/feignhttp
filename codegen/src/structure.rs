@@ -101,13 +101,6 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
                         }
                     }
 
-                    fn header_map(&self) -> std::collections::HashMap<&str, String> {
-                        match &self.context {
-                            Some(f) => (**f).header_map(),
-                            None => std::collections::HashMap::new()
-                        }
-                    }
-
                     fn path_map(&self) -> std::collections::HashMap<&str, String> {
                         match &self.context {
                             Some(f) => (**f).path_map(),
@@ -115,10 +108,17 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
                         }
                     }
 
-                    fn query_map(&self) -> Vec<(&str, String)> {
+                    fn header_map(&self) -> ::feignhttp::Result<std::collections::HashMap<&str, String>> {
+                        match &self.context {
+                            Some(f) => (**f).header_map(),
+                            None => Ok(std::collections::HashMap::new())
+                        }
+                    }
+
+                    fn query_map(&self) -> ::feignhttp::Result<Vec<(&str, String)>> {
                         match &self.context {
                             Some(f) => (**f).query_map(),
-                            None => Vec::new()
+                            None => Ok(Vec::new())
                         }
                     }
                 }

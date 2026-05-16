@@ -4,7 +4,7 @@ use crate::util::{
     remove_url_attr,
 };
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::collections::HashMap;
 use std::str::FromStr;
 use syn::DataStruct;
@@ -51,30 +51,31 @@ pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenS
 pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::TokenStream> {
     let args = parse_args_from_struct(&mut item_struct)?;
 
-    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |_fn_arg| true);
+    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
     let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
 
-    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg));
+    let (header_names, header_vars) =
+        find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
+
+    let (_header_struct_names, header_struct_vars) =
+        find_type_name_vars(&args, ArgType::HEADER, |fn_arg| filter_struct(fn_arg));
+
+    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, |fn_arg| {
+        !filter_query_array(fn_arg) && !filter_struct(fn_arg)
+    });
 
     let (query_array_names, query_array_vars) =
-        find_type_name_vars(&args, ArgType::QUERY,|fn_arg| filter_query_array(fn_arg));
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg));
 
-    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
+    let (_query_struct_names, query_struct_vars) =
+        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_struct(fn_arg));
 
     let tokens = quote!(
         fn param_map(&self) -> ::std::collections::HashMap<&str, String> {
             let mut out = ::std::collections::HashMap::new();
             #(
                 out.insert(#param_names, format!("{}", self.#param_vars));
-            )*
-            out
-        }
-
-        fn header_map(&self) -> ::std::collections::HashMap<&str, String> {
-            let mut out = ::std::collections::HashMap::new();
-            #(
-                out.insert(#header_names, format!("{}", self.#header_vars));
             )*
             out
         }
@@ -87,7 +88,27 @@ pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::T
             out
         }
 
-        fn query_map(&self) -> Vec<(&str, String)> {
+        fn header_map(&self) -> ::feignhttp::Result<::std::collections::HashMap<&str, String>> {
+            use ::feignhttp::ser;
+
+            let mut out = ::std::collections::HashMap::new();
+            #(
+                out.insert(#header_names, format!("{}", self.#header_vars));
+            )*
+
+            #(
+                let map = ser::to_map(& self.#header_struct_vars)?;
+                for (key, value) in map {
+                    out.insert(&*Box::leak(key.into_boxed_str()), value.to_string());
+                }
+            )*
+
+            Ok(out)
+        }
+
+        fn query_map(&self) -> ::feignhttp::Result<Vec<(&str, String)>> {
+            use ::feignhttp::ser;
+
             let mut query_vec: Vec<(&str, String)> = Vec::new();
             #(
                 query_vec.push((#query_names, format!("{}", self.#query_vars)));
@@ -99,7 +120,14 @@ pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::T
                     query_vec.push((query_array_name, format!("{}", query_array_var)));
                 }
             )*
-            query_vec
+
+            #(
+                let map = ser::to_map(& self.#query_struct_vars)?;
+                for (key, value) in map {
+                    query_vec.push((&*Box::leak(key.into_boxed_str()), value));
+                }
+            )*
+            Ok(query_vec)
         }
     );
 
@@ -152,15 +180,19 @@ pub fn fn_impl(
     let vis = &item_fn.vis;
     let args = parse_args_from_sig(sig)?;
 
-    let (header_names, header_vars) = find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
+    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
+
+    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
+
+    let (header_names, header_vars) =
+        find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
 
     let (_header_struct_names, header_struct_vars) =
         find_type_name_vars(&args, ArgType::HEADER, |fn_arg| filter_struct(fn_arg));
 
-    let (path_names, path_vars) = find_type_name_vars(&args, ArgType::PATH, |_fn_arg| true);
-
-    let (query_names, query_vars) =
-        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg) && !filter_struct(fn_arg));
+    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, |fn_arg| {
+        !filter_query_array(fn_arg) && !filter_struct(fn_arg)
+    });
 
     let (query_array_names, query_array_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg));
@@ -169,8 +201,6 @@ pub fn fn_impl(
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_struct(fn_arg));
 
     let (form_names, form_vars) = find_type_name_vars(&args, ArgType::FORM, |_fn_arg| true);
-
-    let (param_names, param_vars) = find_type_name_vars(&args, ArgType::PARAM, |_fn_arg| true);
 
     let body_vars = find_type_vars(&args, ArgType::BODY, |_fn_arg| true);
 
@@ -236,20 +266,23 @@ pub fn fn_impl(
     #[rustfmt::skip]
     let param_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.param_map() ) };
     #[rustfmt::skip]
-    let header_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.header_map() ) };
-    #[rustfmt::skip]
     let path_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.path_map() ) };
     #[rustfmt::skip]
-    let query_map = if from_fn { quote! ( Vec::new() ) } else { quote! ( self.query_map() ) };
+    let header_map = if from_fn { quote! ( HashMap::new() ) } else { quote! ( self.header_map()? ) };
+    #[rustfmt::skip]
+    let query_map = if from_fn { quote! ( Vec::new() ) } else { quote! ( self.query_map()? ) };
 
-    let client = if from_fn { quote! { HttpClient::shared() } } else { quote! { self.client } };
+    let client = if from_fn {
+        quote! { HttpClient::shared() }
+    } else {
+        quote! { self.client }
+    };
 
     let stream = quote! {
         #vis #sig {
             use feignhttp::FeignContext as _;
             use std::collections::HashMap;
             use feignhttp::{HttpClient, RequestConfig, RequestBuilder, HttpResponse, ser, util};
-            //use std::borrow::Cow;
 
             let mut param_map: HashMap<&str, String> = #param_map;
             #(
