@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 // Deserialize: Specifies deserialization.
 #[derive(Debug, Deserialize)]
 struct IssueItem {
-    pub id: u32,
+    pub id: u64,
     pub number: u32,
     pub title: String,
     pub url: String,
