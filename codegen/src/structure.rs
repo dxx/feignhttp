@@ -167,13 +167,13 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 pub fn feign_context_impl(item: TokenStream) -> TokenStream {
     let derive = parse_macro_input!(item as DeriveInput);
 
-    let gen = &derive.generics;
+    let context_gen = &derive.generics;
     let ident = &derive.ident;
 
     match derive.data {
         syn::Data::Struct(struc) => match client_fn_impl(struc) {
             Ok(x) => quote! {
-                impl #gen ::feignhttp::FeignContext for #ident #gen {
+                impl #context_gen ::feignhttp::FeignContext for #ident #context_gen {
                     #x
                 }
             }

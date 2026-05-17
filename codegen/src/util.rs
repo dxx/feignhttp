@@ -1,10 +1,10 @@
 use crate::enu::ArgType;
 use crate::func::FnArg;
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::collections::HashMap;
 use std::str::FromStr;
-use syn::{parse::Parse, Attribute, Field, Lit, PatType, Token, Type};
+use syn::{Attribute, Field, Lit, PatType, Token, Type, parse::Parse};
 
 /// Parse url and return url token stream.
 /// A URL can be an expression.
@@ -269,7 +269,7 @@ fn parse_args<'a>(
             });
         }
 
-        if let (Some(ref arg_type), false) = (&default_arg_type, found_one) {
+        if let (Some(arg_type), false) = (&default_arg_type, found_one) {
             req_args.push(FnArg {
                 arg_type: arg_type.clone(),
                 name,

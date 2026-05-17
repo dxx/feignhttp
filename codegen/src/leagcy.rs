@@ -11,13 +11,13 @@ const CONFIG_KEYS: [&str; 1] = ["timeout"];
 pub fn leagcy_feign_client_impl(item: TokenStream) -> TokenStream {
     let derive = parse_macro_input!(item as DeriveInput);
 
-    let gen = &derive.generics;
+    let context_gen = &derive.generics;
     let ident = &derive.ident;
 
     match derive.data {
         syn::Data::Struct(struc) => match client_fn_impl(struc) {
             Ok(x) => quote! {
-                impl #gen ::feignhttp::FeignContext for #ident #gen {
+                impl #context_gen ::feignhttp::FeignContext for #ident #context_gen {
                     #x
                 }
             }
