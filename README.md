@@ -17,16 +17,7 @@ FeignHTTP is a declarative HTTP client. Based on rust macros.
 
 ## Usage
 
-FeignHTTP mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://github.com/async-rs/async-std) or [tokio](https://github.com/tokio-rs/tokio).
-
-async-std:
-
-```toml
-[dependencies]
-async-std = { version = "1", features = ["attributes", "tokio1"] }
-```
-
-The feature `tokio1` is need when use reqwest as the HTTP backend.
+FeignHTTP mark macros on asynchronous functions, you need a runtime for support async/await. You can use [tokio](https://github.com/tokio-rs/tokio).
 
 tokio:
 
@@ -38,7 +29,7 @@ tokio = { version = "1", features = ["full"] }
 Add `feignhttp` in your `Cargo.toml` and use default feature:
 
 ```toml
-feignhttp = { version = "0.5" }
+feignhttp = { version = "0.6.0-rc" }
 ```
 
 Then add the following code:

@@ -7,9 +7,9 @@
 //! * Easy to use
 //! * Asynchronous request
 //! * Supports form, plain text and JSON
-//! * Configurable timeout settings
+//! * Configurable settings
 //! * Friendly error handling
-//! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest) or [isahc](https://docs.rs/isahc))
+//! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest), [reqwest-middleware](https://docs.rs/reqwest-middleware) or [isahc](https://docs.rs/isahc))
 //!
 //! ## Table of contents
 //!
@@ -21,25 +21,18 @@
 //! * <a href="#headers">Headers</a>
 //! * <a href="#form">Form</a>
 //! * <a href="#json">JSON</a>
-//! * <a href="#using-structure">Using Structure</a>
-//! * <a href="#timeout-configuration">Timeout Configuration</a>
+//! * <a href="#using-triat">Using Trait</a>
+//! * <a href="#timeout">Timeout</a>
 //! * <a href="#params">Params</a>
+//! * <a href="#configuration">Configuration</a>
+//! * <a href="#customize-client">Customize Client</a>
 //! * <a href="#error-handling">Error Handling</a>
-//! * <a href="#logs">Logs</a>
+//! * <a href="#debug-logs">Debug Logs</a>
 //! * <a href="#optional-features">Optional Features</a>
 //!
 //! ## Usage
 //!
-//! FeignHTTP mark macros on asynchronous functions, you need a runtime for support async/await. You can use [async-std](https://docs.rs/async-std) or [tokio](https://docs.rs/tokio).
-//!
-//! async-std:
-//!
-//! ```toml
-//! [dependencies]
-//! async-std = { version = "1", features = ["attributes", "tokio1"] }
-//! ```
-//!
-//! The feature `tokio1` is need when use reqwest as the HTTP backend.
+//! FeignHTTP mark macros on asynchronous functions, you need a runtime for support async/await. You can use [tokio](https://docs.rs/tokio).
 //!
 //! tokio:
 //!
@@ -51,7 +44,7 @@
 //! Add `feignhttp` in your `Cargo.toml` and use default feature:
 //!
 //! ```toml
-//! feignhttp = { version = "0.5" }
+//! feignhttp = { version = "0.6.0-rc" }
 //! ```
 //!
 //! Then add the following code:
@@ -77,7 +70,7 @@
 //! Using non-default HTTP backend:
 //!
 //! ```toml
-//! feignhttp = { version = "0.5", default-features = false, features = ["isahc-client"] }
+//! feignhttp = { version = "0.6.0-rc", default-features = false, features = ["isahc-client"] }
 //! ```
 //!
 //! The `default-features = false` option disable default reqwest.
@@ -247,7 +240,7 @@
 //! }
 //! ```
 //!
-//! Before send request, a header `content-type: application/x-www-form-urlencoded` will be added automatically.
+//! Before sending a request, a header `content-type: application/x-www-form-urlencoded` will be added automatically.
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/form.rs) for more examples.
 //!
 //! ## JSON
@@ -260,7 +253,7 @@
 //!
 //! You also need enable `json` feature:
 //! ```toml
-//! feignhttp = { version = "<version>", features = ["json"] }
+//! feignhttp = { version = "<version>", features = ["reqwest-json"] }
 //! ```
 //!
 //! Here is an example of getting json:
@@ -340,15 +333,15 @@
 //! Before send request, a header `content-type: application/json` will be added automatically.
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/json.rs) for a complete example.
 //!
-//! ## Using Structure
+//! ## Using Trait
 //!
-//! Structure is a good way to manage requests. Define a structure and then define a large number of request methods：
+//! Trait is a good way to manage requests. Define a Trait and then define a large number of request methods：
 //!
 //! ```rust, no_run
-//! use feignhttp::{feign, Feign};
+//! use feignhttp::{Context, FeignClientBuilder, feign};
 //!
-//! #[derive(Feign)]
-//! struct Github {
+//! #[derive(Context)]
+//! struct GithubContext {
 //!     // `url_path` and `param` are used to set the shared data.
 //!     // The other two for share data are `header` and `query`.
 //!     #[url_path("owner")]
@@ -363,13 +356,13 @@
 //!     url = "https://api.github.com/repos/{owner}/{repo}",
 //!     headers = "Accept: {accept}"
 //! )]
-//! impl Github {
+//! pub trait Github {
 //!     // The method must have a self argument.
 //!     #[get]
-//!     async fn home(&self) -> feignhttp::Result<String> {}
+//!     async fn home(&self) -> feignhttp::Result<String>;
 //!
 //!     #[get(path = "", headers = "Accept: application/json")]
-//!     async fn repository(&self) -> feignhttp::Result<String> {}
+//!     async fn repository(&self) -> feignhttp::Result<String>;
 //!
 //!     #[get("/commits")]
 //!     async fn commits(
@@ -377,27 +370,34 @@
 //!         #[header] accept: &str,
 //!         #[query] page: u32,
 //!         #[query] per_page: u32,
-//!     ) -> feignhttp::Result<String> {}
+//!     ) -> feignhttp::Result<String>;
 //!
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let context = GithubContext {
+//!         user: "dxx",
+//!         repo: "feignhttp",
+//!         accept: "*/*",
+//!     };
+//!
+//!     let github = Github::builder().context(context).build()?;
+//!
+//!     let r = github.home().await?;
+//!     println!("github result: {}\n", r);
+//!
+//!     Ok(())
 //! }
 //! ```
 //!
-//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/struct.rs) for a complete example.
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/trait.rs) for a complete example.
 //!
-//! ## Timeout Configuration
+//! ## Timeout
 //!
-//! If you need to configure the timeout, use `connect_timeout` and `timeout` to specify connect timeout and read timeout.
+//! If you need to configure the timeout, use `timeout` to specify total timeout.
 //!
-//! Connect timeout:
-//!
-//! ```rust, no_run
-//! use feignhttp::get;
-//!
-//! #[get(url = "http://site_dne.com", connect_timeout = 3000)]
-//! async fn connect_timeout() -> feignhttp::Result<String> {}
-//! ```
-//!
-//! Read timeout:
+//! Total timeout:
 //!
 //! ```rust, no_run
 //! use feignhttp::get;
@@ -405,6 +405,8 @@
 //! #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
+//!
+//! More configuration please use `ClientConfig` configuration.
 //!
 //! ## Params
 //!
@@ -439,6 +441,75 @@
 //! ```
 //!
 //! **Note**: `param` can't replace placeholder in url or path.
+//!
+//! ## Configuration
+//!
+//! You can use `ClientConfig` to configure timeout settings for trait-based clients:
+//!
+//! ```rust, no_run
+//! use feignhttp::{ClientConfig, FeignClientBuilder, feign};
+//!
+//! #[feign(url = "https://api.github.com")]
+//! pub trait GitHub {
+//!     #[get("/repos/{owner}/{repo}")]
+//!     async fn repository(
+//!         &self,
+//!         #[path] owner: &str,
+//!         #[path] repo: &str,
+//!     ) -> feignhttp::Result<String>;
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let config = ClientConfig {
+//!         connect_timeout: Some(5000), // 5 seconds
+//!         timeout: Some(10000),        // 10 seconds
+//!         ..Default::default()
+//!     };
+//!
+//!     let github = GitHub::builder().config(config).build()?;
+//!
+//!     let r = github.repository("dxx", "feignhttp").await?;
+//!     println!("repository: {}\n", r);
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/config.rs) for a complete example.
+//!
+//! ## Customize Client
+//!
+//! You can customize the HTTP client by using `ClientWrapper::with_client`. This allows you to configure
+//! the client with custom settings before building the feign client:
+//!
+//! ```rust, no_run
+//! use feignhttp::{ClientWrapper, Client, FeignClientBuilder, feign};
+//!
+//! #[feign(url = "https://api.github.com")]
+//! pub trait GitHub {
+//!     #[get("/users/{user}")]
+//!     async fn user(&self, #[path] user: &str) -> feignhttp::Result<String>;
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Build a custom reqwest client with default headers
+//!     let client = reqwest::Client::builder()
+//!         .user_agent("Feign HTTP")
+//!         .build()?;
+//!
+//!     let client_wrapper = ClientWrapper::with_client(client)?;
+//!     let github = GitHubBuilder::build_with_client(client_wrapper)?;
+//!
+//!     let r = github.user("dxx").await?;
+//!     println!("{}", r);
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/custom_client.rs) for more examples.
 //!
 //! ## Error Handling
 //!
@@ -491,7 +562,7 @@
 //! ```
 //! When parsing the configuration, an error is thrown if the value is incorrect. `timeout` is an integer type, when parse `abc` to integer will throw an error.
 //!
-//! HTTP status is an importmant info about response. The status code can tell whether the client or server is abnormal.
+//! HTTP status is an important indicator of response health. The status code can tell whether the client or server encountered an error.
 //! The following is an example of handling through HTTP status:
 //!
 //! ```rust, no_run
@@ -527,7 +598,7 @@
 //! The status is [StatusCode](https://docs.rs/http/latest/http/status/struct.StatusCode.html) struct that supply by [http](https://crates.io/crates/http) crate.
 //! For more examples, see [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/error.rs).
 //!
-//! ## Logs
+//! ## Debug Logs
 //!
 //! FeignHTTP logs some useful information about requests and responses with the [log](https://crates.io/crates/log) crate.
 //! To enable the log information, specify `log` feature in `Cargo.toml`, then set the log level to debug.
@@ -540,7 +611,11 @@
 //!
 //! The following features are available. The default features are `reqwest-client`
 //! * **reqwest-client** *(default)*: Use `reqwest` as the HTTP backend
+//! * **reqwest-middleware-client**: Use `reqwest-middleware` as the HTTP backend
 //! * **isahc-client**: Use `isahc` as the HTTP backend
+//! * **reqwest-json**: Enable json for `reqwest` backend
+//! * **reqwest-middleware-json**: Enable json for `reqwest-middleware` backend
+//! * **isahc-json**: Enable json for `isahc` backend
 //! * **json**: Enable json serialization and deserialization
 //! * **log**: Enable request and response logs
 
