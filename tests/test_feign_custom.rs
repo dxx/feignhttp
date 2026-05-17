@@ -29,7 +29,7 @@ async fn test_feign() {
         client_wrapper = ClientWrapper::with_client(client).unwrap();
     }
 
-    let feign = Feign::builder().client(client_wrapper).build().unwrap();
+    let feign = FeignBuilder::build_with_client(client_wrapper).unwrap();
     let r = feign.user("dxx").await.unwrap();
 
     println!("{}", r);

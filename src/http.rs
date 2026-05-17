@@ -14,8 +14,6 @@ pub trait FeignClientBuilder: Sized {
 
     fn new() -> Self;
 
-    fn client(self, client: ClientWrapper) -> Self;
-
     fn config(self, config: ClientConfig) -> Self;
 
     fn context<C>(self, context: C) -> Self

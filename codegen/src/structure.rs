@@ -29,13 +29,7 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
                 };
 
             quote! {
-                pub struct #trait_ident {
-                    client: ::feignhttp::ClientWrapper,
-                    context: Option<Box<dyn ::feignhttp::FeignContext>>,
-                }
-
                 pub struct #builder_ident {
-                    client: Option<::feignhttp::ClientWrapper>,
                     config: Option<::feignhttp::ClientConfig>,
                     context: Option<Box<dyn ::feignhttp::FeignContext>>,
                 }
@@ -45,15 +39,9 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     fn new() -> Self {
                         Self {
-                            client: None,
                             config: None,
                             context: None,
                         }
-                    }
-
-                    fn client(mut self, client: ::feignhttp::ClientWrapper) -> Self {
-                        self.client = Some(client);
-                        self
                     }
 
                     fn config(mut self, config: ::feignhttp::ClientConfig) -> Self {
@@ -70,18 +58,44 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
 
                     fn build(self) -> ::feignhttp::Result<Self::Target> {
-                        let client = match self.client {
-                            Some(client) => client,
-                            None => match self.config {
-                                Some(config) => ::feignhttp::HttpClient::with_config(config)?,
-                                None => ::feignhttp::HttpClient::new()?,
-                            },
+                        let client = match self.config {
+                            Some(config) => ::feignhttp::HttpClient::with_config(config)?,
+                            None => ::feignhttp::HttpClient::new()?,
                         };
                         Ok(#trait_ident {
                             client,
                             context: self.context,
                         })
                     }
+                }
+
+                impl #builder_ident {
+                    pub fn build_with_client(
+                        client: ::feignhttp::ClientWrapper
+                    ) -> ::feignhttp::Result<#trait_ident> {
+                        Ok(#trait_ident {
+                            client,
+                            context: None,
+                        })
+                    }
+
+                    pub fn build_with_context<C>(
+                        client: ::feignhttp::ClientWrapper,
+                        context: C
+                    ) -> ::feignhttp::Result<#trait_ident>
+                    where
+                        C: ::feignhttp::FeignContext + 'static,
+                    {
+                        Ok(#trait_ident {
+                            client,
+                            context: Some(Box::new(context)),
+                        })
+                    }
+                }
+
+                pub struct #trait_ident {
+                    client: ::feignhttp::ClientWrapper,
+                    context: Option<Box<dyn ::feignhttp::FeignContext>>,
                 }
 
                 impl #trait_ident {
