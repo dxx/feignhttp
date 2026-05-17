@@ -4,7 +4,7 @@ use std::collections::HashMap;
 #[test]
 fn test_one_path() {
     let mut map = HashMap::new();
-    map.insert("name", "abc".to_string());
+    map.insert("name".to_string(), "abc".to_string());
 
     assert_eq!(replace("/find/{name}", &map), "/find/abc");
 }
@@ -12,8 +12,8 @@ fn test_one_path() {
 #[test]
 fn test_multipart_path() {
     let mut map = HashMap::new();
-    map.insert("id", "1".to_string());
-    map.insert("name", "abc".to_string());
+    map.insert("id".to_string(), "1".to_string());
+    map.insert("name".to_string(), "abc".to_string());
 
     assert_eq!(replace("/{name}/{id}", &map), "/abc/1");
 }
@@ -21,7 +21,7 @@ fn test_multipart_path() {
 #[test]
 fn test_config() {
     let mut map = HashMap::new();
-    map.insert("timeout", "3000".to_string());
+    map.insert("timeout".to_string(), "3000".to_string());
 
     assert_eq!(replace("{timeout}", &map), "3000");
 }

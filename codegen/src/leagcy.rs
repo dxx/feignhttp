@@ -1,12 +1,10 @@
-use crate::enu::{ArgType};
-use crate::func::{FnArg, FnMetadata, client_fn_impl};
-use crate::util::{
-    parse_args_from_sig, parse_return_type,
-};
+use crate::enu::ArgType;
+use crate::func::{client_fn_impl, FnArg, FnMetadata};
+use crate::util::{parse_args_from_sig, parse_return_type};
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{DeriveInput, parse_macro_input};
 use std::str::FromStr;
+use syn::{parse_macro_input, DeriveInput};
 
 const CONFIG_KEYS: [&str; 1] = ["timeout"];
 
@@ -33,7 +31,10 @@ pub fn leagcy_feign_client_impl(item: TokenStream) -> TokenStream {
 }
 
 /// Generate function code.
-#[deprecated(since = "0.6.0", note = "use `feign` on impl is deprecated, please use it on trait")]
+#[deprecated(
+    since = "0.6.0",
+    note = "use `feign` on impl is deprecated, please use it on trait"
+)]
 pub fn leagcy_fn_impl(
     metadata: FnMetadata,
     item_stream: TokenStream,
@@ -54,7 +55,10 @@ pub fn leagcy_fn_impl(
         if key == "connect_timeout" || key == "read_timeout" {
             return Err(syn::Error::new_spanned(
                 sig.fn_token,
-                format!("`{}` is not support on method or impl, please use trait instead", key),
+                format!(
+                    "`{}` is not support on method or impl, please use trait instead",
+                    key
+                ),
             ));
         }
         if !CONFIG_KEYS.contains(&key) {
@@ -68,7 +72,6 @@ pub fn leagcy_fn_impl(
         Some(val) => parse_header_values(&val)?,
         None => (vec![], vec![]),
     };
-
 
     let asyncness = &sig.asyncness;
     if asyncness.is_none() {
@@ -90,8 +93,9 @@ pub fn leagcy_fn_impl(
     let (_header_struct_names, header_struct_vars) =
         find_type_name_vars(&args, ArgType::HEADER, |fn_arg| !filter_struct(fn_arg));
 
-    let (query_names, query_vars) =
-        find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg) && filter_struct(fn_arg));
+    let (query_names, query_vars) = find_type_name_vars(&args, ArgType::QUERY, |fn_arg| {
+        filter_query_array(fn_arg) && filter_struct(fn_arg)
+    });
 
     let (query_array_names, query_array_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| !filter_query_array(fn_arg));
@@ -177,71 +181,74 @@ pub fn leagcy_fn_impl(
             use std::collections::HashMap;
             use feignhttp::{HttpClient, RequestConfig, RequestBuilder, HttpResponse, ser, util};
 
-            let mut param_map: HashMap<&str, String> = #param_map;
+            let mut param_map: HashMap<String, String> = #param_map;
             #(
-                param_map.insert(#param_names, format!("{}", #param_vars));
+                param_map.insert(#param_names.to_string(), #param_vars.to_string());
             )*
 
-            let mut config_map: HashMap<&str, String> = HashMap::new();
+            let mut config_map: HashMap<String, String> = HashMap::new();
             #(
-                config_map.insert(#config_keys, util::replace(#config_values, &param_map));
+                config_map.insert(#config_keys.to_string(), util::replace(#config_values, &param_map));
             )*
 
-            let mut header_map: HashMap<&str, String> = #header_map;
+            let mut header_map: HashMap<String, String> = #header_map;
 
             // Header in `#[get("", headers="")]` added before header in `#[header]` added.
             #(
                 let key = util::replace(#header_keys, &param_map);
                 let value = util::replace(#header_values, &param_map);
-                header_map.insert(key.as_str(), value);
+                header_map.insert(key, value);
             )*
 
             #(
-                header_map.insert(#header_names, #header_vars.to_string());
+                header_map.insert(#header_names.to_string(), #header_vars.to_string());
             )*
 
             #(
                 let map = ser::to_map(& #header_struct_vars)?;
                 for (key, value) in map {
-                    header_map.insert(key.as_str(), value);
+                    header_map.insert(key, value);
                 }
             )*
 
-            let mut path_map: HashMap<&str, String> = #path_map;
+            let mut path_map: HashMap<String, String> = #path_map;
             #(
-                path_map.insert(#path_names, #path_vars.to_string());
+                path_map.insert(#path_names.to_string(), #path_vars.to_string());
             )*
 
-            let mut query_vec: Vec<(&str, String)> = #query_map;
+            let mut query_vec: Vec<(String, String)> = #query_map;
             #(
-                query_vec.push((#query_names, #query_vars.to_string()));
+                query_vec.push((#query_names.to_string(), #query_vars.to_string()));
             )*
 
             #(
-                let query_array_name = #query_array_names;
+                let query_array_name = #query_array_names.to_string();
                 for query_array_var in #query_array_vars {
-                    query_vec.push((query_array_name, query_array_var.to_string()));
+                    query_vec.push((query_array_name.clone(), query_array_var.to_string()));
                 }
             )*
 
             #(
                 let map = ser::to_map(& #query_struct_vars)?;
                 for (key, value) in map.iter() {
-                    query_vec.push((key.as_str(), value.to_string()));
+                    query_vec.push((key.clone(), value.to_string()));
                 }
             )*
 
             let url = util::replace(&format!("{}", #url), &path_map);
 
-            let config = RequestConfig::from_map(config_map)?;
-            
+            let config_ref: HashMap<&str, String> = config_map.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
+            let config = RequestConfig::from_map(config_ref)?;
+
             let client = HttpClient::shared();
+            let header_ref: HashMap<&str, String> = header_map.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
+            let query_ref: Vec<(&str, String)> = query_vec.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
             let request = RequestBuilder::new(client.clone())
                 .url(&url)
                 .method(#method)
                 .config(config)
-                .headers(header_map)
-                .query(query_vec)
+                .headers(header_ref)
+                .query(query_ref)
                 .build()?;
 
             let response = request.#send_fn_call.await?;

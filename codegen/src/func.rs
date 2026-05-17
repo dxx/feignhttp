@@ -72,59 +72,59 @@ pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::T
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_struct(fn_arg));
 
     let tokens = quote!(
-        fn param_map(&self) -> ::std::collections::HashMap<&str, String> {
+        fn param_map(&self) -> ::std::collections::HashMap<String, String> {
             let mut out = ::std::collections::HashMap::new();
             #(
-                out.insert(#param_names, format!("{}", self.#param_vars));
+                out.insert(#param_names.to_string(), self.#param_vars.to_string());
             )*
             out
         }
 
-        fn path_map(&self) -> ::std::collections::HashMap<&str, String> {
+        fn path_map(&self) -> ::std::collections::HashMap<String, String> {
             let mut out = ::std::collections::HashMap::new();
             #(
-                out.insert(#path_names, format!("{}", self.#path_vars));
+                out.insert(#path_names.to_string(), self.#path_vars.to_string());
             )*
             out
         }
 
-        fn header_map(&self) -> ::feignhttp::Result<::std::collections::HashMap<&str, String>> {
+        fn header_map(&self) -> ::feignhttp::Result<::std::collections::HashMap<String, String>> {
             use ::feignhttp::ser;
 
             let mut out = ::std::collections::HashMap::new();
             #(
-                out.insert(#header_names, format!("{}", self.#header_vars));
+                out.insert(#header_names.to_string(), self.#header_vars.to_string());
             )*
 
             #(
                 let map = ser::to_map(& self.#header_struct_vars)?;
                 for (key, value) in map {
-                    out.insert(&*Box::leak(key.into_boxed_str()), value.to_string());
+                    out.insert(key, value.to_string());
                 }
             )*
 
             Ok(out)
         }
 
-        fn query_map(&self) -> ::feignhttp::Result<Vec<(&str, String)>> {
+        fn query_map(&self) -> ::feignhttp::Result<Vec<(String, String)>> {
             use ::feignhttp::ser;
 
-            let mut query_vec: Vec<(&str, String)> = Vec::new();
+            let mut query_vec: Vec<(String, String)> = Vec::new();
             #(
-                query_vec.push((#query_names, format!("{}", self.#query_vars)));
+                query_vec.push((#query_names.to_string(), self.#query_vars.to_string()));
             )*
 
             #(
-                let query_array_name = #query_array_names;
+                let query_array_name = #query_array_names.to_string();
                 for query_array_var in self.#query_array_vars.iter() {
-                    query_vec.push((query_array_name, format!("{}", query_array_var)));
+                    query_vec.push((query_array_name.clone(), query_array_var.to_string()));
                 }
             )*
 
             #(
                 let map = ser::to_map(& self.#query_struct_vars)?;
                 for (key, value) in map {
-                    query_vec.push((&*Box::leak(key.into_boxed_str()), value));
+                    query_vec.push((key, value));
                 }
             )*
             Ok(query_vec)
@@ -284,70 +284,74 @@ pub fn fn_impl(
             use std::collections::HashMap;
             use feignhttp::{HttpClient, RequestConfig, RequestBuilder, HttpResponse, ser, util};
 
-            let mut param_map: HashMap<&str, String> = #param_map;
+            let mut param_map: HashMap<String, String> = #param_map;
             #(
-                param_map.insert(#param_names, format!("{}", #param_vars));
+                param_map.insert(#param_names.to_string(), #param_vars.to_string());
             )*
 
-            let mut config_map: HashMap<&str, String> = HashMap::new();
+            let mut config_map: HashMap<String, String> = HashMap::new();
             #(
-                config_map.insert(#config_keys, util::replace(#config_values, &param_map));
+                config_map.insert(#config_keys.to_string(), util::replace(#config_values, &param_map));
             )*
 
-            let mut header_map: HashMap<&str, String> = #header_map;
+            let mut header_map: HashMap<String, String> = #header_map;
 
             // Header in `#[get("", headers="")]` added before header in `#[header]` added.
             #(
                 let key = util::replace(#header_keys, &param_map);
                 let value = util::replace(#header_values, &param_map);
-                header_map.insert(key.as_str(), value);
+                header_map.insert(key, value);
             )*
 
             #(
-                header_map.insert(#header_names, #header_vars.to_string());
+                header_map.insert(#header_names.to_string(), #header_vars.to_string());
             )*
 
             #(
                 let map = ser::to_map(& #header_struct_vars)?;
                 for (key, value) in map.iter() {
-                    header_map.insert(key.as_str(), value.to_string());
+                    header_map.insert(key.clone(), value.to_string());
                 }
             )*
 
-            let mut path_map: HashMap<&str, String> = #path_map;
+            let mut path_map: HashMap<String, String> = #path_map;
             #(
-                path_map.insert(#path_names, #path_vars.to_string());
+                path_map.insert(#path_names.to_string(), #path_vars.to_string());
             )*
 
-            let mut query_vec: Vec<(&str, String)> = #query_map;
+            let mut query_vec: Vec<(String, String)> = #query_map;
             #(
-                query_vec.push((#query_names, #query_vars.to_string()));
+                query_vec.push((#query_names.to_string(), #query_vars.to_string()));
             )*
 
             #(
-                let query_array_name = #query_array_names;
+                let query_array_name = #query_array_names.to_string();
                 for query_array_var in #query_array_vars {
-                    query_vec.push((query_array_name, query_array_var.to_string()));
+                    query_vec.push((query_array_name.clone(), query_array_var.to_string()));
                 }
             )*
 
             #(
                 let map = ser::to_map(& #query_struct_vars)?;
                 for (key, value) in map.iter() {
-                    query_vec.push((key.as_str(), value.to_string()));
+                    query_vec.push((key.clone(), value.to_string()));
                 }
             )*
 
             let url = util::replace(&format!("{}", #url), &path_map);
 
-            let config = RequestConfig::from_map(config_map)?;
+            let config_ref: HashMap<&str, String> = config_map.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
+            let config = RequestConfig::from_map(config_ref)?;
+
+            let header_ref: HashMap<&str, String> = header_map.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
+            let query_ref: Vec<(&str, String)> = query_vec.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
 
             let request = RequestBuilder::new(#client.clone())
                 .url(&url)
                 .method(#method)
                 .config(config)
-                .headers(header_map)
-                .query(query_vec)
+                .headers(header_ref)
+                .query(query_ref)
                 .build()?;
 
             let response = request.#send_fn_call.await?;
@@ -460,7 +464,7 @@ fn is_support_types(t: &str) -> bool {
 }
 
 fn is_support_struct(t: &str) -> bool {
-    if is_support_types(t) || is_sequences(t) {
+    if is_support_types(t) || is_sequences(t) || is_static_str(t) {
         false
     } else {
         true
@@ -476,6 +480,13 @@ fn is_sequences(t: &str) -> bool {
         return true;
     }
     false
+}
+
+fn is_static_str(t: &str) -> bool {
+    return match t {
+        "&'staticstr" => true,
+        _ => false,
+    };
 }
 
 fn get_body_fn_call(body_type: &syn::Type, body_var: &syn::Ident) -> proc_macro2::TokenStream {

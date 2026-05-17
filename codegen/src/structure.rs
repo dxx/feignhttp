@@ -94,28 +94,28 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 impl ::feignhttp::FeignContext for #trait_ident {
 
-                    fn param_map(&self) -> std::collections::HashMap<&str, String> {
+                    fn param_map(&self) -> std::collections::HashMap<String, String> {
                         match &self.context {
                             Some(f) => (**f).param_map(),
                             None => std::collections::HashMap::new()
                         }
                     }
 
-                    fn path_map(&self) -> std::collections::HashMap<&str, String> {
+                    fn path_map(&self) -> std::collections::HashMap<String, String> {
                         match &self.context {
                             Some(f) => (**f).path_map(),
                             None => std::collections::HashMap::new()
                         }
                     }
 
-                    fn header_map(&self) -> ::feignhttp::Result<std::collections::HashMap<&str, String>> {
+                    fn header_map(&self) -> ::feignhttp::Result<std::collections::HashMap<String, String>> {
                         match &self.context {
                             Some(f) => (**f).header_map(),
                             None => Ok(std::collections::HashMap::new())
                         }
                     }
 
-                    fn query_map(&self) -> ::feignhttp::Result<Vec<(&str, String)>> {
+                    fn query_map(&self) -> ::feignhttp::Result<Vec<(String, String)>> {
                         match &self.context {
                             Some(f) => (**f).query_map(),
                             None => Ok(Vec::new())
