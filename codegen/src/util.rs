@@ -1,10 +1,10 @@
 use crate::enu::ArgType;
 use crate::func::FnArg;
 use proc_macro::TokenStream;
-use quote::{ToTokens, quote};
+use quote::{quote, ToTokens};
 use std::collections::HashMap;
 use std::str::FromStr;
-use syn::{Attribute, Field, Lit, PatType, Token, Type, parse::Parse};
+use syn::{parse::Parse, Attribute, Field, Lit, PatType, Token, Type};
 
 /// Parse url and return url token stream.
 /// A URL can be an expression.
