@@ -7,7 +7,7 @@
 //! * Easy to use
 //! * Asynchronous request
 //! * Supports form, plain text and JSON
-//! * Configurable settings
+//! * Configurable timeout settings
 //! * Friendly error handling
 //! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest), [reqwest-middleware](https://docs.rs/reqwest-middleware) or [isahc](https://docs.rs/isahc))
 //!
@@ -406,7 +406,7 @@
 //! async fn timeout() -> feignhttp::Result<String> {}
 //! ```
 //!
-//! More configuration please use `ClientConfig` configuration.
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/timeout.rs) for more example.
 //!
 //! ## Params
 //!
