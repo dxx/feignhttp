@@ -1,5 +1,5 @@
 use feignhttp::get;
-use feignhttp::{Feign, feign};
+use feignhttp::{Context, feign};
 use serde::Serialize;
 
 // Using `#[query]` to specify query parameter.
@@ -30,7 +30,7 @@ pub struct Query {
 #[get("https://httpbin.org/anything")]
 async fn anything_struct(#[query] q: Query) -> feignhttp::Result<String> {}
 
-#[derive(Feign)]
+#[derive(Context)]
 struct NameQuery<'a> {
     #[query]
     name: Vec<&'a str>,

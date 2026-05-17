@@ -1,4 +1,4 @@
-use feignhttp::{Feign, feign, get};
+use feignhttp::{FeignClientBuilder, feign, get};
 
 #[get("https://httpbin.org/headers", headers = "token: {token}")]
 async fn headers(#[param] token: &str) -> feignhttp::Result<String> {}
@@ -13,24 +13,19 @@ async fn dynamic_timeout(
 ) -> feignhttp::Result<String> {
 }
 
-#[derive(Feign)]
-struct Http;
-
 #[feign(url = "https://httpbin.org/delay/5", timeout = "{timeout}")]
-impl Http {
+pub trait Http {
     #[get]
     async fn timeout(
         &self,
         #[param("timeout")] time: u16, // Replace `{timeout}` in feign attribute.
-    ) -> feignhttp::Result<String> {
-    }
+    ) -> feignhttp::Result<String>;
 
     #[get(path = "", timeout = "{time}")] // Override timeout in feign attribute.
     async fn override_timeout(
         &self,
         #[param(name = "time")] time: &str, // Must be a type that can be converted to timeout.
-    ) -> feignhttp::Result<String> {
-    }
+    ) -> feignhttp::Result<String>;
 }
 
 #[tokio::main]
@@ -72,8 +67,10 @@ async fn main() {
         }
     }
 
+    let http = HttpBuilder::new().build().unwrap();
+
     // The request timeout is 3000ms.
-    match Http.timeout(3000).await {
+    match http.timeout(3000).await {
         Ok(res) => {
             println!("Http::timeout(3000) ok: {}\n", res);
         }
@@ -84,7 +81,7 @@ async fn main() {
     }
 
     // The request timeout is 7000ms.
-    match Http.override_timeout("7000").await {
+    match http.override_timeout("7000").await {
         Ok(res) => {
             // Execute here.
             println!("Http::override_timeout(\"7000\") ok: {}\n", res);

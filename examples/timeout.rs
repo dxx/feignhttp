@@ -1,4 +1,4 @@
-use feignhttp::{Feign, feign, get};
+use feignhttp::{FeignClientBuilder, feign, get};
 
 /// The default connect_timeout is 10000 milliseconds.
 #[get(url = "http://site_dne.com")]
@@ -8,13 +8,10 @@ async fn connect_timeout() -> feignhttp::Result<String> {}
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn timeout() -> feignhttp::Result<String> {}
 
-#[derive(Feign)]
-struct Http;
-
 #[feign(url = "http://site_dne.com")]
-impl Http {
+pub trait Http {
     #[get("")] // The default connect_timeout is 10000 milliseconds..
-    async fn get(&self) -> feignhttp::Result<String> {}
+    async fn get(&self) -> feignhttp::Result<String>;
 }
 
 #[tokio::main]
@@ -37,7 +34,7 @@ async fn main() {
         }
     }
 
-    match Http.get().await {
+    match Http::builder().build().unwrap().get().await {
         Ok(res) => {
             println!("Http::get: {}", res);
         }
