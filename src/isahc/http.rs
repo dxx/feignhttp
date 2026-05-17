@@ -40,11 +40,8 @@ impl Client for ClientWrapper {
         if let Some(millisecond) = config.timeout {
             client_builder = client_builder.timeout(Duration::from_millis(millisecond));
         }
-        if let Some(_millisecond) = config.read_timeout {
-            #[cfg(feature = "log")]
-            log::warn!("isahc client does not support read_timeout, ignoring...");
-            #[cfg(not(feature = "log"))]
-            eprintln!("warning: isahc client does not support read_timeout, ignoring...");
+        if let Some(millisecond) = config.read_timeout {
+            client_builder = client_builder.low_speed_timeout(1, Duration::from_millis(millisecond));
         }
         client_builder = client_builder.redirect_policy(RedirectPolicy::Limit(10));
         let client = client_builder.build().map_err(Error::build)?;
