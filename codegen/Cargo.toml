@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp-codegen"
-version = "0.6.0"
+version = "0.6.0-rc.1"
 authors = ["dxx <dx1898@foxmail.com>"]
 edition = "2024"
 description = "FeignHTTP macro support"
@@ -20,4 +20,4 @@ syn = { version = "2.0", features = ["full"] }
 
 [dev-dependencies]
 trybuild = "1.0.62"
-feignhttp = { version = "0.6", path = "../../feignhttp" }
+feignhttp = { path = "../../feignhttp" }
