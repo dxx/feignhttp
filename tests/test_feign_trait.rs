@@ -1,9 +1,6 @@
 use feignhttp::{Context, FeignClientBuilder as _, feign};
 
 use mockito::{Matcher, Server, ServerOpts};
-use std::sync::Mutex;
-
-static PORT_LOCK: Mutex<()> = Mutex::new(());
 
 const URL: &str = "https://api.github.com";
 
