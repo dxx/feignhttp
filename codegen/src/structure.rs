@@ -1,6 +1,8 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
-use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr, NestedMeta};
+use crate::util::{
+    get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr, NestedMeta,
+};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use std::collections::HashMap;
@@ -300,7 +302,7 @@ fn parse_fn_metas(attr: &syn::Attribute) -> HashMap<String, String> {
                                 attr_map.insert(key, format!("{}", b.value()));
                             }
                             _ => {}
-                        }
+                        },
                         _ => {}
                     }
                 }

@@ -1,5 +1,4 @@
 /// Note: those examples are deprecated;
-
 use feignhttp::{Context, feign};
 
 #[derive(Context)]

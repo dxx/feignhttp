@@ -10,7 +10,6 @@ pub trait Feign {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     #[cfg(feature = "reqwest-middleware-client")]
     {
         use reqwest_middleware::{ClientBuilder, Middleware, Next, reqwest};

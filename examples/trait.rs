@@ -37,7 +37,7 @@ pub trait Github {
     ) -> feignhttp::Result<String>;
 
     #[get(path = "/languages")]
-    async fn languages(&self) -> feignhttp::Result<String>;  
+    async fn languages(&self) -> feignhttp::Result<String>;
 }
 
 #[tokio::main]

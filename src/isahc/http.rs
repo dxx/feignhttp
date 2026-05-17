@@ -41,7 +41,8 @@ impl Client for ClientWrapper {
             client_builder = client_builder.timeout(Duration::from_millis(millisecond));
         }
         if let Some(millisecond) = config.read_timeout {
-            client_builder = client_builder.low_speed_timeout(1, Duration::from_millis(millisecond));
+            client_builder =
+                client_builder.low_speed_timeout(1, Duration::from_millis(millisecond));
         }
         client_builder = client_builder.redirect_policy(RedirectPolicy::Limit(10));
         let client = client_builder.build().map_err(Error::build)?;

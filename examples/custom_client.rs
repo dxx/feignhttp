@@ -16,7 +16,6 @@ pub trait GitHub {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     let client_wrapper;
 
     #[cfg(feature = "reqwest-client")]

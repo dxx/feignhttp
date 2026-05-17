@@ -1,4 +1,4 @@
-use feignhttp::{FeignClientBuilder, ClientConfig, feign, get};
+use feignhttp::{ClientConfig, FeignClientBuilder, feign, get};
 
 #[get(url = "http://site_dne.com")]
 async fn connect_timeout() -> feignhttp::Result<String> {}

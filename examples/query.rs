@@ -1,5 +1,5 @@
-use feignhttp::{FeignClientBuilder, get};
 use feignhttp::{Context, feign};
+use feignhttp::{FeignClientBuilder, get};
 use serde::Serialize;
 
 // Using `#[query]` to specify query parameter.
