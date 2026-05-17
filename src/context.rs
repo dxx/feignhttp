@@ -1,7 +1,7 @@
 use crate::error::Result;
 use std::collections::HashMap;
 
-pub trait FeignContext {
+pub trait FeignContext: Send + Sync {
     fn param_map(&self) -> HashMap<String, String>;
 
     fn path_map(&self) -> HashMap<String, String>;
