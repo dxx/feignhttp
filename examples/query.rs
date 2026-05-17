@@ -1,4 +1,4 @@
-use feignhttp::get;
+use feignhttp::{FeignClientBuilder, get};
 use feignhttp::{Context, feign};
 use serde::Serialize;
 
@@ -31,15 +31,15 @@ pub struct Query {
 async fn anything_struct(#[query] q: Query) -> feignhttp::Result<String> {}
 
 #[derive(Context)]
-struct NameQuery<'a> {
+struct NameQueryContext<'a> {
     #[query]
     name: Vec<&'a str>,
 }
 
 #[feign(url = "https://httpbin.org/anything")]
-impl<'a> NameQuery<'_> {
+pub trait NameQuery {
     #[get]
-    async fn anything_name(&self) -> feignhttp::Result<String> {}
+    async fn anything_name(&self) -> feignhttp::Result<String>;
 }
 
 #[tokio::main]
@@ -61,10 +61,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r = anything_struct(query).await?;
     println!("anything struct result: {}", r);
 
-    let t = NameQuery {
+    let context = NameQueryContext {
         name: vec!["Bob", "Tom", "Jack"],
     };
-    let r = t.anything_name().await?;
+    let name_query = NameQuery::builder().context(context).build()?;
+    let r = name_query.anything_name().await?;
     println!("anything name result: {}", r);
 
     Ok(())
