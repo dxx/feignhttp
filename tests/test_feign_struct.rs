@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use feignhttp::{Feign, feign};
 
 use mockito::{Matcher, Server, ServerOpts};

@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 
 use feignhttp::{Client, ClientWrapper, FeignClientBuilder, feign};
 

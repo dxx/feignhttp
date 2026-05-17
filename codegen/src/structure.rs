@@ -1,6 +1,5 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
-use crate::leagcy::leagcy_fn_impl;
 use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
@@ -140,6 +139,8 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
             .into()
         }
         syn::Item::Impl(item_impl) => {
+            eprint!("warning: useing `feign` on impl is deprecated, please use it on trait and it will be removed in future versions.\n");
+
             let impl_signature = impl_signature(&item_impl);
 
             let fn_streams = match fn_to_streams(url, item_impl.items, meta_map) {
@@ -232,7 +233,7 @@ fn fn_to_streams(
                 }
 
                 #[allow(deprecated)]
-                let fn_stream = leagcy_fn_impl(
+                let fn_stream = crate::leagcy::leagcy_fn_impl(
                     FnMetadata {
                         url,
                         method,

@@ -42,7 +42,7 @@ pub fn feign_context(item: TokenStream) -> TokenStream {
 
 #[deprecated(
     since = "0.6.0",
-    note = "`Feign` is deprecated, please use `Context` instead"
+    note = "`Feign` is deprecated, please use `Context` instead and it will be removed in future versions."
 )]
 #[proc_macro_derive(Feign, attributes(url_path, query, header, param))]
 pub fn feign_client(item: TokenStream) -> TokenStream {
