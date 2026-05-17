@@ -1,10 +1,10 @@
 use crate::enu::ArgType;
 use crate::func::FnArg;
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::collections::HashMap;
 use std::str::FromStr;
-use syn::{parse::Parse, Attribute, Field, Lit, PatType, Token, Type};
+use syn::{Attribute, Field, Lit, PatType, Token, Type, parse::Parse};
 
 /// Parse url and return url token stream.
 /// A URL can be an expression.
@@ -211,19 +211,19 @@ impl<'a> From<&'a mut Field> for PType<'a> {
 }
 
 fn extract_name(attr: &Attribute) -> Option<String> {
-    let vec = get_metas(attr)?;
-    let nested_meta = vec.first()?;
+    let metas = get_metas(attr)?;
+    let nested_meta = metas.first()?;
     match nested_meta {
-        syn::NestedMeta::Lit(lit) => {
+        NestedMeta::Lit(lit) => {
             if let syn::Lit::Str(lit) = lit {
                 if !lit.value().is_empty() {
-                    return lit.value().into();
+                    return Some(lit.value());
                 }
             }
         }
         _ => {
             if let Some(name_value) = get_meta_str_value(nested_meta, "name") {
-                return name_value.into();
+                return Some(name_value);
             }
         }
     }
@@ -245,8 +245,9 @@ fn parse_args<'a>(
             syn::Type::Path(_) | syn::Type::Reference(_) | syn::Type::Array(_) => {}
             _ => {
                 return Err(syn::Error::new_spanned(
-                        quote!(),
-                        "function args type must be like `std::slice::Iter`, `&std::slice::Iter` or `[T; n]`"));
+                    quote!(),
+                    "function args type must be like `std::slice::Iter`, `&std::slice::Iter` or `[T; n]`",
+                ));
             }
         }
 
@@ -254,7 +255,7 @@ fn parse_args<'a>(
         for (ty, attr) in pat_type
             .attrs
             .iter()
-            .flat_map(|x| x.path.get_ident().map(|u| (u, x)))
+            .flat_map(|x| x.path().get_ident().map(|u| (u, x)))
             .flat_map(|(x, att)| ArgType::from_str(&x.to_string()).map(|u| (u, att)))
         {
             found_one = true;
@@ -278,7 +279,7 @@ fn parse_args<'a>(
         }
 
         pat_type.attrs.retain(|x| {
-            if let Some(i) = x.path.get_ident() {
+            if let Some(i) = x.path().get_ident() {
                 let i = i.to_string();
                 !i.as_str().parse::<ArgType>().is_ok()
             } else {
@@ -320,21 +321,53 @@ pub fn parse_return_type(sig: &syn::Signature) -> syn::Result<Vec<syn::Type>> {
     Err(syn::Error::new_spanned(&sig, err_msg))
 }
 
-pub fn get_metas(attr: &syn::Attribute) -> Option<Vec<syn::NestedMeta>> {
-    if let Ok(syn::Meta::List(mate_list)) = attr.parse_meta() {
-        return Some(mate_list.nested.into_iter().collect());
+/// Compatible with syn 1.0 `NestedMeta`.
+pub enum NestedMeta {
+    Meta(syn::Meta),
+    Lit(syn::Lit),
+}
+
+impl Parse for NestedMeta {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        if input.peek(syn::Lit) {
+            Ok(NestedMeta::Lit(input.parse()?))
+        } else {
+            Ok(NestedMeta::Meta(input.parse()?))
+        }
+    }
+}
+
+impl quote::ToTokens for NestedMeta {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        match self {
+            NestedMeta::Meta(meta) => meta.to_tokens(tokens),
+            NestedMeta::Lit(lit) => lit.to_tokens(tokens),
+        }
+    }
+}
+
+pub fn get_metas(attr: &syn::Attribute) -> Option<Vec<NestedMeta>> {
+    if let syn::Meta::List(meta_list) = &attr.meta {
+        let nested = meta_list.parse_args_with(
+            syn::punctuated::Punctuated::<NestedMeta, syn::Token![,]>::parse_terminated,
+        );
+        if let Ok(nested) = nested {
+            return Some(nested.into_iter().collect());
+        }
     }
     None
 }
 
-pub fn get_meta_str_value(meta: &syn::NestedMeta, name: &str) -> Option<String> {
+pub fn get_meta_str_value(meta: &NestedMeta, name: &str) -> Option<String> {
     match meta {
         // A literal, like the `"name"` in `#[param(p = "name")]`.
-        syn::NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
+        NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
             let key = name_value.path.segments.last().unwrap().ident.to_string();
             if key == name {
-                if let syn::Lit::Str(lit) = &name_value.lit {
-                    return Some(lit.value());
+                if let syn::Expr::Lit(expr_lit) = &name_value.value {
+                    if let syn::Lit::Str(lit) = &expr_lit.lit {
+                        return Some(lit.value());
+                    }
                 }
             }
         }

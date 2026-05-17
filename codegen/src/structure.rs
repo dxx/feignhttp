@@ -1,6 +1,6 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
-use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr};
+use crate::util::{get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr, NestedMeta};
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use std::collections::HashMap;
@@ -210,15 +210,15 @@ fn fn_to_streams(
     let base_meta = meta_map;
     let mut method_streams = Vec::new();
     for item in items.iter() {
-        if let syn::ImplItem::Method(syn::ImplItemMethod { attrs, .. }) = item {
+        if let syn::ImplItem::Fn(syn::ImplItemFn { attrs, .. }) = item {
             if let Some(attr) = attrs.last() {
                 let mut url = base_url.clone();
                 let mut meta_map = base_meta.clone();
                 let method_ident =
-                    Method::from_str(&attr.path.segments.last().unwrap().ident.to_string());
+                    Method::from_str(&attr.path().segments.last().unwrap().ident.to_string());
                 let method = match method_ident {
                     Ok(method) => method,
-                    Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
+                    Err(err) => return Err(syn::Error::new_spanned(attr.path(), err)),
                 };
 
                 let fn_path = parse_fn_path(attr)?;
@@ -257,7 +257,7 @@ fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream>
         if let Some(nested_meta) = vec.first() {
             match nested_meta {
                 // A literal, like the `"/xxx"` in `#[get("/xxx")]`.
-                syn::NestedMeta::Lit(lit) => {
+                NestedMeta::Lit(lit) => {
                     if let syn::Lit::Str(lit) = lit {
                         return Ok(lit.value().to_token_stream());
                     }
@@ -283,20 +283,23 @@ fn parse_fn_metas(attr: &syn::Attribute) -> HashMap<String, String> {
         for meta in metas.into_iter() {
             match meta {
                 // A literal, like the `xxx` in `#[get(p = xxx)]`.
-                syn::NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
+                NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
                     let key = name_value.path.segments.last().unwrap().ident.to_string();
-                    match name_value.lit {
-                        syn::Lit::Str(s) => {
-                            attr_map.insert(key, s.value());
-                        }
-                        syn::Lit::Int(i) => {
-                            attr_map.insert(key, i.to_string());
-                        }
-                        syn::Lit::Float(f) => {
-                            attr_map.insert(key, f.to_string());
-                        }
-                        syn::Lit::Bool(b) => {
-                            attr_map.insert(key, format!("{}", b.value()));
+                    match &name_value.value {
+                        syn::Expr::Lit(expr_lit) => match &expr_lit.lit {
+                            syn::Lit::Str(s) => {
+                                attr_map.insert(key, s.value());
+                            }
+                            syn::Lit::Int(i) => {
+                                attr_map.insert(key, i.to_string());
+                            }
+                            syn::Lit::Float(f) => {
+                                attr_map.insert(key, f.to_string());
+                            }
+                            syn::Lit::Bool(b) => {
+                                attr_map.insert(key, format!("{}", b.value()));
+                            }
+                            _ => {}
                         }
                         _ => {}
                     }
@@ -318,16 +321,16 @@ fn fn_to_streams_for_trait(
     let mut trait_fn_streams = Vec::new();
 
     for item in items.iter() {
-        if let syn::TraitItem::Method(trait_method) = item {
+        if let syn::TraitItem::Fn(trait_method) = item {
             if let Some(attr) = trait_method.attrs.last() {
                 let mut url = base_url.clone();
                 let mut meta_map = base_meta.clone();
 
                 let method_ident =
-                    Method::from_str(&attr.path.segments.last().unwrap().ident.to_string());
+                    Method::from_str(&attr.path().segments.last().unwrap().ident.to_string());
                 let method = match method_ident {
                     Ok(method) => method,
-                    Err(err) => return Err(syn::Error::new_spanned(&attr.path, err)),
+                    Err(err) => return Err(syn::Error::new_spanned(attr.path(), err)),
                 };
 
                 let fn_path = parse_fn_path(attr)?;
@@ -358,7 +361,7 @@ fn fn_to_streams_for_trait(
     Ok(trait_fn_streams)
 }
 
-fn trait_method_to_item_fn(trait_method: &syn::TraitItemMethod) -> syn::ItemFn {
+fn trait_method_to_item_fn(trait_method: &syn::TraitItemFn) -> syn::ItemFn {
     let sig = &trait_method.sig;
 
     syn::ItemFn {
