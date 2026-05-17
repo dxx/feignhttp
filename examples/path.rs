@@ -5,7 +5,8 @@ use feignhttp::get;
 async fn repository(
     #[path("owner")] user: &str,
     #[path] repo: String,
-) -> feignhttp::Result<String> {}
+) -> feignhttp::Result<String> {
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

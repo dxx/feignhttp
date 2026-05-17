@@ -27,8 +27,8 @@ async fn issues(
     #[path] repo: &str,
     page: u32,
     per_page: u32,
-) -> feignhttp::Result<Vec<IssueItem>> {}
-
+) -> feignhttp::Result<Vec<IssueItem>> {
+}
 
 #[derive(Debug, Serialize)]
 struct User {

@@ -1,5 +1,5 @@
 use crate::FeignContext;
-use crate::{error::Result, ClientConfig, ClientWrapper, RequestConfig, RequestWrapper};
+use crate::{ClientConfig, ClientWrapper, RequestConfig, RequestWrapper, error::Result};
 use async_trait::async_trait;
 #[cfg(feature = "isahc-client")]
 use http_0_2::StatusCode;

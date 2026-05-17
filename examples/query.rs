@@ -1,5 +1,5 @@
 use feignhttp::get;
-use feignhttp::{feign, Feign};
+use feignhttp::{Feign, feign};
 use serde::Serialize;
 
 // Using `#[query]` to specify query parameter.
@@ -24,14 +24,11 @@ async fn anything_vec(
 #[derive(Serialize)]
 pub struct Query {
     pub id: i32,
-    pub name: String
+    pub name: String,
 }
 
 #[get("https://httpbin.org/anything")]
-async fn anything_struct(
-    #[query] q: Query,
-) -> feignhttp::Result<String> {
-}
+async fn anything_struct(#[query] q: Query) -> feignhttp::Result<String> {}
 
 #[derive(Feign)]
 struct NameQuery<'a> {
@@ -59,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let query = Query {
         id: 100,
-        name: String::from("Bob")
+        name: String::from("Bob"),
     };
     let r = anything_struct(query).await?;
     println!("anything struct result: {}", r);

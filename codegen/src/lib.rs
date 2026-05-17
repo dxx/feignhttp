@@ -1,14 +1,14 @@
 mod enu;
 mod func;
+mod leagcy;
 mod structure;
 mod util;
-mod leagcy;
 
 use enu::Method;
 use func::http_impl;
+use leagcy::leagcy_feign_client_impl;
 use proc_macro::TokenStream;
 use structure::{feign_context_impl, feign_impl};
-use leagcy::leagcy_feign_client_impl;
 
 #[proc_macro_attribute]
 pub fn feign(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -40,7 +40,10 @@ pub fn feign_context(item: TokenStream) -> TokenStream {
     feign_context_impl(item)
 }
 
-#[deprecated(since = "0.6.0", note = "`Feign` is deprecated, please use `Context` instead")]
+#[deprecated(
+    since = "0.6.0",
+    note = "`Feign` is deprecated, please use `Context` instead"
+)]
 #[proc_macro_derive(Feign, attributes(url_path, query, header, param))]
 pub fn feign_client(item: TokenStream) -> TokenStream {
     leagcy_feign_client_impl(item)

@@ -1,6 +1,6 @@
 use feignhttp::{get, post};
 
-use mockito::{mock, Matcher};
+use mockito::{Matcher, mock};
 use serde::Serialize;
 
 #[get("http://localhost:1234/get")]

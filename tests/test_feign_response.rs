@@ -19,7 +19,6 @@ async fn test_get_text() {
     assert_eq!("Hello, i' m text", text);
 }
 
-
 const JSON_URL: &str = "http://localhost:1234";
 
 #[derive(Debug, Deserialize)]

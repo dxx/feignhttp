@@ -3,7 +3,7 @@
 use feignhttp::{HttpClient, RequestBuilder, map};
 use serde::Serialize;
 
-use mockito::{mock, server_address, Matcher};
+use mockito::{Matcher, mock, server_address};
 
 #[tokio::test]
 async fn test_request() {

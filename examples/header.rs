@@ -7,7 +7,8 @@ async fn commits(
     #[header] accept: &str,
     #[query] page: u32,
     #[query] per_page: u32,
-) -> feignhttp::Result<String> {}
+) -> feignhttp::Result<String> {
+}
 
 // headers format: header-key1: header-value1; header-key2: header-value2; ...
 #[get("https://httpbin.org/headers", headers = "key1: value1; key2: value2")]

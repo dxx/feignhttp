@@ -1,4 +1,4 @@
-use feignhttp::{feign, get, Feign};
+use feignhttp::{Feign, feign, get};
 
 /// The default connect_timeout is 10000 milliseconds.
 #[get(url = "http://site_dne.com")]

@@ -1,6 +1,6 @@
-use feignhttp::{feign, Feign};
+use feignhttp::{Feign, feign};
 
-use mockito::{mock, Matcher};
+use mockito::{Matcher, mock};
 
 const URL: &str = "https://api.github.com";
 

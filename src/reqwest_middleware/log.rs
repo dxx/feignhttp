@@ -1,6 +1,6 @@
 use log::debug;
-use reqwest_middleware::reqwest::Response;
 use reqwest_middleware::RequestBuilder;
+use reqwest_middleware::reqwest::Response;
 
 pub fn print_request_log(request: RequestBuilder) {
     if let Ok(request) = request.build() {

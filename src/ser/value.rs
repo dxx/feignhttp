@@ -1,6 +1,6 @@
-use crate::error::Error;
 use crate::ErrorKind;
-use serde::{ser, Serialize};
+use crate::error::Error;
+use serde::{Serialize, ser};
 
 pub struct StringSerializer {}
 

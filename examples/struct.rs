@@ -1,4 +1,4 @@
-use feignhttp::{feign, Feign};
+use feignhttp::{Feign, feign};
 
 #[derive(Feign)]
 struct Github {

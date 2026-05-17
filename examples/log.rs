@@ -19,11 +19,10 @@ async fn anything(#[body] data: Data) -> feignhttp::Result<String> {}
 // cargo run --example log --features log.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
-    unsafe { 
+    unsafe {
         std::env::set_var("RUST_LOG", "feignhttp=debug");
     };
-    
+
     env_logger::init();
 
     #[cfg(feature = "json")]
@@ -32,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             id: 1,
             name: "test".to_string(),
         };
-    
+
         let r = anything(data).await?;
         println!("anything result: {}", r);
     }

@@ -1,8 +1,8 @@
+use crate::ErrorKind;
 use crate::error::Error;
 use crate::ser::value::StringSerializer;
-use crate::ErrorKind;
 use serde::ser::Error as SerdeError;
-use serde::{ser, Serialize};
+use serde::{Serialize, ser};
 use std::collections::HashMap;
 use std::fmt::Display;
 

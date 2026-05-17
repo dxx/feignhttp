@@ -1,4 +1,4 @@
-use feignhttp::{get, ErrorKind};
+use feignhttp::{ErrorKind, get};
 
 #[get("httpbin.org/anything")]
 async fn url_error() -> feignhttp::Result<()> {}
@@ -11,7 +11,6 @@ async fn timeout_error() -> feignhttp::Result<()> {}
 
 #[get(url = "https://httpbin.org/123")]
 async fn status_error() -> feignhttp::Result<()> {}
-
 
 #[allow(dead_code)]
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -73,7 +72,6 @@ async fn main() {
                 println!("status_error: {}", err);
             }
             if let ErrorKind::Status(status) = err.error_kind() {
-                
                 println!("status error code: {}", status.as_u16());
 
                 if status.is_client_error() {

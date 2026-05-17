@@ -1,4 +1,4 @@
-use feignhttp::{ser, ErrorKind};
+use feignhttp::{ErrorKind, ser};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -27,7 +27,7 @@ pub struct IdList {
 #[test]
 fn test_ser_error() {
     let id_list = IdList {
-        ids: vec![100, 200, 300]
+        ids: vec![100, 200, 300],
     };
     let r = ser::to_map(&id_list);
     match r {
@@ -35,7 +35,7 @@ fn test_ser_error() {
             if let ErrorKind::Serialize(msg) = e.error_kind() {
                 assert_eq!("not support sequences", msg);
             }
-        },
+        }
         Ok(_) => {
             panic!();
         }

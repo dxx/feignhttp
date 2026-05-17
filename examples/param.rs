@@ -1,4 +1,4 @@
-use feignhttp::{feign, get, Feign};
+use feignhttp::{Feign, feign, get};
 
 #[get("https://httpbin.org/headers", headers = "token: {token}")]
 async fn headers(#[param] token: &str) -> feignhttp::Result<String> {}

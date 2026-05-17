@@ -1,4 +1,4 @@
-use feignhttp::{RequestBuilder};
+use feignhttp::RequestBuilder;
 
 use mockito::{mock, server_address};
 
@@ -29,9 +29,9 @@ async fn test_custom_client() {
         let client = isahc::HttpClient::new().unwrap();
         client_wrapper = ClientWrapper::with_client(client).unwrap();
     }
-    
+
     let request = RequestBuilder::new(client_wrapper)
-        .url(&url)
+        .url(url.as_str())
         .method(method)
         .build()
         .unwrap();

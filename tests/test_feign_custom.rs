@@ -1,5 +1,4 @@
-use feignhttp::{feign, FeignClientBuilder, ClientWrapper, Client};
-
+use feignhttp::{Client, ClientWrapper, FeignClientBuilder, feign};
 
 #[feign(url = "https://api.github.com", headers = "user-agent: Feign HTTP")]
 pub trait Feign {
@@ -30,10 +29,7 @@ async fn test_feign() {
         client_wrapper = ClientWrapper::with_client(client).unwrap();
     }
 
-    let feign = Feign::builder()
-        .client(client_wrapper)
-        .build()
-        .unwrap();
+    let feign = Feign::builder().client(client_wrapper).build().unwrap();
     let r = feign.user("dxx").await.unwrap();
 
     println!("{}", r);

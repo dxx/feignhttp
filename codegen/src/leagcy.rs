@@ -166,14 +166,29 @@ pub fn leagcy_fn_impl(
     let return_type = return_args.get(0).unwrap();
     let return_fn = get_return_fn(return_type);
 
-    #[rustfmt::skip]
-    let param_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.param_map() ) };
-    #[rustfmt::skip]
-    let path_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.path_map() ) };
-    #[rustfmt::skip]
-    let header_map = if empty_maps { quote! ( HashMap::new() ) } else { quote! ( self.header_map()? ) };
-    #[rustfmt::skip]
-    let query_map = if empty_maps { quote! ( Vec::new() ) } else { quote! ( self.query_map()? ) };
+    let param_map = if empty_maps {
+        quote! { HashMap::new() }
+    } else {
+        quote! { self.param_map() }
+    };
+
+    let path_map = if empty_maps {
+        quote! { HashMap::new() }
+    } else {
+        quote! { self.path_map() }
+    };
+
+    let header_map = if empty_maps {
+        quote! { HashMap::new() }
+    } else {
+        quote! { self.header_map()? }
+    };
+
+    let query_map = if empty_maps {
+        quote! { Vec::new() }
+    } else {
+        quote! { self.query_map()? }
+    };
 
     let stream = quote! {
         #vis #sig {
@@ -244,7 +259,7 @@ pub fn leagcy_fn_impl(
             let header_ref: HashMap<&str, String> = header_map.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
             let query_ref: Vec<(&str, String)> = query_vec.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
             let request = RequestBuilder::new(client.clone())
-                .url(&url)
+                .url(url.as_str())
                 .method(#method)
                 .config(config)
                 .headers(header_ref)
