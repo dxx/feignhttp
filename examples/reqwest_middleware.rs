@@ -13,20 +13,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(feature = "reqwest-middleware-client")]
     {
-        use reqwest_middleware::{ClientBuilder, reqwest};
-        use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
-        use reqwest_tracing::TracingMiddleware;
+        use reqwest_middleware::{ClientBuilder, Middleware, Next, reqwest};
+        use http_1_x::Extensions;
+
+        struct LoggingMiddleware;
+
+        #[async_trait::async_trait]
+        impl Middleware for LoggingMiddleware {
+            async fn handle(
+                &self,
+                req: reqwest::Request,
+                extensions: &mut Extensions,
+                next: Next<'_>,
+            ) -> reqwest_middleware::Result<reqwest::Response> {
+                println!("Request started {:?}\n", req);
+                let res = next.run(req, extensions).await;
+                println!("Result: {:?}\n", res);
+                res
+            }
+        }
 
         let reqwest_client = reqwest::Client::builder().build()?;
 
-        let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
-        
         // See https://github.com/TrueLayer/reqwest-middleware.
         let client = ClientBuilder::new(reqwest_client)
-                // Trace HTTP requests. See the tracing crate to make use of these traces.
-            .with(TracingMiddleware::default())
-            // Retry failed requests.
-            .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+            .with(LoggingMiddleware)
             .build();
 
         // Create Feign ClientWrapper.
@@ -34,9 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Build client with custom client.
         let feign = FeignBuilder::build_with_client(client_wrapper).unwrap();
-        let r = feign.user("dxx").await.unwrap();
-
-        println!("{}", r);
+        let _r = feign.user("dxx").await.unwrap();
     }
 
     Ok(())
