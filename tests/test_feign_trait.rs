@@ -1,6 +1,9 @@
 use feignhttp::{Context, FeignClientBuilder as _, feign};
 
-use mockito::{Matcher, mock};
+use mockito::{Matcher, Server, ServerOpts};
+use std::sync::Mutex;
+
+static PORT_LOCK: Mutex<()> = Mutex::new(());
 
 const URL: &str = "https://api.github.com";
 
@@ -27,7 +30,7 @@ struct FeignContext {
     say: &'static str,
 }
 
-#[feign(url = "http://localhost:1234", headers = "accept: {accept}")]
+#[feign(url = "http://localhost:1237", headers = "accept: {accept}")]
 pub trait FeignClient {
     #[get]
     async fn home(&self) -> feignhttp::Result<String> {}
@@ -38,17 +41,26 @@ pub trait FeignClient {
 
 #[tokio::test]
 async fn test_feign_client() {
-    let _mock_home = mock("GET", "/")
+    let opts = ServerOpts {
+        port: 1237,
+        ..Default::default()
+    };
+    let mut server = Server::new_with_opts_async(opts).await;
+    let _mock_home = server
+        .mock("GET", "/")
         .match_header("accept", "application/octet-stream")
         .match_header("content-type", "none")
         .match_query(Matcher::Regex("say=hello".into()))
-        .create();
+        .create_async()
+        .await;
 
-    let _mock_repo = mock("GET", "/repos")
+    let _mock_repo = server
+        .mock("GET", "/repos")
         .match_header("accept", "application/json")
         .match_header("content-type", "none")
         .match_query(Matcher::Regex("say=hello".into()))
-        .create();
+        .create_async()
+        .await;
 
     let context = FeignContext {
         accept: "application/octet-stream",

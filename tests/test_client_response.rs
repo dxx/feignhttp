@@ -3,14 +3,19 @@
 
 use feignhttp::{HttpClient, HttpResponse, RequestBuilder};
 
-use mockito::{mock, server_address};
+use mockito::Server;
 use serde::Deserialize;
 
 #[tokio::test]
 async fn test_response() {
-    let _mock = mock("GET", "/").with_status(200).create();
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/")
+        .with_status(200)
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
     let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
@@ -24,9 +29,14 @@ async fn test_response() {
 
 #[tokio::test]
 async fn test_get_text() {
-    let _mock = mock("GET", "/text").with_body("Hello, i' m text").create();
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/text")
+        .with_body("Hello, i' m text")
+        .create_async()
+        .await;
 
-    let url = format!("http://{}/text", server_address());
+    let url = format!("http://{}/text", server.host_with_port());
     let method = "GET";
     let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
@@ -43,9 +53,12 @@ async fn test_get_text() {
 async fn test_get_json() {
     #[cfg(feature = "json")]
     {
-        let _mock = mock("GET", "/json")
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/json")
             .with_body(r#"{ "code": 200, "message": "success" }"#)
-            .create();
+            .create_async()
+            .await;
 
         #[derive(Debug, Deserialize)]
         struct User {
@@ -53,7 +66,7 @@ async fn test_get_json() {
             message: String,
         }
 
-        let url = format!("http://{}/json", server_address());
+        let url = format!("http://{}/json", server.host_with_port());
         let method = "GET";
         let request = RequestBuilder::new(HttpClient::new().unwrap())
             .url(&url)
@@ -72,12 +85,15 @@ async fn test_get_json() {
 
 #[tokio::test]
 async fn test_get_vec() {
-    let _mock = mock("GET", "/vec")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/vec")
         .with_header("content-type", "application/octet-stream")
         .with_body(r#"aaa"#)
-        .create();
+        .create_async()
+        .await;
 
-    let url = format!("http://{}/vec", server_address());
+    let url = format!("http://{}/vec", server.host_with_port());
     let method = "GET";
     let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
@@ -93,9 +109,14 @@ async fn test_get_vec() {
 #[tokio::test]
 #[should_panic]
 async fn test_client_error() {
-    let _mock = mock("GET", "/").with_status(404).create();
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/")
+        .with_status(404)
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
     let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
@@ -108,9 +129,14 @@ async fn test_client_error() {
 #[tokio::test]
 #[should_panic]
 async fn test_server_error() {
-    let _mock = mock("GET", "/").with_status(503).create();
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/")
+        .with_status(503)
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
     let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)

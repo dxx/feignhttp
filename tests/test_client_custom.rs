@@ -1,12 +1,13 @@
 use feignhttp::RequestBuilder;
 
-use mockito::{mock, server_address};
+use mockito::Server;
 
 #[tokio::test]
 async fn test_custom_client() {
-    let _mock = mock("GET", "/").create();
+    let mut server = Server::new_async().await;
+    let _mock = server.mock("GET", "/").create_async().await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
 
     use feignhttp::{Client, ClientWrapper};

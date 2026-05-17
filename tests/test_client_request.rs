@@ -3,13 +3,14 @@
 use feignhttp::{HttpClient, RequestBuilder, map};
 use serde::Serialize;
 
-use mockito::{Matcher, mock, server_address};
+use mockito::{Matcher, Server};
 
 #[tokio::test]
 async fn test_request() {
-    let _mock = mock("GET", "/").create();
+    let mut server = Server::new_async().await;
+    let _mock = server.mock("GET", "/").create_async().await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
     let request = RequestBuilder::new(HttpClient::new().unwrap())
         .url(&url)
@@ -21,13 +22,16 @@ async fn test_request() {
 
 #[tokio::test]
 async fn test_header() {
-    let _mock = mock("GET", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/")
         .match_header("auth", "name_pass")
         .match_header("username", "jack")
         .match_header("pwd", "xxx")
-        .create();
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
 
     let header_map = map!(
@@ -46,13 +50,16 @@ async fn test_header() {
 
 #[tokio::test]
 async fn test_query() {
-    let _mock = mock("GET", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/")
         .match_query(Matcher::Regex("id=1".into()))
         .match_query(Matcher::Regex("name=xxx".into()))
         .match_query(Matcher::Regex("name=xxx2".into()))
-        .create();
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "GET";
 
     let query_vec = [
@@ -75,12 +82,15 @@ async fn test_query() {
 
 #[tokio::test]
 async fn test_send_form() {
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("POST", "/")
         .match_header("content-type", "application/x-www-form-urlencoded")
         .match_body(r#"id=1&name=xxx&name=xxx2"#)
-        .create();
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "POST";
 
     let form_vec: Vec<(&str, String)> = [
@@ -102,12 +112,15 @@ async fn test_send_form() {
 
 #[tokio::test]
 async fn test_send_text() {
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("POST", "/")
         .match_header("content-type", "text/plain")
         .match_body(r#"I' m text"#)
-        .create();
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "POST";
 
     let text = r#"I' m text"#;
@@ -124,12 +137,15 @@ async fn test_send_text() {
 async fn test_send_json() {
     #[cfg(feature = "json")]
     {
-        let _mock = mock("POST", "/")
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/")
             .match_header("content-type", "application/json")
             .match_body(r#"{"id":1,"name":"jack"}"#)
-            .create();
+            .create_async()
+            .await;
 
-        let url = format!("http://{}", server_address());
+        let url = format!("http://{}", server.host_with_port());
         let method = "POST";
 
         #[derive(Serialize)]
@@ -154,12 +170,15 @@ async fn test_send_json() {
 
 #[tokio::test]
 async fn test_send_vec() {
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("POST", "/")
         .match_header("content-type", "application/octet-stream")
         .match_body(r#"aaa"#)
-        .create();
+        .create_async()
+        .await;
 
-    let url = format!("http://{}", server_address());
+    let url = format!("http://{}", server.host_with_port());
     let method = "POST";
 
     let vec = vec![97, 97, 97];
