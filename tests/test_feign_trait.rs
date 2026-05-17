@@ -30,10 +30,10 @@ struct FeignContext {
 #[feign(url = "http://localhost:1237", headers = "accept: {accept}")]
 pub trait FeignClient {
     #[get]
-    async fn home(&self) -> feignhttp::Result<String> {}
+    async fn home(&self) -> feignhttp::Result<String>;
 
     #[get("/repos", headers = "accept: application/json")]
-    async fn repository(&self) -> feignhttp::Result<String> {}
+    async fn repository(&self) -> feignhttp::Result<String>;
 }
 
 #[tokio::test]
