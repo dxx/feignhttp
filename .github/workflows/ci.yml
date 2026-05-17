@@ -32,7 +32,7 @@ jobs:
           - macos-latest
           - windows-latest
         features:
-          - "log,json"
+          - "reqwest-json,log"
           
     runs-on: ${{ matrix.os }}
     
