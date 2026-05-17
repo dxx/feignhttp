@@ -32,7 +32,7 @@ isahc-client = ["dep:isahc"]
 json = ["dep:serde_json"]
 
 reqwest-json = ["reqwest-client", "json", "reqwest/json"]
-reqwest-middleware-json = ["reqwest-middleware-client", "json", "reqwest-middleware/json", "reqwest/json"]
+reqwest-middleware-json = ["reqwest-middleware-client", "json", "reqwest-middleware/json"]
 isahc-json = ["isahc-client", "json", "isahc/json"]
 
 log = ["dep:log"]
