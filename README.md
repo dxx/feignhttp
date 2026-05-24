@@ -12,7 +12,7 @@ FeignHTTP is a declarative HTTP client. Based on rust macros.
 * Easy to use
 * Asynchronous request
 * Configurable timeout settings
-* Supports form, plain text and JSON
+* Supports plain text, form, multipart and JSON
 * Selectable HTTP backends ([reqwest](https://github.com/seanmonstar/reqwest), [reqwest-middleware](https://github.com/TrueLayer/reqwest-middleware) or [isahc](https://github.com/sagebind/isahc))
 
 ## Usage
@@ -29,7 +29,7 @@ tokio = { version = "1", features = ["full"] }
 Add `feignhttp` in your `Cargo.toml` and use default feature:
 
 ```toml
-feignhttp = { version = "0.6.0-rc" }
+feignhttp = { version = "0.6" }
 ```
 
 Then add the following code:
@@ -55,7 +55,7 @@ It will send get request to `https://api.github.com` and receive a plain text bo
 Using non-default HTTP backend:
 
 ```toml
-feignhttp = { version = "0.6.0-rc", default-features = false, features = ["isahc-client"] }
+feignhttp = { version = "0.6", default-features = false, features = ["isahc-client"] }
 ```
 
 The `default-features = false` option disable default reqwest.
@@ -65,6 +65,9 @@ For more examples, click [here](./examples).
 ## Documentation
 
 Read the [documentation](https://docs.rs/feignhttp) for more details.
+
+- [English](./docs/README.md)
+- [中文](./docs/README_zh.md)
 
 ## License
 

@@ -6,7 +6,7 @@
 //!
 //! * Easy to use
 //! * Asynchronous request
-//! * Supports form, plain text and JSON
+//! * Supports plain text, form, multipart and JSON
 //! * Configurable timeout settings
 //! * Friendly error handling
 //! * Selectable HTTP backends ([reqwest](https://docs.rs/reqwest), [reqwest-middleware](https://docs.rs/reqwest-middleware) or [isahc](https://docs.rs/isahc))
@@ -20,6 +20,7 @@
 //! * <a href="#query-parameters">Query Parameters</a>
 //! * <a href="#headers">Headers</a>
 //! * <a href="#form">Form</a>
+//! * <a href="#multipart">Multipart</a>
 //! * <a href="#json">JSON</a>
 //! * <a href="#using-triat">Using Trait</a>
 //! * <a href="#timeout">Timeout</a>
@@ -44,7 +45,7 @@
 //! Add `feignhttp` in your `Cargo.toml` and use default feature:
 //!
 //! ```toml
-//! feignhttp = { version = "0.6.0-rc" }
+//! feignhttp = { version = "0.6" }
 //! ```
 //!
 //! Then add the following code:
@@ -70,7 +71,7 @@
 //! Using non-default HTTP backend:
 //!
 //! ```toml
-//! feignhttp = { version = "0.6.0-rc", default-features = false, features = ["isahc-client"] }
+//! feignhttp = { version = "0.6", default-features = false, features = ["isahc-client"] }
 //! ```
 //!
 //! The `default-features = false` option disable default reqwest.
@@ -242,6 +243,41 @@
 //!
 //! Before sending a request, a header `content-type: application/x-www-form-urlencoded` will be added automatically.
 //! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/form.rs) for more examples.
+//!
+//! ## Multipart
+//!
+//! Using `part` for form fields and `file` for file uploads:
+//!
+//! ```toml
+//! feignhttp = { version = "<version>", features = ["reqwest-multipart"] }
+//! ```
+//!
+//! ```rust, no_run
+//! use feignhttp::post;
+//! use std::path::PathBuf;
+//!
+//! #[post("https://httpbin.org/post")]
+//! async fn upload_file(
+//!     #[file("file")] file: PathBuf,
+//!     #[part("name")] name: &str,
+//! ) -> feignhttp::Result<String> {}
+//! ```
+//!
+//! You can also specify `content_type` and `filename`:
+//!
+//! ```rust, no_run
+//! use feignhttp::post;
+//! use std::path::PathBuf;
+//!
+//! #[post("https://httpbin.org/post")]
+//! async fn upload_file(
+//!     #[file("file", content_type = "image/png", filename = "custom.png")] file: PathBuf,
+//!     #[part("name")] name: &str,
+//! ) -> feignhttp::Result<String> {}
+//! ```
+//!
+//! Supported file types: `PathBuf`, `std::fs::File`, `Vec<u8>`.
+//! See [here](https://github.com/dxx/feignhttp/blob/HEAD/examples/multipart.rs) for a complete example.
 //!
 //! ## JSON
 //!
@@ -610,13 +646,17 @@
 //! ## Optional Features
 //!
 //! The following features are available. The default features are `reqwest-client`
-//! * **reqwest-client** *(default)*: Use `reqwest` as the HTTP backend
+//! * **reqwest-client**: Use `reqwest` as the HTTP backend
 //! * **reqwest-middleware-client**: Use `reqwest-middleware` as the HTTP backend
 //! * **isahc-client**: Use `isahc` as the HTTP backend
 //! * **reqwest-json**: Enable json for `reqwest` backend
 //! * **reqwest-middleware-json**: Enable json for `reqwest-middleware` backend
 //! * **isahc-json**: Enable json for `isahc` backend
+//! * **reqwest-multipart**: Enable multipart for `reqwest` backend
+//! * **reqwest-middleware-multipart**: Enable multipart for `reqwest-middleware` backend
+//! * **isahc-multipart**: Enable multipart for `isahc` backend
 //! * **json**: Enable json serialization and deserialization
+//! * **multipart**: Enable multipart support (required for file uploads)
 //! * **log**: Enable request and response logs
 
 mod config;
