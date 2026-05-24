@@ -6,7 +6,7 @@ FeignHTTP 是一个基于 Rust 宏的声明式 HTTP 客户端。
 
 - 易于使用
 - 异步请求
-- 支持纯文本、表单、多部分和 JSON
+- 支持纯文本、表单、多类型表单和 JSON
 - 可配置超时设置
 - 友好的错误处理
 - 可选的 HTTP 后端 ([reqwest](https://docs.rs/reqwest), [reqwest-middleware](https://docs.rs/reqwest-middleware) 或 [isahc](https://docs.rs/isahc))
@@ -20,7 +20,7 @@ FeignHTTP 是一个基于 Rust 宏的声明式 HTTP 客户端。
 - [查询参数](#查询参数)
 - [请求头](#请求头)
 - [表单](#表单)
-- [多部分表单](#多部分表单)
+- [多类型表单](#多类型表单)
 - [JSON](#json)
 - [使用 Trait](#使用-trait)
 - [超时配置](#超时配置)
@@ -171,7 +171,7 @@ async fn post_user(
 
 自动添加 `content-type: application/x-www-form-urlencoded`。
 
-## 多部分表单
+## 多类型表单
 
 使用 `part` 指定表单字段，`file` 指定文件上传:
 
@@ -422,9 +422,9 @@ feignhttp = { version = "0.6", features = ["log"] }
 - **reqwest-json**: 为 `reqwest` 后端启用 JSON
 - **reqwest-middleware-json**: 为 `reqwest-middleware` 后端启用 JSON
 - **isahc-json**: 为 `isahc` 后端启用 JSON
-- **reqwest-multipart**: 为 `reqwest` 后端启用多部分表单
-- **reqwest-middleware-multipart**: 为 `reqwest-middleware` 后端启用多部分表单
-- **isahc-multipart**: 为 `isahc` 后端启用多部分表单
+- **reqwest-multipart**: 为 `reqwest` 后端启用多类型表单
+- **reqwest-middleware-multipart**: 为 `reqwest-middleware` 后端启用多类型表单
+- **isahc-multipart**: 为 `isahc` 后端启用多类型表单
 - **json**: 启用 JSON 序列化/反序列化
-- **multipart**: 启用多部分表单支持（文件上传必需）
+- **multipart**: 启用多类型表单支持（文件上传必需）
 - **log**: 启用请求和响应日志
