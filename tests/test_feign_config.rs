@@ -28,6 +28,7 @@ async fn test_dynamic_timeout1() {
 }
 
 #[tokio::test]
+#[ignore = "Unstable network and services"]
 async fn test_dynamic_timeout2() {
     dynamic_timeout(8000).await.unwrap();
 }
