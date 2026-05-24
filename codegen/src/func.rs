@@ -4,7 +4,7 @@ use crate::util::{
     remove_url_attr,
 };
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::collections::HashMap;
 use std::str::FromStr;
 use syn::DataStruct;
@@ -23,6 +23,7 @@ pub struct FnArg {
     pub name: String,
     pub var: syn::Ident,
     pub var_type: syn::Type,
+    pub meta_map: HashMap<String, String>,
 }
 
 pub fn http_impl(method: Method, attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -204,8 +205,25 @@ pub fn fn_impl(
 
     let body_vars = find_type_vars(&args, ArgType::BODY, |_fn_arg| true);
 
+    let (part_names, part_vars) = find_type_name_vars(&args, ArgType::PART, |_fn_arg| true);
+
+    let (file_names, file_vars, file_metas) =
+        find_type_name_vars_with_meta(&args, ArgType::FILE, |_fn_arg| true);
+
+    let has_multipart = !part_vars.is_empty() || !file_vars.is_empty();
+
     // Valid form and body.
-    if form_vars.len() > 0 && body_vars.len() > 0 {
+    if has_multipart && (form_vars.len() > 0 || body_vars.len() > 0) {
+        return Err(syn::Error::new_spanned(
+            &sig.inputs,
+            "multipart (part or file) cannot be used with form or body",
+        ));
+    } else if has_multipart && body_vars.len() > 1 {
+        return Err(syn::Error::new_spanned(
+            &sig.inputs,
+            "request must have only one body",
+        ));
+    } else if form_vars.len() > 0 && body_vars.len() > 0 {
         return Err(syn::Error::new_spanned(
             &sig.inputs,
             "request must have only one of body or form",
@@ -251,6 +269,14 @@ pub fn fn_impl(
                 return Err(syn::Error::new_spanned(&sig.inputs, e));
             }
         }
+    } else if has_multipart {
+        send_fn_call = get_multipart_fn_call(
+            &part_names,
+            &part_vars,
+            &file_names,
+            &file_vars,
+            &file_metas,
+        );
     }
 
     let return_args = parse_return_type(sig)?;
@@ -394,6 +420,24 @@ fn find_type_name_vars(
         vars.push(arg.var.clone());
     }
     (names, vars)
+}
+
+fn find_type_name_vars_with_meta(
+    args: &Vec<FnArg>,
+    arg_type: ArgType,
+    filter: impl Fn(&FnArg) -> bool,
+) -> (Vec<String>, Vec<syn::Ident>, Vec<HashMap<String, String>>) {
+    let args = args
+        .iter()
+        .filter(|arg| arg.arg_type == arg_type)
+        .filter(|arg| filter(arg));
+    let (mut names, mut vars, mut meta_maps) = (vec![], vec![], vec![]);
+    for arg in args {
+        names.push(arg.name.clone());
+        vars.push(arg.var.clone());
+        meta_maps.push(arg.meta_map.clone());
+    }
+    (names, vars, meta_maps)
 }
 
 fn find_type_vars(
@@ -615,4 +659,47 @@ fn get_form_fn_call(
         token_str.push_str("])");
         Ok(proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap())
     };
+}
+
+fn get_multipart_fn_call(
+    part_names: &[String],
+    part_vars: &[syn::Ident],
+    file_names: &[String],
+    file_vars: &[syn::Ident],
+    file_metas: &[HashMap<String, String>],
+) -> proc_macro2::TokenStream {
+    let mut token_str = "send_multipart(multipart::MultipartForm::new()".to_string();
+
+    for i in 0..part_names.len() {
+        let part_name = part_names.get(i).unwrap();
+        let part_var = part_vars.get(i).unwrap();
+        token_str.push_str(&format!(
+            ".add_part(multipart::Part::text(\"{}\", &{}))",
+            part_name, part_var
+        ));
+    }
+
+    for i in 0..file_names.len() {
+        let file_name = file_names.get(i).unwrap();
+        let file_var = file_vars.get(i).unwrap();
+        let file_meta = file_metas.get(i).unwrap();
+        let content_type = file_meta.get("content_type");
+        let filename = file_meta.get("filename");
+        let ct_str = match content_type {
+            Some(ct) => format!("Some(\"{}\")", ct),
+            None => "None".to_string(),
+        };
+        let fn_str = match filename {
+            Some(name) => format!("Some(\"{}\")", name),
+            None => "None".to_string(),
+        };
+        let part_str = format!(
+            ".add_part(multipart::Part::file_with_content_type(\"{}\", {}, {}, {})?)",
+            file_name, file_var, ct_str, fn_str
+        );
+        token_str.push_str(&part_str);
+    }
+
+    token_str.push_str(")");
+    proc_macro2::TokenStream::from_str(token_str.as_str()).unwrap()
 }

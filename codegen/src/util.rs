@@ -211,7 +211,7 @@ impl<'a> From<&'a mut Field> for PType<'a> {
 }
 
 fn extract_name(attr: &Attribute) -> Option<String> {
-    let metas = get_metas(attr)?;
+    let metas = parse_attr_metas(attr)?;
     let nested_meta = metas.first()?;
     match nested_meta {
         NestedMeta::Lit(lit) => {
@@ -260,12 +260,14 @@ fn parse_args<'a>(
         {
             found_one = true;
             let name = extract_name(attr).unwrap_or_else(|| name.clone());
+            let meta_map = parse_attr_meta_to_map(attr);
 
             req_args.push(FnArg {
                 arg_type: ty,
                 name,
                 var: ident.clone(),
                 var_type: pat_type.ty.clone(),
+                meta_map,
             });
         }
 
@@ -275,6 +277,7 @@ fn parse_args<'a>(
                 name,
                 var: ident,
                 var_type: pat_type.ty.clone(),
+                meta_map: HashMap::new(),
             });
         }
 
@@ -346,7 +349,7 @@ impl quote::ToTokens for NestedMeta {
     }
 }
 
-pub fn get_metas(attr: &syn::Attribute) -> Option<Vec<NestedMeta>> {
+pub fn parse_attr_metas(attr: &syn::Attribute) -> Option<Vec<NestedMeta>> {
     if let syn::Meta::List(meta_list) = &attr.meta {
         let nested = meta_list.parse_args_with(
             syn::punctuated::Punctuated::<NestedMeta, syn::Token![,]>::parse_terminated,
@@ -374,4 +377,38 @@ pub fn get_meta_str_value(meta: &NestedMeta, name: &str) -> Option<String> {
         _ => {}
     }
     None
+}
+
+pub fn parse_attr_meta_to_map(attr: &syn::Attribute) -> HashMap<String, String> {
+    let mut attr_map = HashMap::new();
+    if let Some(metas) = parse_attr_metas(attr) {
+        for meta in metas.into_iter() {
+            match meta {
+                // A literal, like the `xxx` in `#[get(p = xxx)]`.
+                NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
+                    let key = name_value.path.segments.last().unwrap().ident.to_string();
+                    match &name_value.value {
+                        syn::Expr::Lit(expr_lit) => match &expr_lit.lit {
+                            syn::Lit::Str(s) => {
+                                attr_map.insert(key, s.value());
+                            }
+                            syn::Lit::Int(i) => {
+                                attr_map.insert(key, i.to_string());
+                            }
+                            syn::Lit::Float(f) => {
+                                attr_map.insert(key, f.to_string());
+                            }
+                            syn::Lit::Bool(b) => {
+                                attr_map.insert(key, format!("{}", b.value()));
+                            }
+                            _ => {}
+                        },
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    attr_map
 }

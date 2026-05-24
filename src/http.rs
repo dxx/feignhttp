@@ -23,7 +23,7 @@ pub trait FeignClientBuilder: Sized {
     fn build(self) -> Result<Self::Target>;
 }
 
-/// A trait for HTTP clients.
+/// A trait for HTTP client.
 pub trait Client: Sized + Clone {
     type Inner;
 
@@ -60,7 +60,7 @@ pub trait HttpResponse {
         T: serde::de::DeserializeOwned;
 }
 
-/// An HTTP client to create RequestBuilder.
+/// An HTTP client to create ClientWrapper.
 pub struct HttpClient;
 
 impl HttpClient {

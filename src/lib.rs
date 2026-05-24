@@ -640,6 +640,9 @@ mod isahc;
 #[cfg(feature = "isahc-client")]
 pub use crate::isahc::*;
 
+#[cfg(feature = "multipart")]
+pub mod multipart;
+
 #[doc(hidden)]
 pub mod ser;
 #[doc(hidden)]

@@ -37,6 +37,8 @@ pub enum ArgType {
     FORM,
     BODY,
     PARAM,
+    PART,
+    FILE,
 }
 
 impl fmt::Display for ArgType {
@@ -47,7 +49,9 @@ impl fmt::Display for ArgType {
             ArgType::QUERY => "query",
             ArgType::FORM => "form",
             ArgType::BODY => "body",
-            ArgType::PARAM => "PARAM",
+            ArgType::PARAM => "param",
+            ArgType::PART => "part",
+            ArgType::FILE => "file",
         };
         write!(f, "{}", t)
     }
@@ -64,6 +68,8 @@ impl FromStr for ArgType {
             "form" => Ok(ArgType::FORM),
             "body" => Ok(ArgType::BODY),
             "param" => Ok(ArgType::PARAM),
+            "part" => Ok(ArgType::PART),
+            "file" => Ok(ArgType::FILE),
             _ => Err("unknown arg type: ".to_string() + s),
         }
     }

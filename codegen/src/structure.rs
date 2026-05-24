@@ -1,7 +1,7 @@
 use crate::enu::Method;
 use crate::func::{client_fn_impl, fn_impl, FnMetadata};
 use crate::util::{
-    get_meta_str_value, get_metas, parse_exprs, parse_url_stream, remove_url_attr, NestedMeta,
+    get_meta_str_value, parse_attr_metas, parse_attr_meta_to_map, parse_exprs, parse_url_stream, remove_url_attr, NestedMeta,
 };
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, ToTokens};
@@ -229,7 +229,7 @@ fn fn_to_streams(
                 }
 
                 // Override meta.
-                let map = parse_fn_metas(attr);
+                let map = parse_attr_meta_to_map(attr);
                 for (k, v) in map {
                     meta_map.insert(k, v);
                 }
@@ -255,7 +255,7 @@ fn fn_to_streams(
 }
 
 fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream> {
-    if let Some(vec) = get_metas(attr) {
+    if let Some(vec) = parse_attr_metas(attr) {
         if let Some(nested_meta) = vec.first() {
             match nested_meta {
                 // A literal, like the `"/xxx"` in `#[get("/xxx")]`.
@@ -277,40 +277,6 @@ fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream>
         }
     }
     Ok(proc_macro2::TokenStream::new())
-}
-
-fn parse_fn_metas(attr: &syn::Attribute) -> HashMap<String, String> {
-    let mut attr_map = HashMap::new();
-    if let Some(metas) = get_metas(attr) {
-        for meta in metas.into_iter() {
-            match meta {
-                // A literal, like the `xxx` in `#[get(p = xxx)]`.
-                NestedMeta::Meta(syn::Meta::NameValue(name_value)) => {
-                    let key = name_value.path.segments.last().unwrap().ident.to_string();
-                    match &name_value.value {
-                        syn::Expr::Lit(expr_lit) => match &expr_lit.lit {
-                            syn::Lit::Str(s) => {
-                                attr_map.insert(key, s.value());
-                            }
-                            syn::Lit::Int(i) => {
-                                attr_map.insert(key, i.to_string());
-                            }
-                            syn::Lit::Float(f) => {
-                                attr_map.insert(key, f.to_string());
-                            }
-                            syn::Lit::Bool(b) => {
-                                attr_map.insert(key, format!("{}", b.value()));
-                            }
-                            _ => {}
-                        },
-                        _ => {}
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-    attr_map
 }
 
 fn fn_to_streams_for_trait(
@@ -340,7 +306,7 @@ fn fn_to_streams_for_trait(
                     url = quote!(#url + #fn_path);
                 }
 
-                let map = parse_fn_metas(attr);
+                let map = parse_attr_meta_to_map(attr);
                 for (k, v) in map {
                     meta_map.insert(k, v);
                 }

@@ -1,5 +1,7 @@
 #[cfg(feature = "log")]
 use super::log::{print_request_log, print_response_log};
+#[cfg(feature = "multipart")]
+use crate::multipart::{MultipartForm, build_multipart_body};
 use crate::{
     config::{ClientConfig, RequestConfig},
     error::{Error, ErrorKind, Result},
@@ -222,6 +224,13 @@ impl RequestWrapper {
     pub async fn send_vec(mut self, vec: Vec<u8>) -> Result<ResponseWrapper> {
         self.set_header_if_absent("content-type", "application/octet-stream".to_string());
         self.send_body(Some(Body::from(vec))).await
+    }
+
+    #[cfg(feature = "multipart")]
+    pub async fn send_multipart(mut self, form: MultipartForm) -> Result<ResponseWrapper> {
+        let (body, content_type) = build_multipart_body(&form);
+        self.set_header_if_absent("content-type", content_type);
+        self.send_body(Some(Body::from(body))).await
     }
 }
 
