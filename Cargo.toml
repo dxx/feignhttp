@@ -1,6 +1,6 @@
 [package]
 name = "feignhttp"
-version = "0.6.0-rc.2"
+version = "0.6.0"
 authors = ["dxx <dx1898@foxmail.com>"]
 edition = "2024"
 description = "Declarative HTTP client for rust"
@@ -13,6 +13,7 @@ readme = "README.md"
 license = "MIT"
 
 exclude = [
+    "docs/**",
     "examples/**",
 ]
 
@@ -44,7 +45,7 @@ multipart = ["dep:mime_guess"]
 log = ["dep:log"]
 
 [dependencies]
-feignhttp-codegen = { version = "0.6.0-rc", path = "./codegen" }
+feignhttp-codegen = { version = "0.6", path = "./codegen" }
 
 async-trait = "0.1"
 
