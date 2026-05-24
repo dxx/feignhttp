@@ -14,13 +14,11 @@ pub trait UserClient {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tokens = vec!["token_a", "token_b", "token_c"];
 
-
     let client = Arc::new(UserClient::builder().build()?);
 
     let handles: Vec<_> = tokens
         .into_iter()
         .map(|token| {
-            
             let client = client.clone();
             async move {
                 let r = client.get_headers(token).await;

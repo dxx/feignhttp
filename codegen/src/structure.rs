@@ -1,13 +1,14 @@
 use crate::enu::Method;
-use crate::func::{client_fn_impl, fn_impl, FnMetadata};
+use crate::func::{FnMetadata, client_fn_impl, fn_impl};
 use crate::util::{
-    get_meta_str_value, parse_attr_metas, parse_attr_meta_to_map, parse_exprs, parse_url_stream, remove_url_attr, NestedMeta,
+    NestedMeta, get_meta_str_value, parse_attr_meta_to_map, parse_attr_metas, parse_exprs,
+    parse_url_stream, remove_url_attr,
 };
 use proc_macro::TokenStream;
-use quote::{format_ident, quote, ToTokens};
+use quote::{ToTokens, format_ident, quote};
 use std::collections::HashMap;
 use syn::DeriveInput;
-use syn::{parse_macro_input, ItemImpl};
+use syn::{ItemImpl, parse_macro_input};
 
 pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let url = match parse_url_stream(&attr) {
@@ -141,7 +142,9 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
             .into()
         }
         syn::Item::Impl(item_impl) => {
-            eprint!("warning: useing `feign` on impl is deprecated, please use it on trait and it will be removed in future versions.\n");
+            eprint!(
+                "warning: useing `feign` on impl is deprecated, please use it on trait and it will be removed in future versions.\n"
+            );
 
             let impl_signature = impl_signature(&item_impl);
 
@@ -271,7 +274,7 @@ fn parse_fn_path(attr: &syn::Attribute) -> syn::Result<proc_macro2::TokenStream>
                             nested_meta,
                             "metadata path not specified or must be the first",
                         )),
-                    }
+                    };
                 }
             }
         }

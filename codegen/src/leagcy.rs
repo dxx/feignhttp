@@ -1,10 +1,10 @@
 use crate::enu::ArgType;
-use crate::func::{client_fn_impl, FnArg, FnMetadata};
+use crate::func::{FnArg, FnMetadata, client_fn_impl};
 use crate::util::{parse_args_from_sig, parse_return_type};
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::str::FromStr;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 const CONFIG_KEYS: [&str; 1] = ["timeout"];
 
