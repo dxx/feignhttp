@@ -18,13 +18,13 @@ async fn test_timeout() {
     timeout().await.unwrap();
 }
 
-#[get(url = "https://httpbin.org/delay/1", timeout = "{time}")]
+#[get(url = "https://httpbin.org/delay/3", timeout = "{time}")]
 async fn dynamic_timeout(#[param] time: u16) -> feignhttp::Result<String> {}
 
 #[tokio::test]
 #[should_panic]
 async fn test_dynamic_timeout1() {
-    dynamic_timeout(200).await.unwrap();
+    dynamic_timeout(1000).await.unwrap();
 }
 
 #[tokio::test]
