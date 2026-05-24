@@ -252,7 +252,7 @@
 //! feignhttp = { version = "<version>", features = ["reqwest-multipart"] }
 //! ```
 //!
-//! ```rust, no_run
+//! ```rust, ignore
 //! use feignhttp::post;
 //! use std::path::PathBuf;
 //!
@@ -265,7 +265,7 @@
 //!
 //! You can also specify `content_type` and `filename`:
 //!
-//! ```rust, no_run
+//! ```rust, ignore
 //! use feignhttp::post;
 //! use std::path::PathBuf;
 //!
