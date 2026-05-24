@@ -29,11 +29,17 @@ reqwest-client = ["dep:reqwest"]
 reqwest-middleware-client = ["dep:reqwest-middleware", "dep:reqwest"]
 isahc-client = ["dep:isahc"]
 
-json = ["dep:serde_json"]
-
 reqwest-json = ["reqwest-client", "json", "reqwest/json"]
 reqwest-middleware-json = ["reqwest-middleware-client", "json", "reqwest-middleware/json"]
 isahc-json = ["isahc-client", "json", "isahc/json"]
+
+reqwest-multipart = ["reqwest-client", "multipart"]
+reqwest-middleware-multipart = ["reqwest-middleware-client", "multipart"]
+isahc-multipart = ["isahc-client", "multipart"]
+
+json = ["dep:serde_json"]
+
+multipart = ["dep:mime_guess"]
 
 log = ["dep:log"]
 
@@ -66,6 +72,9 @@ isahc = { version = "1.8.2", optional = true }
 
 ## json
 serde_json = { version = "1.0", optional = true }
+
+## mime_guess
+mime_guess = { version = "2.0", optional = true }
 
 ## log
 log = { version = "0.4", optional = true }
