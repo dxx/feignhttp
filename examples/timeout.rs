@@ -8,7 +8,7 @@ async fn default_connect_timeout() -> feignhttp::Result<String> {}
 #[get(url = "https://httpbin.org/delay/5", timeout = 3000)]
 async fn default_timeout() -> feignhttp::Result<String> {}
 
-// The default timeout for all requests in the trait is 10000 milliseconds.
+/// The default timeout for all requests in the trait is 10000 milliseconds.
 #[feign(url = "https://httpbin.org")]
 pub trait TimeoutClient {
     // The default timeout is 10000 milliseconds.
@@ -21,7 +21,7 @@ pub trait TimeoutClient {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match default_connect_timeout().await {
         Ok(res) => {
             println!("default_connect_timeout ok: {}", res);
@@ -42,7 +42,7 @@ async fn main() {
         }
     }
 
-    let http_client = TimeoutClient::builder().build().unwrap();
+    let http_client = TimeoutClient::builder().build()?;
     match http_client.default_timeout().await {
         Ok(res) => {
             // Execute here.
@@ -62,4 +62,6 @@ async fn main() {
             println!("TimeoutClient.custom_timeout err: {:?}", err);
         }
     }
+
+    Ok(())
 }

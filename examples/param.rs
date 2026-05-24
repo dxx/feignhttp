@@ -29,9 +29,9 @@ pub trait Http {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A request with a header `token: ZmVpZ25odHRw`.
-    let res = headers("ZmVpZ25odHRw").await.unwrap();
+    let res = headers("ZmVpZ25odHRw").await?;
     println!("headers: {}", res);
 
     // Request timeout is 3000ms.
@@ -90,4 +90,6 @@ async fn main() {
             println!("Http::override_timeout(\"7000\") err: {:?}\n", err);
         }
     }
+
+    Ok(())
 }
