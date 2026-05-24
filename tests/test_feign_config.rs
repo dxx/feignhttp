@@ -29,7 +29,7 @@ async fn test_dynamic_timeout1() {
 
 #[tokio::test]
 async fn test_dynamic_timeout2() {
-    dynamic_timeout(5000).await.unwrap();
+    dynamic_timeout(8000).await.unwrap();
 }
 
 #[feign(url = "https://httpbin.org", timeout = 3000)]
