@@ -1,4 +1,6 @@
 use crate::FeignContext;
+#[cfg(feature = "multipart")]
+use crate::multipart::MultipartForm;
 use crate::{ClientConfig, ClientWrapper, RequestConfig, RequestWrapper, error::Result};
 use async_trait::async_trait;
 use http::StatusCode;
@@ -34,10 +36,31 @@ pub trait Client: Sized + Clone {
 }
 
 /// A trait of HTTP request.
+#[async_trait]
 pub trait HttpRequest {
+    type Response: HttpResponse;
+
     fn headers(self, headers: HashMap<&str, String>) -> Self;
 
     fn query(self, query: Vec<(&str, String)>) -> Self;
+
+    async fn send(self) -> Result<Self::Response>;
+
+    async fn send_text(self, text: String) -> Result<Self::Response>;
+
+    async fn send_form<T>(self, form: &T) -> Result<Self::Response>
+    where
+        T: serde::ser::Serialize + Sync;
+
+    #[cfg(feature = "json")]
+    async fn send_json<T>(self, json: &T) -> Result<Self::Response>
+    where
+        T: serde::ser::Serialize + Sync;
+
+    #[cfg(feature = "multipart")]
+    async fn send_multipart(self, form: MultipartForm) -> Result<Self::Response>;
+
+    async fn send_vec(self, vec: Vec<u8>) -> Result<Self::Response>;
 }
 
 /// A trait of HTTP response.

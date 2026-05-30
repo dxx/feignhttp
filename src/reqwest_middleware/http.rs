@@ -77,7 +77,10 @@ pub struct ResponseWrapper {
     response: Response,
 }
 
+#[async_trait]
 impl HttpRequest for RequestWrapper {
+    type Response = ResponseWrapper;
+
     fn headers(mut self, headers: HashMap<&str, String>) -> Self {
         for (k, v) in headers {
             self.headers.insert(k.to_lowercase(), v);
@@ -102,6 +105,49 @@ impl HttpRequest for RequestWrapper {
                 .request(self.method.clone(), new_url);
         }
         self
+    }
+
+    async fn send(self) -> Result<Self::Response> {
+        self.send_body(None).await
+    }
+
+    async fn send_text(mut self, text: String) -> Result<Self::Response> {
+        self.set_header_if_absent("content-type", "text/plain".to_string());
+        self.send_body(Some(Body::from(text))).await
+    }
+
+    async fn send_form<T>(mut self, form: &T) -> Result<Self::Response>
+    where
+        T: serde::ser::Serialize + Sync,
+    {
+        self.set_header_if_absent(
+            "content-type",
+            "application/x-www-form-urlencoded".to_string(),
+        );
+        let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
+        self.send_body(Some(Body::from(form))).await
+    }
+
+    #[cfg(feature = "json")]
+    async fn send_json<T>(mut self, json: &T) -> Result<Self::Response>
+    where
+        T: serde::ser::Serialize + Sync,
+    {
+        self.set_header_if_absent("content-type", "application/json".to_string());
+        let json = serde_json::to_string(json).map_err(Error::encode)?;
+        self.send_body(Some(Body::from(json))).await
+    }
+
+    #[cfg(feature = "multipart")]
+    async fn send_multipart(mut self, form: MultipartForm) -> Result<Self::Response> {
+        let (body, content_type) = build_multipart_body(&form);
+        self.set_header_if_absent("content-type", content_type);
+        self.send_body(Some(Body::from(body))).await
+    }
+
+    async fn send_vec(mut self, vec: Vec<u8>) -> Result<Self::Response> {
+        self.set_header_if_absent("content-type", "application/octet-stream".to_string());
+        self.send_body(Some(Body::from(vec))).await
     }
 }
 
@@ -186,49 +232,6 @@ impl RequestWrapper {
             }
             Err(e) => Err(Error::new(ErrorKind::Request, Some(e))),
         };
-    }
-
-    pub async fn send(self) -> Result<ResponseWrapper> {
-        self.send_body(None).await
-    }
-
-    pub async fn send_text(mut self, text: String) -> Result<ResponseWrapper> {
-        self.set_header_if_absent("content-type", "text/plain".to_string());
-        self.send_body(Some(Body::from(text))).await
-    }
-
-    pub async fn send_form<T>(mut self, form: &T) -> Result<ResponseWrapper>
-    where
-        T: serde::ser::Serialize,
-    {
-        self.set_header_if_absent(
-            "content-type",
-            "application/x-www-form-urlencoded".to_string(),
-        );
-        let form = serde_urlencoded::to_string(form).map_err(Error::encode)?;
-        self.send_body(Some(Body::from(form))).await
-    }
-
-    #[cfg(feature = "json")]
-    pub async fn send_json<T>(mut self, json: &T) -> Result<ResponseWrapper>
-    where
-        T: serde::ser::Serialize,
-    {
-        self.set_header_if_absent("content-type", "application/json".to_string());
-        let json = serde_json::to_string(json).map_err(Error::encode)?;
-        self.send_body(Some(Body::from(json))).await
-    }
-
-    pub async fn send_vec(mut self, vec: Vec<u8>) -> Result<ResponseWrapper> {
-        self.set_header_if_absent("content-type", "application/octet-stream".to_string());
-        self.send_body(Some(Body::from(vec))).await
-    }
-
-    #[cfg(feature = "multipart")]
-    pub async fn send_multipart(mut self, form: MultipartForm) -> Result<ResponseWrapper> {
-        let (body, content_type) = build_multipart_body(&form);
-        self.set_header_if_absent("content-type", content_type);
-        self.send_body(Some(Body::from(body))).await
     }
 }
 

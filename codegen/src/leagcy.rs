@@ -194,7 +194,7 @@ pub fn leagcy_fn_impl(
         #vis #sig {
             use feignhttp::FeignContext as _;
             use std::collections::HashMap;
-            use feignhttp::{HttpClient, RequestConfig, RequestBuilder, HttpResponse, ser, util};
+            use feignhttp::{HttpClient, RequestConfig, RequestBuilder, HttpRequest, HttpResponse, ser, util};
 
             let mut param_map: HashMap<String, String> = #param_map;
             #(
