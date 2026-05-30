@@ -1,4 +1,4 @@
-use feignhttp::RequestBuilder;
+use feignhttp::{HttpRequest, RequestBuilder};
 
 use mockito::Server;
 

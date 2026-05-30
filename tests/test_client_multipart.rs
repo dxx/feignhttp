@@ -1,5 +1,5 @@
 #![allow(unused_imports)]
-use feignhttp::{HttpClient, HttpResponse, RequestBuilder};
+use feignhttp::{HttpClient, HttpRequest, HttpResponse, RequestBuilder};
 
 #[tokio::test]
 async fn test_send_multipart() {
@@ -7,7 +7,7 @@ async fn test_send_multipart() {
     {
         use feignhttp::multipart;
 
-        // The Vec<u8> from https://www.rust-lang.org/static/images/rust-logo-blk.svg.
+        // The Vec<u8> containing data from https://www.rust-lang.org/static/images/rust-logo-blk.svg.
         let file_u8 = vec![
             60, 115, 118, 103, 32, 104, 101, 105, 103, 104, 116, 61, 34, 49, 52, 52, 34, 32, 119,
             105, 100, 116, 104, 61, 34, 49, 52, 52, 34, 32, 120, 109, 108, 110, 115, 61, 34, 104,

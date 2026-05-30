@@ -1,4 +1,4 @@
-use feignhttp::{ClientConfig, HttpClient, RequestBuilder, RequestConfig};
+use feignhttp::{ClientConfig, HttpClient, HttpRequest, RequestBuilder, RequestConfig};
 
 #[tokio::test]
 #[should_panic]
