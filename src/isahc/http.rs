@@ -25,7 +25,6 @@ impl Client for ClientWrapper {
 
     fn new() -> Result<ClientWrapper> {
         let client = HttpClient::builder()
-            .default_header("user-agent", "Feign HTTP")
             .redirect_policy(RedirectPolicy::Limit(10))
             .build()
             .map_err(Error::build)?;
@@ -35,7 +34,7 @@ impl Client for ClientWrapper {
     }
 
     fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
-        let mut client_builder = HttpClient::builder().default_header("user-agent", "Feign HTTP");
+        let mut client_builder = HttpClient::builder();
         if let Some(millisecond) = config.connect_timeout {
             client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
         }
@@ -117,7 +116,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!(),
+            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
             request,
         })
     }
@@ -139,7 +138,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!(),
+            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
             request,
         })
     }

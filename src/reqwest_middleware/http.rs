@@ -28,7 +28,6 @@ impl ClientTrait for ClientWrapper {
 
     fn new() -> Result<ClientWrapper> {
         let client = reqwest_middleware::reqwest::Client::builder()
-            .user_agent("Feign HTTP")
             .build()
             .map_err(Error::build)?;
         let middleware_client = ClientBuilder::new(client).build();
@@ -38,8 +37,7 @@ impl ClientTrait for ClientWrapper {
     }
 
     fn with_config(config: ClientConfig) -> Result<ClientWrapper> {
-        let mut client_builder =
-            reqwest_middleware::reqwest::Client::builder().user_agent("Feign HTTP");
+        let mut client_builder = reqwest_middleware::reqwest::Client::builder();
         if let Some(millisecond) = config.connect_timeout {
             client_builder = client_builder.connect_timeout(Duration::from_millis(millisecond));
         }
@@ -118,7 +116,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!(),
+            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
             request,
             method,
         })
@@ -141,7 +139,7 @@ impl RequestWrapper {
         Ok(RequestWrapper {
             client_wrapper,
             url,
-            headers: map!(),
+            headers: map!("user-agent".to_string() => "Feign HTTP".to_string()),
             request,
             method,
         })
