@@ -1,8 +1,11 @@
 use log::debug;
 use reqwest::{RequestBuilder, Response};
 
-pub fn print_request_log(request: RequestBuilder) {
-    if let Ok(request) = request.build() {
+pub fn print_request_log(request: Option<RequestBuilder>) {
+    if let None = request {
+        return;
+    }
+    if let Ok(request) = request.unwrap().build() {
         debug!(
             "---> {} {} {:?}",
             request.method().to_string(),

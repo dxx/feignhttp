@@ -169,7 +169,7 @@ impl RequestWrapper {
         }
 
         #[cfg(feature = "log")]
-        print_request_log(request.try_clone().unwrap());
+        print_request_log(request.try_clone());
 
         return match request.send().await {
             Ok(response) => {
