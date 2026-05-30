@@ -52,7 +52,7 @@ pub trait HttpResponse {
     async fn vec(self) -> Result<Vec<u8>>;
 
     #[cfg(feature = "json")]
-    async fn json<T>(mut self) -> Result<T>
+    async fn json<T>(self) -> Result<T>
     where
         T: serde::de::DeserializeOwned;
 }
