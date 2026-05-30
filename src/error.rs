@@ -1,7 +1,4 @@
-#[cfg(feature = "isahc-client")]
-use http_0_2::StatusCode;
-#[cfg(not(feature = "isahc-client"))]
-use http_1_x::StatusCode;
+use http::StatusCode;
 use std::error::Error as StdError;
 use std::fmt;
 use std::result::Result as StdResult;

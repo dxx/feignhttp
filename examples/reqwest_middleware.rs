@@ -13,8 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "reqwest-middleware-client")]
     {
         use reqwest_middleware::{ClientBuilder, Middleware, Next, reqwest};
-        // use http::Extensions;
-        use http_1_x::Extensions;
+        use http::Extensions;
 
         struct LoggingMiddleware;
 

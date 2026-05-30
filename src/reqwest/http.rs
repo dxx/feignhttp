@@ -9,7 +9,7 @@ use crate::{
     map,
 };
 use async_trait::async_trait;
-use http_1_x::StatusCode;
+use http::StatusCode;
 use reqwest::{Body, Client, Method, RequestBuilder, Response};
 use std::collections::HashMap;
 use std::str::FromStr;

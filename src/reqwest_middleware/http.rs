@@ -9,7 +9,7 @@ use crate::{
     map,
 };
 use async_trait::async_trait;
-use http_1_x::StatusCode;
+use http::StatusCode;
 use reqwest_middleware::RequestBuilder;
 use reqwest_middleware::reqwest::{Body, Method, Response};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};

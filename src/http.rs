@@ -1,10 +1,7 @@
 use crate::FeignContext;
 use crate::{ClientConfig, ClientWrapper, RequestConfig, RequestWrapper, error::Result};
 use async_trait::async_trait;
-#[cfg(feature = "isahc-client")]
-use http_0_2::StatusCode;
-#[cfg(not(feature = "isahc-client"))]
-use http_1_x::StatusCode;
+use http::StatusCode;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
