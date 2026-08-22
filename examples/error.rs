@@ -71,8 +71,9 @@ async fn main() {
             if err.is_status_error() {
                 println!("status_error: {}", err);
             }
-            if let ErrorKind::Status(status) = err.error_kind() {
-                println!("status error code: {}", status.as_u16());
+            if let ErrorKind::Status(status, body) = err.error_kind() {
+                println!("error status code: {}", status.as_u16());
+                println!("error body: {}", body);
 
                 if status.is_client_error() {
                     // Handle error.
