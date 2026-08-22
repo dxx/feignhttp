@@ -16,7 +16,7 @@ pub enum ErrorKind {
     Encode,             // Indicates an error occurred when encode request body.
     Decode,             // Indicates an error occurred when encode response body.
     Request,            // Indicates an error occurred when request target url.
-    Status(StatusCode), // Indicates an error occurred when the http status is not ok.
+    Status(StatusCode, String), // Indicates an error occurred when the http status code is between 400 and 599.
     Serialize(String),  // Indicates an error occurred when serialized by serde.
 }
 
@@ -61,8 +61,8 @@ impl Error {
         Error::new(ErrorKind::Encode, Some(e))
     }
 
-    pub(crate) fn status(url: Url, status: StatusCode) -> Self {
-        Error::new(ErrorKind::Status(status), None::<Error>).with_url(url)
+    pub(crate) fn status(url: Url, status: StatusCode, body: String) -> Self {
+        Error::new(ErrorKind::Status(status, body), None::<Error>).with_url(url)
     }
 
     pub(crate) fn with_url(mut self, url: Url) -> Self {
@@ -95,7 +95,7 @@ impl Error {
     }
 
     pub fn is_status_error(&self) -> bool {
-        matches!(self.inner.kind, ErrorKind::Status(_))
+        matches!(self.inner.kind, ErrorKind::Status(_, _))
     }
 }
 
@@ -131,7 +131,7 @@ impl fmt::Display for Error {
             ErrorKind::Request => f.write_str("error sending request")?,
             ErrorKind::Encode => f.write_str("error encoding request body")?,
             ErrorKind::Decode => f.write_str("error decoding response body")?,
-            ErrorKind::Status(ref status_code) => {
+            ErrorKind::Status(ref status_code, _) => {
                 let prefix = if status_code.is_client_error() {
                     "HTTP status client error"
                 } else {

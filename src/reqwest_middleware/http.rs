@@ -225,7 +225,8 @@ impl RequestWrapper {
                 let status = response.status();
 
                 if status.is_client_error() || status.is_server_error() {
-                    return Err(Error::status(url, status));
+                    let body_text = response.text().await.map_err(Error::decode)?;
+                    return Err(Error::status(url, status, body_text));
                 }
 
                 Ok(ResponseWrapper { response })
