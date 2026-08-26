@@ -6,6 +6,9 @@ pub enum Method {
     POST,
     PUT,
     DELETE,
+    PATCH,
+    HEAD,
+    OPTIONS,
 }
 
 impl Method {
@@ -15,6 +18,9 @@ impl Method {
             Method::POST => "POST",
             Method::PUT => "PUT",
             Method::DELETE => "DELETE",
+            Method::PATCH => "PATCH",
+            Method::HEAD => "HEAD",
+            Method::OPTIONS => "OPTIONS",
         }
     }
     pub fn from_str(str: &str) -> Result<Method, String> {
@@ -23,6 +29,9 @@ impl Method {
             "post" | "POST" => Ok(Method::POST),
             "put" | "PUT" => Ok(Method::PUT),
             "delete" | "DELETE" => Ok(Method::DELETE),
+            "patch" | "PATCH" => Ok(Method::PATCH),
+            "head" | "HEAD" => Ok(Method::HEAD),
+            "options" | "OPTIONS" => Ok(Method::OPTIONS),
             _ => Err("unknown request method marker: ".to_string() + str),
         }
     }
