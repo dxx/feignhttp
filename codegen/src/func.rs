@@ -69,7 +69,7 @@ pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::T
     let (query_array_names, query_array_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg));
 
-    let (_query_struct_names, query_struct_vars) =
+    let (query_struct_names, query_struct_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_struct(fn_arg));
 
     let tokens = quote!(
@@ -123,9 +123,13 @@ pub fn client_fn_impl(mut item_struct: DataStruct) -> syn::Result<proc_macro2::T
             )*
 
             #(
-                let map = ser::to_map(& self.#query_struct_vars)?;
-                for (key, value) in map {
-                    query_vec.push((key, value));
+                let mut pairs = ser::to_pairs(& self.#query_struct_vars)?;
+                for (key, value) in pairs.drain(..) {
+                    if key.is_empty() {
+                        query_vec.push((#query_struct_names.to_string(), value));
+                    } else {
+                        query_vec.push((key, value));
+                    }
                 }
             )*
             Ok(query_vec)
@@ -198,7 +202,7 @@ pub fn fn_impl(
     let (query_array_names, query_array_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_query_array(fn_arg));
 
-    let (_query_struct_names, query_struct_vars) =
+    let (query_struct_names, query_struct_vars) =
         find_type_name_vars(&args, ArgType::QUERY, |fn_arg| filter_struct(fn_arg));
 
     let (form_names, form_vars) = find_type_name_vars(&args, ArgType::FORM, |_fn_arg| true);
@@ -373,9 +377,13 @@ pub fn fn_impl(
             )*
 
             #(
-                let map = ser::to_map(& #query_struct_vars)?;
-                for (key, value) in map.iter() {
-                    query_vec.push((key.clone(), value.to_string()));
+                let mut pairs = ser::to_pairs(& #query_struct_vars)?;
+                for (key, value) in pairs.drain(..) {
+                    if key.is_empty() {
+                        query_vec.push((#query_struct_names.to_string(), value));
+                    } else {
+                        query_vec.push((key, value));
+                    }
                 }
             )*
 
