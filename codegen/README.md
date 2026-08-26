@@ -23,3 +23,7 @@ Annotated on function to send put request.
 ### delete
 
 Annotated on function to send delete request.
+
+### patch
+
+Annotated on function to send patch request.
