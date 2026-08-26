@@ -25,7 +25,12 @@ pub fn feign_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
             let builder_ident = format_ident!("{}Builder", trait_ident);
 
             let trait_fn_streams =
-                match fn_to_streams_for_trait(url.clone(), &item_trait.items, meta_map.clone()) {
+                match fn_to_streams_for_trait(
+                    url.clone(),
+                    &item_trait.items,
+                    meta_map.clone(),
+                    &item_trait.vis,
+                ) {
                     Ok(streams) => streams,
                     Err(err) => return err.into_compile_error().into(),
                 };
@@ -286,6 +291,7 @@ fn fn_to_streams_for_trait(
     url: proc_macro2::TokenStream,
     items: &[syn::TraitItem],
     meta_map: HashMap<String, String>,
+    trait_vis: &syn::Visibility,
 ) -> syn::Result<Vec<proc_macro2::TokenStream>> {
     let base_url = url;
     let base_meta = meta_map;
@@ -314,7 +320,7 @@ fn fn_to_streams_for_trait(
                     meta_map.insert(k, v);
                 }
 
-                let item_fn = trait_method_to_item_fn(trait_method);
+                let item_fn = trait_method_to_item_fn(trait_method, trait_vis);
                 let fn_stream = fn_impl(
                     FnMetadata {
                         url,
@@ -332,12 +338,15 @@ fn fn_to_streams_for_trait(
     Ok(trait_fn_streams)
 }
 
-fn trait_method_to_item_fn(trait_method: &syn::TraitItemFn) -> syn::ItemFn {
+fn trait_method_to_item_fn(
+    trait_method: &syn::TraitItemFn,
+    trait_vis: &syn::Visibility,
+) -> syn::ItemFn {
     let sig = &trait_method.sig;
 
     syn::ItemFn {
         attrs: trait_method.attrs.clone(),
-        vis: syn::Visibility::Inherited,
+        vis: trait_vis.clone(),
         sig: syn::Signature {
             constness: None,
             asyncness: sig.asyncness,
