@@ -40,16 +40,6 @@ pub fn patch(attr: TokenStream, item: TokenStream) -> TokenStream {
     http_impl(Method::PATCH, attr, item)
 }
 
-#[proc_macro_attribute]
-pub fn head(attr: TokenStream, item: TokenStream) -> TokenStream {
-    http_impl(Method::HEAD, attr, item)
-}
-
-#[proc_macro_attribute]
-pub fn options(attr: TokenStream, item: TokenStream) -> TokenStream {
-    http_impl(Method::OPTIONS, attr, item)
-}
-
 #[proc_macro_derive(Context, attributes(url_path, query, header, param))]
 pub fn feign_context(item: TokenStream) -> TokenStream {
     feign_context_impl(item)
